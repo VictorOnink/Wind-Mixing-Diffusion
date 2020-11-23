@@ -9,6 +9,7 @@ from parcels import ParcelsRandom
 import math
 import numpy as np
 import settings as SET
+import utils
 
 
 def vertical_diffusion_run(k_z, w_10, w_rise):
@@ -17,7 +18,7 @@ def vertical_diffusion_run(k_z, w_10, w_rise):
     # Create the particle set
     pset = ParticleSet(fieldset=fieldset, pclass=JITParticle, lon=[0.5]*SET.p_number, lat=[0.5]*SET.p_number,
                        depth=[0]*SET.p_number)
-    output_file = pset.ParticleFile(name=get_parcels_output_name(k_z, w_10, w_rise), outputdt=SET.dt_out)
+    output_file = pset.ParticleFile(name=utils.get_parcels_output_name(k_z, w_10, w_rise), outputdt=SET.dt_out)
     # Determine the particle behavior
     kernel = pset.Kernel(simple_vertical_diffusion)
     # The actual integration
@@ -62,7 +63,3 @@ def simple_vertical_diffusion(particle, fieldset, time):
     # Check that the particle doesn't go through the surface, and doesn't go below 200 m for convenience
     if particle.depth + w_total >= 0 and particle.depth + w_total <= 200:
         particle.depth += w_total
-
-
-def get_parcels_output_name(k_z, w_10, w_rise):
-    return SET.output_dir + 'k_z_{}_w10_{}_w_rise_{}.nc'.format(k_z, w_10, w_rise)
