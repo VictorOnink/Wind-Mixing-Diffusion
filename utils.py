@@ -41,7 +41,6 @@ def determine_kukulka_e_length(w_10, w_rise):
     tau_wind = determine_tau(w_10, rho_a)                 # wind stress at the ocean surface
     u_water = math.sqrt(tau_wind / rho_w)                       # friction velocity of water
     u_air = math.sqrt(tau_wind / rho_a)                         # friction velocity of air
-    print(u_air)
     H_s = 0.96 * g ** (-1) * wave_age ** 1.5 * u_air ** 2       # significant wave height (m)
     A0 = 1.5 * u_water * vk * H_s                               # A0 constant Kukulka et al. (2012)
     return math.fabs(w_rise) / A0
