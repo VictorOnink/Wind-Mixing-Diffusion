@@ -11,7 +11,7 @@ dt_out = timedelta(seconds=3600)
 dt_int = timedelta(seconds=30)
 
 # Runtime for the entire simulation
-runtime = timedelta(seconds=168*3600)
+runtime = timedelta(seconds=12*3600)
 
 # Number of particles in a simulation
 p_number = 100000

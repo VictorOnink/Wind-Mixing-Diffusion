@@ -15,10 +15,10 @@ def quick_plot(x, y):
 def basic_profile_figure(k_z_list, w_10_list, w_rise_list, selection='k_z', close_up=None,
                          y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
                          ax_label_size=16, legend_size=12, rouse=True, kukulka=True, model=True, single_select=1,
-                         output_step=-1, diffusion_type='Rouse'):
+                         output_step=-1, diffusion_type='Rouse', boundary='Mixed'):
     # Load the relevant data for the figure
     profile_dict = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select,
-                                          output_step=output_step, diffusion_type=diffusion_type)
+                                          output_step=output_step, diffusion_type=diffusion_type, boundary=boundary)
     # Preparing for the actual plotting
     range_dict = get_axes_range(profile_dict['depth_bins'], profile_dict['concentration_list'])
     xmax, xmin = range_dict['max_count'], range_dict['min_count']
@@ -64,7 +64,7 @@ def basic_profile_figure(k_z_list, w_10_list, w_rise_list, selection='k_z', clos
 def timestep_comparison(k_z_list, w_10_list, w_rise_list, selection='k_z', close_up=None,
                         y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
                         ax_label_size=16, legend_size=12, rouse=True, kukulka=True, model=True, single_select=0,
-                        time_range=1, diffusion_type='Rouse', interval = 1):
+                        time_range=1, diffusion_type='Rouse', interval=1, boundary='Mixed'):
     # Load the relevant data for the figure
     profile_dict = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select, diffusion_type,
                                           all_timesteps=True)
@@ -167,7 +167,7 @@ def get_axes_range(depth_bins, concentrations):
 
 
 def get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select, diffusion_type, output_step=-1,
-                           all_timesteps=False):
+                           all_timesteps=False, boundary='Mixed'):
     output_dic = {'concentration_list': [], 'kukulka_list': [], 'rouse_list': [], 'parameter_concentrations': [],
                   'parameter_kukulka': []}
     if selection == 'k_z':
@@ -184,7 +184,7 @@ def get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_s
         for w_10 in w_10_list:
             for k_z in k_z_list:
                 # Loading the dictionary containing the concentrations
-                input_dir = utils.load_obj(utils.get_concentration_output_name(k_z, w_10, w_rise, diffusion_type))
+                input_dir = utils.load_obj(utils.get_concentration_output_name(k_z, w_10, w_rise, diffusion_type, boundary))
                 # Selecting the timeslice of interest
                 if output_step == -1:
                     concentration = [input_dir['last_time_slice']]
