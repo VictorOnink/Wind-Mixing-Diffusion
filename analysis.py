@@ -6,15 +6,21 @@ import numpy as np
 import math
 
 
-def depth_concentration(k_z, w_10, w_rise):
-    dataset = Dataset(utils.get_parcels_output_name(k_z, w_10, w_rise))
-    depth = dataset.variables['z'][:, -1]
+def depth_concentration(k_z, w_10, w_rise, diffusion_type):
+    dataset = Dataset(utils.get_parcels_output_name(k_z, w_10, w_rise, diffusion_type))
+    time = dataset.variables['time'][0,:]
     # Bins, at 0.5 meter intervals
     depth_bins = np.arange(0, 100, 0.1)
-    # The concentration
-    concentrations, bin_edges = np.histogram(depth, bins=depth_bins)
     # Saving the depth profiles
-    output_dir = {'concentration': concentrations, 'bin_edges': bin_edges}
-    utils.save_obj(filename=utils.get_concentration_output_name(k_z, w_10, w_rise), object=output_dir)
+    output_dir = {}
+    for t in range(len(time)):
+        depth = dataset.variables['z'][:, t]
+        # The concentration
+        concentrations, bin_edges = np.histogram(depth, bins=depth_bins)
+        output_dir[t] = concentrations
+    output_dir['bin_edges'] = bin_edges
+    output_dir['last_time_slice'] = t
+    utils.save_obj(filename=utils.get_concentration_output_name(k_z, w_10, w_rise, diffusion_type),
+                   object=output_dir)
 
 

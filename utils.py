@@ -1,14 +1,24 @@
 import settings
 import pickle
 import math
+import os
+import numpy as np
 
 
-def get_parcels_output_name(k_z, w_10, w_rise):
-    return settings.output_dir + 'k_z_{}_w10_{}_w_rise_{}.nc'.format(k_z, w_10, w_rise)
+def get_parcels_output_name(k_z, w_10, w_rise, diffusion_type, boundary):
+    if diffusion_type == 'Rouse':
+        return settings.output_dir + diffusion_type + '_' + boundary + '_k_z_{}_w10_{}_w_rise_{}.nc'.format(k_z, w_10,
+                                                                                                            w_rise)
+    else:
+        return settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}.nc'.format(w_10, w_rise)
 
 
-def get_concentration_output_name(k_z, w_10, w_rise):
-    return settings.conc_dir + 'conc_k_z_{}_w10_{}_w_rise_{}.nc'.format(k_z, w_10, w_rise)
+def get_concentration_output_name(k_z, w_10, w_rise, diffusion_type, boundary):
+    if diffusion_type == 'Rouse':
+        return settings.conc_dir + diffusion_type + '_' + boundary + '_conc_k_z_{}_w10_{}_w_rise_{}'.format(k_z, w_10,
+                                                                                                            w_rise)
+    else:
+        return settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}'.format(w_10, w_rise)
 
 
 def save_obj(filename, object):
@@ -44,3 +54,51 @@ def determine_kukulka_e_length(w_10, w_rise):
     H_s = 0.96 * g ** (-1) * wave_age ** 1.5 * u_air ** 2       # significant wave height (m)
     A0 = 1.5 * u_water * vk * H_s                               # A0 constant Kukulka et al. (2012)
     return math.fabs(w_rise) / A0
+
+
+def _check_file_exist(File: str):
+    return os.path.isfile(File)
+
+
+def remove_file(conduct: bool, File:str):
+    if conduct:
+        if _check_file_exist(File):
+            os.remove(File)
+
+
+def get_vertical_diffusion_profile(w_10, k_z, depth: np.array, diffusion_type: str):
+    rho_w = settings.rho_w # density sea water (kg/m^3)
+    rho_a = settings.rho_a # density air (kg/m^3)
+    wave_age = settings.wave_age # wave age of developed wave field (Kukulka et al., 2012)
+    g = settings.g # Gravitational acceleration (
+    u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w) # shear velocity
+    u_air = math.sqrt(determine_tau(w_10, rho_a) / rho_a)
+    H_s = 0.96 * g ** (-1) * wave_age ** 1.5 * u_air ** 2  # significant wave height (m)
+    k = settings.vk # von Karman constant
+    phi = settings.phi
+    z0 = settings.z0
+    MLD = settings.MLD
+    if diffusion_type == 'Rouse':
+        return k * u_s * depth + k_z
+    if diffusion_type == 'Kukulka':
+        return 1.5 * k * u_s * H_s * np.ones(depth.shape)
+    if diffusion_type == 'KPP':
+        alpha = (k * u_s) / phi
+        return alpha * (depth + z0) * np.power(1 - depth / MLD, 2)
+
+
+def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str):
+    rho_w = settings.rho_w # density sea water (kg/m^3)
+    rho_a = settings.rho_a # density air (kg/m^3)
+    u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w) # shear velocity
+    k = settings.vk # von Karman constant
+    phi = settings.phi
+    z0 = settings.z0
+    MLD = settings.MLD
+    if diffusion_type == 'Rouse':
+        return k * u_s * np.ones(depth.shape)
+    if diffusion_type == 'Kukulka':
+        return np.zeros(depth.shape)
+    if diffusion_type == 'KPP':
+        alpha = (k * u_s) / (phi * MLD**2)
+        return alpha * (MLD - depth) * (MLD - 3*depth - 2 * z0)
