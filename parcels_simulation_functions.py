@@ -23,6 +23,8 @@ def vertical_diffusion_run(k_z, w_10, w_rise, diffusion_type, boundary='Mixed'):
     # Determine the particle behavior
     if boundary == 'Mixed':
         kernel = pset.Kernel(simple_vertical_diffusion_mixed_layer_boundary)
+    if boundary == 'Zero_Ceiling':
+        kernel = pset.Kernel(simple_vertical_diffusion_zero_ceiling_boundary)
     # # The actual integration
     pset.execute(kernel, runtime=SET.runtime, dt=SET.dt_int, output_file=output_file)
     output_file.export()
@@ -35,10 +37,9 @@ def determine_mixed_layer(k_z, w_10, w_rise, diffusion_type='KPP'):
         K = utils.get_vertical_diffusion_profile(w_10, k_z, z_t + 0.5 * dK * dt, diffusion_type)
         RHS = dK*dt + np.sqrt(6 * K * dt) + w_rise * dt
         return np.abs(z_t - RHS)
-    mixing_depth = scipy.optimize.minimize_scalar(to_optimize).x
-    print('The surface turbulen mixed layer depth {} m'.format(mixing_depth))
+    mixing_depth = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
+    print('The surface turbulent mixed layer depth {} m'.format(mixing_depth))
     return mixing_depth
-
 
 def create_fieldset(k_z, w_10, w_rise, diffusion_type, boundary):
     # Creating the lon and lat grids
@@ -92,3 +93,26 @@ def simple_vertical_diffusion_mixed_layer_boundary(particle, fieldset, time):
     else:
         particle.depth = potential
 
+
+def simple_vertical_diffusion_zero_ceiling_boundary(particle, fieldset, time):
+    # According to Ross & Sharples (2004), first the deterministic part of equation 1
+    dK_z_p = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
+    deterministic = dK_z_p * particle.dt
+
+    # The random walk component
+    R = ParcelsRandom.uniform(-1., 1.) * math.sqrt(math.fabs(particle.dt) * 3)
+    bz = math.sqrt(fieldset.K_z[time, particle.depth + 0.5 * dK_z_p * particle.dt, particle.lat, particle.lon])
+
+    # Rise velocity component
+    rise = fieldset.wrise * particle.dt
+
+    # Total movement
+    w_total = deterministic + R * bz + rise
+
+    # Dealing with boundary condition by having a thin mixed layer, and if the particle is not within the mixed layer,
+    # then we have simple diffusion according to the equation
+    potential = particle.depth + w_total
+    if potential < 0:
+        particle.depth = 0
+    else:
+        particle.depth = potential

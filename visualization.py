@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import utils
 import math
+from datetime import timedelta
 
 
 def quick_plot(x, y):
@@ -14,8 +15,8 @@ def quick_plot(x, y):
 
 def basic_profile_figure(k_z_list, w_10_list, w_rise_list, selection='k_z', close_up=None,
                          y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
-                         ax_label_size=16, legend_size=12, rouse=True, kukulka=True, model=True, single_select=1,
-                         output_step=-1, diffusion_type='Rouse', boundary='Mixed'):
+                         ax_label_size=16, legend_size=12, kukulka=True, model=True, single_select=1,
+                         output_step=-1, diffusion_type='Rouse', boundary='Mixed', diffusion_curve=True):
     # Load the relevant data for the figure
     profile_dict = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select,
                                           output_step=output_step, diffusion_type=diffusion_type, boundary=boundary)
@@ -46,15 +47,19 @@ def basic_profile_figure(k_z_list, w_10_list, w_rise_list, selection='k_z', clos
             ax.plot(profile_dict['kukulka_list'][counter], profile_dict['depth_bins'],
                     label=label_kukulka(parameters=profile_dict['parameter_kukulka'][counter]),
                     linestyle='--', color=colors[counter])
-    # Plotting the distribution according to the theoretical Rouse profile
-    if rouse:
-        for counter in range(len(profile_dict['rouse_list'])):
-            ax.plot(profile_dict['rouse_list'][counter], profile_dict['depth_bins'],
-                    label=label_rouse(parameters=profile_dict['parameter_concentrations'][counter]),
-                    linestyle='-.', color=colors[counter])
+    lines, labels = ax.get_legend_handles_labels()
+
+    # Plotting the diffusion curve
+    if diffusion_curve:
+        for counter in range(len(profile_dict['concentration_list'])):
+            k_z, w_10, w_rise = profile_dict['parameter_concentrations'][counter]
+            ax2 = diffusion_curve_axis(ax, ax_label_size, k_z, w_10, w_rise, profile_dict, diffusion_type, colors[counter])
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            lines += lines2
+            labels += labels2
 
     # Adding the legend
-    ax.legend(fontsize=legend_size, loc='lower right')
+    ax.legend(lines, labels, fontsize=legend_size, loc='lower right')
 
     # Saving the figure
     plt.savefig(saving_filename_basic_profile(settings.figure_dir, selection, close_up, diffusion_type),
@@ -63,11 +68,11 @@ def basic_profile_figure(k_z_list, w_10_list, w_rise_list, selection='k_z', clos
 
 def timestep_comparison(k_z_list, w_10_list, w_rise_list, selection='k_z', close_up=None,
                         y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
-                        ax_label_size=16, legend_size=12, rouse=True, kukulka=True, model=True, single_select=0,
-                        time_range=1, diffusion_type='Rouse', interval=1, boundary='Mixed'):
+                        ax_label_size=16, legend_size=12, kukulka=True, model=True, single_select=0,
+                        diffusion_type='Rouse', interval=1, boundary='Mixed', diffusion_curve=True):
     # Load the relevant data for the figure
     profile_dict = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select, diffusion_type,
-                                          all_timesteps=True)
+                                          all_timesteps=True, boundary=boundary)
     # Preparing for the actual plotting
     range_dict = get_axes_range(profile_dict['depth_bins'], profile_dict['concentration_list'])
     xmax, xmin = range_dict['max_count'], range_dict['min_count']
@@ -82,65 +87,120 @@ def timestep_comparison(k_z_list, w_10_list, w_rise_list, selection='k_z', close
     # Creating the axis
     ax = base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
 
-    # Plotting the distribution from the Rouse approach
+    # Plotting the modeled distribution
     if model:
+        steps = 0
         for counter in range(0, len(profile_dict['concentration_list']), interval):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                    label=label_profile(selection, parameters=profile_dict['parameter_concentrations'][0]),
-                    color=colors[counter%len(colors)])
+                    label=label_time_step(steps, interval),
+                    color=colors[steps % len(colors)])
+            steps += 1
     # Plotting the distribution according to the Kukulka parametrization
     if kukulka:
         for counter in range(0, len(profile_dict['kukulka_list']), interval):
             ax.plot(profile_dict['kukulka_list'][counter], profile_dict['depth_bins'],
                     label=label_kukulka(parameters=profile_dict['parameter_kukulka'][counter]),
                     linestyle='--', color=colors[counter])
-    # Plotting the distribution according to the theoretical Rouse profile
-    if rouse:
-        for counter in range(0, len(profile_dict['rouse_list']), interval):
-            ax.plot(profile_dict['rouse_list'][counter], profile_dict['depth_bins'],
-                    label=label_rouse(parameters=profile_dict['parameter_concentrations'][counter]),
-                    linestyle='-.', color=colors[counter])
+    lines, labels = ax.get_legend_handles_labels()
+
+    # Plotting the diffusion curve
+    if diffusion_curve:
+        k_z, w_10, w_rise = profile_dict['parameter_concentrations'][0]
+        ax2 = diffusion_curve_axis(ax, ax_label_size, k_z, w_10, w_rise, profile_dict, diffusion_type, 'black')
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        lines += lines2
+        labels += labels2
 
     # Adding the legend
-    # ax.legend(fontsize=legend_size, loc='lower right')
-    plt.show()
+    ax.legend(lines, labels, fontsize=legend_size, loc='lower right')
+    # Saving the figure
+    plt.savefig(saving_filename_time_step(settings.figure_dir, selection, close_up, diffusion_type),
+                bbox_inches='tight', dpi=600)
 
 
-def saving_filename_basic_profile(save_location, selection, close_up, diffusion_type):
+def boundary_condition_comparison(k_z_list, w_10_list, w_rise_list, selection='k_z', close_up=None,
+                        y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
+                        ax_label_size=16, legend_size=12, kukulka=True, model=True, single_select=0,
+                        diffusion_type='KPP', interval=1, boundary='Mixed', diffusion_curve=True):
+    # Load the relevant data for the figure
+    profile_dict_mix = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select,
+                                              diffusion_type, boundary='Mixed')
+    profile_dict_zero = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select,
+                                               diffusion_type, boundary='Zero_Ceiling')
+    # Preparing for the actual plotting
+    range_dict = get_axes_range(profile_dict_mix['depth_bins'], profile_dict_mix['concentration_list'])
+    xmax, xmin = range_dict['max_count'], range_dict['min_count']
     if close_up == None:
-        return save_location + diffusion_type + '_Depth_profile_full_variable={}.png'.format(selection)
+        ymax, ymin = range_dict['max_depth'], range_dict['min_depth']
     else:
+        # Allowing for easy close up for a specific part of the depth profile
         ymax, ymin = close_up
-        return save_location + diffusion_type + '_Depth_profile_max={}_min={}_variable={}.png'.format(ymax, ymin, selection)
+    ax_range = (xmax, xmin, ymax, ymin)
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray',
+              'tab:olive', 'tab:cyan']
+    # Creating the axis
+    ax = base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
+
+    # First the mixed boundary layer
+    for counter in range(len(profile_dict_mix['concentration_list'])):
+        _, w_10, _ = profile_dict_mix['parameter_concentrations'][counter]
+        ax.plot(profile_dict_mix['concentration_list'][counter], profile_dict_mix['depth_bins'],
+                label=label_boundary(w_10, diffusion_type, 'Random Mixed Layer'),
+                color=colors[0])
+
+    # Next the zero ceiling boundary condition
+    for counter in range(len(profile_dict_zero['concentration_list'])):
+        _, w_10, _ = profile_dict_mix['parameter_concentrations'][counter]
+        ax.plot(profile_dict_zero['concentration_list'][counter], profile_dict_zero['depth_bins'],
+                label=label_boundary(w_10, diffusion_type, 'Zero Ceiling'),
+                color=colors[1])
+    lines, labels = ax.get_legend_handles_labels()
+
+    # Plotting the diffusion curve
+    if diffusion_curve:
+        k_z, w_10, w_rise = profile_dict_mix['parameter_concentrations'][0]
+        ax2 = diffusion_curve_axis(ax, ax_label_size, k_z, w_10, w_rise, profile_dict_mix, diffusion_type, 'black')
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        lines += lines2
+        labels += labels2
+
+    # Adding the legend
+    ax.legend(lines, labels, fontsize=legend_size, loc='lower right')
+    # Saving the figure
+    plt.savefig(saving_filename_boundary(settings.figure_dir, selection, close_up, diffusion_type),
+                bbox_inches='tight', dpi=600)
 
 
-def label_profile(selection, parameters):
-    if selection == 'k_z':
-        k_z, w_10, w_rise = parameters
-        return r'$K_0 = $ ' + '{:.1E}'.format(k_z) + r' m$^2$ s$^{-1}$, $w_{10} = $ ' + '{}'.format(w_10) + \
-               r' m s$^{-1}$, $w_r = $ ' + '{}'.format(w_rise) + ' m s$^{-1}$'
-    elif selection == 'w_10':
-        k_z, w_10, w_rise = parameters
-        return r'$K_0 = $ ' + '{:.1E}'.format(k_z) + r' m$^2$ s$^{-1}$, $w_{10} = $ ' + '{}'.format(w_10) + \
-               r' m s$^{-1}$, $w_r = $ ' + '{}'.format(w_rise) + ' m s$^{-1}$'
-    elif selection == 'w_rise':
-        k_z, w_10, w_rise = parameters
-        return r'$K_0 = $ ' + '{:.1E}'.format(k_z) + r' m$^2$ s$^{-1}$, $w_{10} = $ ' + '{}'.format(w_10) + \
-               r' m s$^{-1}$, $w_r = $ ' + '{}'.format(w_rise) + ' m s$^{-1}$'
+def label_boundary(w_10, diffusion_type, boundary):
+    if diffusion_type == 'Kukulka':
+        return 'Kukulka et al. (2012) $K_z$,  w_10 = {}'.format(w_10) + ' m s$^{-1}$, ' + boundary
+    elif diffusion_type == 'KPP':
+        return r'KPP $K_z$, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = '+'{} m'.format(settings.MLD) + ', ' + boundary
 
 
-def label_kukulka(parameters):
-    w_10, w_rise = parameters
-    lambda_c = np.round(1. / utils.determine_kukulka_e_length(w_10, w_rise), decimals=1)
-    return 'Kukulka et al. (2012), $\lambda = $' + '{}'.format(lambda_c) + ' m'
+def diffusion_curve_axis(ax, ax_label_size, k_z, w_10, w_rise, profile_dict, diffusion_type, color):
+    ax2 = ax.twiny()
+    # Get the proper diffusion curve
+    depth = profile_dict['depth_bins']
+    profile = utils.get_vertical_diffusion_profile(w_10, k_z, depth * -1, diffusion_type)
+    # X axis = Concentration axis
+    ax2.set_xlabel(r'$K_z$ (m$^2$ s$^{-1}$)', fontsize=ax_label_size)
+    ax2.set_xlim((0, 0.1))
+    # The actual plotting
+    ax2.plot(profile, depth, color=color, linestyle='dotted', label=label_diffusivity_profile(w_10, diffusion_type))
+    return ax2
 
 
-def label_rouse(parameters):
-    k_z, w_10, w_rise = parameters
-    k = settings.vk  # von Karman constant
-    u_shear = math.sqrt(utils.determine_tau(w_10, settings.rho_a) / settings.rho_w)
-    Ro = math.fabs(w_rise) / (k * u_shear)  # Rouse value
-    return r'Rouse (Boudreau & Hill, 2020), Ro = {:.1f}, $\epsilon_0$ = {:.1E}'.format(Ro, k_z) + r'm$^2$ s$^{-1}$'
+def label_time_step(steps, interval):
+    t = steps * interval * settings.dt_out.seconds// 3600
+    return 't = {} hours'.format(t)
+
+
+def label_diffusivity_profile(w_10, diffusion_type):
+    if diffusion_type == 'Kukulka':
+        return 'Kukulka et al. (2012) $K_z$,  w_10 = {}'.format(w_10) + ' m s$^{-1}$'
+    elif diffusion_type == 'KPP':
+        return r'KPP $K_z$, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = '+'{} m'.format(settings.MLD)
 
 
 def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size):
@@ -155,6 +215,57 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size):
     ax.set_xlabel(x_label, fontsize=ax_label_size)
     ax.set_xlim((xmin, xmax))
     return ax
+
+
+def saving_filename_basic_profile(save_location, selection, close_up, diffusion_type):
+    if close_up is None:
+        return save_location + diffusion_type + '_Depth_profile_full_variable={}.png'.format(selection)
+    else:
+        ymax, ymin = close_up
+        return save_location + diffusion_type + '_Depth_profile_max={}_min={}_variable={}.png'.format(ymax, ymin, selection)
+
+
+def saving_filename_time_step(save_location, selection, close_up, diffusion_type):
+    if close_up is None:
+        return save_location + diffusion_type + '_time_step_full_variable={}.png'.format(selection)
+    else:
+        ymax, ymin = close_up
+        return save_location + diffusion_type + '_time_step_max={}_min={}_variable={}.png'.format(ymax, ymin, selection)
+
+
+def saving_filename_boundary(save_location, selection, close_up, diffusion_type):
+    if close_up is None:
+        return save_location + diffusion_type + '_boundary_full_variable={}.png'.format(selection)
+    else:
+        ymax, ymin = close_up
+        return save_location + diffusion_type + '_boundary_max={}_min={}_variable={}.png'.format(ymax, ymin, selection)
+
+
+def label_profile(selection, parameters):
+    if selection == 'k_z':
+        k_z, w_10, w_rise = parameters
+        return r'$K_0 = $ ' + '{:.1E}'.format(k_z) + r' m$^2$ s$^{-1}$, $w_{10} = $ ' + '{}'.format(w_10) + \
+               r' m s$^{-1}$, $w_r = $ ' + '{}'.format(w_rise) + ' m s$^{-1}$'
+    elif selection == 'w_10':
+        k_z, w_10, w_rise = parameters
+        return r'$w_{10} = $ ' + '{}'.format(w_10) + r' m s$^{-1}$, $w_r = $ ' + '{}'.format(w_rise) + ' m s$^{-1}$'
+    elif selection == 'w_rise':
+        k_z, w_10, w_rise = parameters
+        return r'$w_{10} = $ ' + '{}'.format(w_10) + r' m s$^{-1}$, $w_r = $ ' + '{}'.format(w_rise) + ' m s$^{-1}$'
+
+
+def label_kukulka(parameters):
+    w_10, w_rise = parameters
+    lambda_c = np.round(1. / utils.determine_kukulka_e_length(w_10, w_rise), decimals=1)
+    return 'Kukulka et al. (2012), $\lambda = $' + '{}'.format(lambda_c) + ' m'
+
+
+def label_rouse(parameters):
+    k_z, w_10, w_rise = parameters
+    k = settings.vk  # von Karman constant
+    u_shear = math.sqrt(utils.determine_tau(w_10, settings.rho_a) / settings.rho_w)
+    Ro = math.fabs(w_rise) / (k * u_shear)  # Rouse value
+    return r'Rouse (Boudreau & Hill, 2020), Ro = {:.1f}, $\epsilon_0$ = {:.1E}'.format(Ro, k_z) + r'm$^2$ s$^{-1}$'
 
 
 def get_axes_range(depth_bins, concentrations):
@@ -202,7 +313,6 @@ def get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_s
             # Getting the Kukulka profile and the associated parameters
             output_dic['kukulka_list'].append(get_kukulka_profile(w_10, w_rise, output_dic['depth_bins']))
             output_dic['parameter_kukulka'].append((w_10, w_rise))
-
     return output_dic
 
 
