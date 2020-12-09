@@ -25,3 +25,5 @@ g = 9.81                                                    # acceleration due t
 MLD = 100                                                   # Ocean mixing layer depth (m)
 phi = 0.9                                                   # Stability function in Monin-Obukov boundary layer theory
 z0 = 1                                                      # roughness scale of turbulence
+mu = 1e-3                                                   # dynamic viscosity
+rho_p = 920                                                 # density polypropylene (kg/m^3)

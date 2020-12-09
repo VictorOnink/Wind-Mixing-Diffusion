@@ -127,6 +127,8 @@ def boundary_condition_comparison(k_z_list, w_10_list, w_rise_list, selection='k
                                               diffusion_type, boundary='Mixed')
     profile_dict_zero = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select,
                                                diffusion_type, boundary='Zero_Ceiling')
+    profile_dict_reflect = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select,
+                                                  diffusion_type, boundary='Reflect')
     # Preparing for the actual plotting
     range_dict = get_axes_range(profile_dict_mix['depth_bins'], profile_dict_mix['concentration_list'])
     xmax, xmin = range_dict['max_count'], range_dict['min_count']
@@ -154,6 +156,13 @@ def boundary_condition_comparison(k_z_list, w_10_list, w_rise_list, selection='k
         ax.plot(profile_dict_zero['concentration_list'][counter], profile_dict_zero['depth_bins'],
                 label=label_boundary(w_10, diffusion_type, 'Zero Ceiling'),
                 color=colors[1])
+
+    # Finally, the reflecting boundary condition
+    for counter in range(len(profile_dict_reflect['concentration_list'])):
+        _, w_10, _ = profile_dict_reflect['parameter_concentrations'][counter]
+        ax.plot(profile_dict_reflect['concentration_list'][counter], profile_dict_reflect['depth_bins'],
+                label=label_boundary(w_10, diffusion_type, 'Reflect'),
+                color=colors[2])
     lines, labels = ax.get_legend_handles_labels()
 
     # Plotting the diffusion curve

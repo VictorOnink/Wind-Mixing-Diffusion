@@ -16,16 +16,19 @@ def vertical_diffusion_run(k_z, w_10, w_rise, diffusion_type, boundary='Mixed'):
     # Create the fieldset
     fieldset = create_fieldset(k_z=k_z, w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary)
     # Create the particle set
+    determine_particle_size(w_rise)
     pset = ParticleSet(fieldset=fieldset, pclass=JITParticle, lon=[0.5]*SET.p_number, lat=[0.5]*SET.p_number,
                        depth=[0]*SET.p_number)
     output_file = pset.ParticleFile(name=utils.get_parcels_output_name(k_z, w_10, w_rise, diffusion_type, boundary),
                                     outputdt=SET.dt_out)
     # Determine the particle behavior
-    if boundary == 'Mixed':
+    if boundary is 'Mixed':
         kernel = pset.Kernel(simple_vertical_diffusion_mixed_layer_boundary)
-    if boundary == 'Zero_Ceiling':
+    if boundary is 'Zero_Ceiling':
         kernel = pset.Kernel(simple_vertical_diffusion_zero_ceiling_boundary)
-    # # The actual integration
+    if boundary is 'Reflect':
+        kernel = pset.Kernel(simple_vertical_diffusion_reflective_boundary)
+    # The actual integration
     pset.execute(kernel, runtime=SET.runtime, dt=SET.dt_int, output_file=output_file)
     output_file.export()
 
@@ -40,6 +43,21 @@ def determine_mixed_layer(k_z, w_10, w_rise, diffusion_type='KPP'):
     mixing_depth = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
     print('The surface turbulent mixed layer depth {} m'.format(mixing_depth))
     return mixing_depth
+
+
+def determine_particle_size(w_rise):
+    def Re(L):
+        return L * np.abs(w_rise) / (SET.mu / SET.rho_w)
+
+    def to_optimize(L):
+        Reynold = Re(L)
+        left = 240. / (np.pi * Reynold) * (1 + 0.138 * Reynold ** 0.792) * w_rise ** 2
+        right = 2. / 15 * L * (SET.rho_p / SET.rho_w - 1) * SET.g
+        return np.abs(left - right)
+
+    particle_size = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
+    print('The particle size according to Poulain et al. (2019) is {} m'.format(particle_size))
+
 
 def create_fieldset(k_z, w_10, w_rise, diffusion_type, boundary):
     # Creating the lon and lat grids
@@ -109,10 +127,32 @@ def simple_vertical_diffusion_zero_ceiling_boundary(particle, fieldset, time):
     # Total movement
     w_total = deterministic + R * bz + rise
 
-    # Dealing with boundary condition by having a thin mixed layer, and if the particle is not within the mixed layer,
-    # then we have simple diffusion according to the equation
+    # If the particle crosses the ocean surface, it is just placed back at the ocean surface
     potential = particle.depth + w_total
     if potential < 0:
         particle.depth = 0
+    else:
+        particle.depth = potential
+
+
+def simple_vertical_diffusion_reflective_boundary(particle, fieldset, time):
+    # According to Ross & Sharples (2004), first the deterministic part of equation 1
+    dK_z_p = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
+    deterministic = dK_z_p * particle.dt
+
+    # The random walk component
+    R = ParcelsRandom.uniform(-1., 1.) * math.sqrt(math.fabs(particle.dt) * 3)
+    bz = math.sqrt(fieldset.K_z[time, particle.depth + 0.5 * dK_z_p * particle.dt, particle.lat, particle.lon])
+
+    # Rise velocity component
+    rise = fieldset.wrise * particle.dt
+
+    # Total movement
+    w_total = deterministic + R * bz + rise
+
+    # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
+    potential = particle.depth + w_total
+    if potential < 0:
+        particle.depth = -1 * potential
     else:
         particle.depth = potential

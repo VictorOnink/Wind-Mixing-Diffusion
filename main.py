@@ -9,8 +9,8 @@ def run():
     w_10 = [2, 5, 10]
     w_rise = [-0.03, -0.003, -0.0003]
     diffusion = 'KPP'
-    boundary = 'Mixed'
-    pbar=ProgressBar()
+    boundary = 'Reflect'
+    pbar = ProgressBar()
     for k in pbar(k_z):
         for wind in w_10:
             for rise in w_rise:
