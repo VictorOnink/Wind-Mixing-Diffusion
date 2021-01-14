@@ -129,6 +129,11 @@ def boundary_condition_comparison(k_z_list, w_10_list, w_rise_list, selection='k
                                                diffusion_type, boundary='Zero_Ceiling')
     profile_dict_reflect = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select,
                                                   diffusion_type, boundary='Reflect')
+    profile_dict_reduce = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select,
+                                                  diffusion_type, boundary='Reduce_dt')
+    profile_dict_markov1 = get_concentration_list(k_z_list, w_10_list, w_rise_list, selection, single_select,
+                                                  diffusion_type, boundary='Reflect_Markov')
+
     # Preparing for the actual plotting
     range_dict = get_axes_range(profile_dict_mix['depth_bins'], profile_dict_mix['concentration_list'])
     xmax, xmin = range_dict['max_count'], range_dict['min_count']
@@ -157,13 +162,29 @@ def boundary_condition_comparison(k_z_list, w_10_list, w_rise_list, selection='k
                 label=label_boundary(w_10, diffusion_type, 'Zero Ceiling'),
                 color=colors[1])
 
-    # Finally, the reflecting boundary condition
+    # Then, the reflecting boundary condition
     for counter in range(len(profile_dict_reflect['concentration_list'])):
         _, w_10, _ = profile_dict_reflect['parameter_concentrations'][counter]
         ax.plot(profile_dict_reflect['concentration_list'][counter], profile_dict_reflect['depth_bins'],
                 label=label_boundary(w_10, diffusion_type, 'Reflect'),
                 color=colors[2])
     lines, labels = ax.get_legend_handles_labels()
+
+    # Then, the reducing dt boundary condition
+    for counter in range(len(profile_dict_reduce['concentration_list'])):
+        _, w_10, _ = profile_dict_reduce['parameter_concentrations'][counter]
+        ax.plot(profile_dict_reduce['concentration_list'][counter], profile_dict_reduce['depth_bins'],
+                label=label_boundary(w_10, diffusion_type, 'Reduce dt'),
+                color=colors[3])
+
+    # Then, the Markov 1 reflecting boundary condition
+    for counter in range(len(profile_dict_markov1['concentration_list'])):
+        _, w_10, _ = profile_dict_markov1['parameter_concentrations'][counter]
+        ax.plot(profile_dict_markov1['concentration_list'][counter], profile_dict_markov1['depth_bins'],
+                label=label_boundary(w_10, diffusion_type, 'Markov-1, Reflect'),
+                color=colors[4])
+    lines, labels = ax.get_legend_handles_labels()
+
 
     # Plotting the diffusion curve
     if diffusion_curve:
@@ -182,9 +203,9 @@ def boundary_condition_comparison(k_z_list, w_10_list, w_rise_list, selection='k
 
 def label_boundary(w_10, diffusion_type, boundary):
     if diffusion_type == 'Kukulka':
-        return 'Kukulka et al. (2012) $K_z$,  w_10 = {}'.format(w_10) + ' m s$^{-1}$, ' + boundary
+        return 'Kukulka et al. (2012),  w_10 = {}'.format(w_10) + ' m s$^{-1}$, ' + boundary
     elif diffusion_type == 'KPP':
-        return r'KPP $K_z$, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = '+'{} m'.format(settings.MLD) + ', ' + boundary
+        return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = '+'{} m'.format(settings.MLD) + ', ' + boundary
 
 
 def diffusion_curve_axis(ax, ax_label_size, k_z, w_10, w_rise, profile_dict, diffusion_type, color):

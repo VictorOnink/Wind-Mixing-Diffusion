@@ -1,5 +1,5 @@
 from datetime import timedelta
-import utils
+import numpy as np
 
 # directory for the output files of the parcels simulations
 output_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/parcels_output/'
@@ -15,6 +15,8 @@ runtime = timedelta(seconds=12*3600)
 
 # Number of particles in a simulation
 p_number = 500000
+p_start_depth = 0.0                                         # starting depth of the particles
+seed = 1
 
 # Some basic physical parameters
 rho_w = 1027                                                # density sea water (kg/m^3)
@@ -27,3 +29,4 @@ phi = 0.9                                                   # Stability function
 z0 = 1                                                      # roughness scale of turbulence
 mu = 1e-3                                                   # dynamic viscosity
 rho_p = 920                                                 # density polypropylene (kg/m^3)
+latitude = 45 * np.pi / 180                                 # Latitude for the determination

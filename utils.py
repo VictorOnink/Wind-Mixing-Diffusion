@@ -6,7 +6,7 @@ import numpy as np
 
 
 def get_parcels_output_name(k_z, w_10, w_rise, diffusion_type, boundary):
-    if diffusion_type == 'Rouse':
+    if diffusion_type is 'Rouse':
         return settings.output_dir + diffusion_type + '_' + boundary + '_k_z_{}_w10_{}_w_rise_{}.nc'.format(k_z, w_10,
                                                                                                             w_rise)
     else:
