@@ -21,6 +21,10 @@ def get_concentration_output_name(k_z, w_10, w_rise, diffusion_type, boundary):
         return settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}'.format(w_10, w_rise)
 
 
+def get_data_output_name(prefix: str):
+    return settings.data_dir + 'standardized_data_' + prefix
+
+
 def save_obj(filename, object):
     with open(filename + '.pkl', 'wb') as f:
         pickle.dump(object, f, pickle.HIGHEST_PROTOCOL)
@@ -102,3 +106,7 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
     if diffusion_type == 'KPP':
         alpha = (k * u_s) / (phi * MLD**2)
         return alpha * (MLD - depth) * (MLD - 3*depth - 2 * z0)
+
+
+def find_nearest_index(depth, z_ref):
+    return (np.abs(depth - z_ref)).argmin()

@@ -5,6 +5,7 @@ import numpy as np
 output_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/parcels_output/'
 conc_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/concentration_output/'
 figure_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/Figures/'
+data_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/Data/'
 
 # Timesteps for integration and for printing to the output file
 dt_out = timedelta(seconds=3600)
