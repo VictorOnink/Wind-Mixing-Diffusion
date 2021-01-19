@@ -15,7 +15,7 @@ dt_int = timedelta(seconds=30)
 runtime = timedelta(seconds=12*3600)
 
 # Number of particles in a simulation
-p_number = 500000
+p_number = 100000
 p_start_depth = 0.0                                         # starting depth of the particles
 seed = 1
 
@@ -25,9 +25,10 @@ rho_a = 1.22                                                # density air (kg/m^
 vk = 0.4                                                    # von Karman constant
 wave_age = 35                                               # assuming fully developed sea, Kukulka et al. (2012)
 g = 9.81                                                    # acceleration due to gravity (m s^-2)
-MLD = 100                                                   # Ocean mixing layer depth (m)
+MLD = 50                                                    # Ocean mixing layer depth (m)
+max_depth = 100                                             # Maximum depth in our two layer model
 phi = 0.9                                                   # Stability function in Monin-Obukov boundary layer theory
-z0 = 1                                                      # roughness scale of turbulence
 mu = 1e-3                                                   # dynamic viscosity
 rho_p = 920                                                 # density polypropylene (kg/m^3)
 latitude = 45 * np.pi / 180                                 # Latitude for the determination
+bulk_diff = 3.7e-4                                          # Dianeutral diffusion below MLD (m^2/s) (Ganachaud, 2003)

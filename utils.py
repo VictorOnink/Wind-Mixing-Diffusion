@@ -5,20 +5,12 @@ import os
 import numpy as np
 
 
-def get_parcels_output_name(k_z, w_10, w_rise, diffusion_type, boundary):
-    if diffusion_type is 'Rouse':
-        return settings.output_dir + diffusion_type + '_' + boundary + '_k_z_{}_w10_{}_w_rise_{}.nc'.format(k_z, w_10,
-                                                                                                            w_rise)
-    else:
-        return settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}.nc'.format(w_10, w_rise)
+def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary):
+    return settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}.nc'.format(w_10, w_rise)
 
 
-def get_concentration_output_name(k_z, w_10, w_rise, diffusion_type, boundary):
-    if diffusion_type == 'Rouse':
-        return settings.conc_dir + diffusion_type + '_' + boundary + '_conc_k_z_{}_w10_{}_w_rise_{}'.format(k_z, w_10,
-                                                                                                            w_rise)
-    else:
-        return settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}'.format(w_10, w_rise)
+def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary):
+    return settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}'.format(w_10, w_rise)
 
 
 def get_data_output_name(prefix: str):
@@ -35,78 +27,92 @@ def load_obj(filename):
         return pickle.load(f)
 
 
-def determine_Cd(w_10):
-    return min(max(1.2E-3, 1.0E-3*(0.49+0.065*w_10)), 2.12E-3)
-
-
-def determine_tau(w_10, rho_air):
-    C_d = determine_Cd(w_10)
-    return C_d * rho_air * w_10**2
-
-
-def determine_kukulka_e_length(w_10, w_rise):
-    # basic constants
-    rho_w = 1027                                                # density sea water (kg/m^3)
-    rho_a = 1.22                                                # density air (kg/m^3)
-    vk = 0.4                                                    # von Karman constant
-    wave_age = 35                                               # assuming fully developed sea, Kukulka et al. (2012)
-    g = 9.81                                                    # acceleration due to gravity (m s^-2)
-    # Getting environmental parameters
-    tau_wind = determine_tau(w_10, rho_a)                 # wind stress at the ocean surface
-    u_water = math.sqrt(tau_wind / rho_w)                       # friction velocity of water
-    u_air = math.sqrt(tau_wind / rho_a)                         # friction velocity of air
-    H_s = 0.96 * g ** (-1) * wave_age ** 1.5 * u_air ** 2       # significant wave height (m)
-    A0 = 1.5 * u_water * vk * H_s                               # A0 constant Kukulka et al. (2012)
-    return math.fabs(w_rise) / A0
-
-
 def _check_file_exist(File: str):
     return os.path.isfile(File)
 
 
-def remove_file(conduct: bool, File:str):
+def remove_file(conduct: bool, File: str):
     if conduct:
         if _check_file_exist(File):
             os.remove(File)
 
 
-def get_vertical_diffusion_profile(w_10, k_z, depth: np.array, diffusion_type: str):
-    rho_w = settings.rho_w # density sea water (kg/m^3)
-    rho_a = settings.rho_a # density air (kg/m^3)
-    wave_age = settings.wave_age # wave age of developed wave field (Kukulka et al., 2012)
-    g = settings.g # Gravitational acceleration (
-    u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w) # shear velocity
-    u_air = math.sqrt(determine_tau(w_10, rho_a) / rho_a)
-    H_s = 0.96 * g ** (-1) * wave_age ** 1.5 * u_air ** 2  # significant wave height (m)
-    k = settings.vk # von Karman constant
+def find_nearest_index(depth, z_ref):
+    return (np.abs(depth - z_ref)).argmin()
+
+
+def return_color(index):
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray',
+              'tab:olive', 'tab:cyan']
+    num = len(colors)
+    return colors[index % num]
+
+
+def beaufort_limits():
+    return [(0, 0.2), (0.2, 1.5), (1.5, 3.3), (3.3, 5.4), (5.4, 7.9), (7.9, 10.7), (10.7, 13.8), (13.8, 17.1),
+            (17.1, 20.7), (20.7, 24.4), (24.4, 28.4), (28.5, 32.6), (32.7, 100)]
+
+
+def determine_Cd(w_10):
+    return min(max(1.2E-3, 1.0E-3 * (0.49 + 0.065 * w_10)), 2.12E-3)
+
+
+def determine_tau(w_10, rho_air):
+    C_d = determine_Cd(w_10)
+    return C_d * rho_air * w_10 ** 2
+
+
+def determine_wave_height(w_10):
+    tau_wind = determine_tau(w_10, settings.rho_a)  # wind stress at the ocean surface
+    u_air = math.sqrt(tau_wind / settings.rho_a)  # friction velocity of air
+    H_s = 0.96 * settings.g ** (-1) * settings.wave_age ** 1.5 * u_air ** 2  # significant wave height (m)
+    return H_s
+
+
+def determine_kukulka_e_length(w_10, w_rise):
+    # Getting environmental parameters
+    tau_wind = determine_tau(w_10, settings.rho_a)  # wind stress at the ocean surface
+    u_water = math.sqrt(tau_wind / settings.rho_w)  # friction velocity of water
+    H_s = determine_wave_height(w_10)  # significant wave height (m)
+    A0 = 1.5 * u_water * settings.vk * H_s  # A0 constant Kukulka et al. (2012)
+    return math.fabs(w_rise) / A0
+
+
+def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str):
+    rho_w = settings.rho_w  # density sea water (kg/m^3)
+    rho_a = settings.rho_a  # density air (kg/m^3)
+    u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w)  # shear velocity
+    H_s = determine_wave_height(w_10)  # significant wave height (m)
+    k = settings.vk  # von Karman constant
     phi = settings.phi
-    z0 = settings.z0
+    z0 = determine_wave_height(w_10)
     MLD = settings.MLD
-    if diffusion_type == 'Rouse':
-        return k * u_s * depth + k_z
     if diffusion_type == 'Kukulka':
-        return 1.5 * k * u_s * H_s * np.ones(depth.shape)
+        profile = 1.5 * k * u_s * H_s * np.ones(depth.shape)
+        profile[depth > H_s] *= (H_s ** 1.5 * np.power(depth[depth > H_s], -1.5))
+        return profile + settings.bulk_diff
     if diffusion_type == 'KPP':
         alpha = (k * u_s) / phi
-        return alpha * (depth + z0) * np.power(1 - depth / MLD, 2)
+        profile = alpha * (depth + z0) * np.power(1 - depth / MLD, 2)
+        profile[depth > settings.MLD] = 0
+        return profile + settings.bulk_diff
 
 
 def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str):
-    rho_w = settings.rho_w # density sea water (kg/m^3)
-    rho_a = settings.rho_a # density air (kg/m^3)
-    u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w) # shear velocity
-    k = settings.vk # von Karman constant
+    rho_w = settings.rho_w  # density sea water (kg/m^3)
+    rho_a = settings.rho_a  # density air (kg/m^3)
+    u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w)  # shear velocity
+    k = settings.vk  # von Karman constant
+    H_s = determine_wave_height(w_10)  # significant wave height (m)
     phi = settings.phi
-    z0 = settings.z0
+    z0 = determine_wave_height(w_10)
     MLD = settings.MLD
-    if diffusion_type == 'Rouse':
-        return k * u_s * np.ones(depth.shape)
     if diffusion_type == 'Kukulka':
-        return np.zeros(depth.shape)
+        profile = -2.25 * k * u_s * H_s * H_s ** 1.5 * np.power(depth, -2.5) * np.ones(depth.shape)
+        profile[depth < H_s] = 0
+        return profile
     if diffusion_type == 'KPP':
-        alpha = (k * u_s) / (phi * MLD**2)
-        return alpha * (MLD - depth) * (MLD - 3*depth - 2 * z0)
-
-
-def find_nearest_index(depth, z_ref):
-    return (np.abs(depth - z_ref)).argmin()
+        alpha = (k * u_s) / (phi * MLD ** 2)
+        profile = alpha * (MLD - depth) * (MLD - 3 * depth - 2 * z0)
+        profile[depth > MLD] = 0
+        return profile

@@ -13,9 +13,9 @@ import utils
 import scipy.optimize
 from datetime import timedelta
 
-def vertical_diffusion_run(k_z, w_10, w_rise, diffusion_type, boundary='Mixed'):
+def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed'):
     # Create the fieldset
-    fieldset = create_fieldset(k_z=k_z, w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary)
+    fieldset = create_fieldset(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary)
     # Create the particle set
     determine_particle_size(w_rise)
     ParcelsRandom.seed(SET.seed)
@@ -25,7 +25,7 @@ def vertical_diffusion_run(k_z, w_10, w_rise, diffusion_type, boundary='Mixed'):
         pclass = JITParticle
     pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[0.5]*SET.p_number, lat=[0.5]*SET.p_number,
                        depth=[SET.p_start_depth]*SET.p_number)
-    output_file = pset.ParticleFile(name=utils.get_parcels_output_name(k_z, w_10, w_rise, diffusion_type, boundary),
+    output_file = pset.ParticleFile(name=utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary),
                                     outputdt=SET.dt_out)
     # Determine the particle behavior
     if boundary is 'Mixed':
@@ -66,11 +66,11 @@ def lagrangian_integral_timescale(w_10):
     return T_L
 
 
-def determine_mixed_layer(k_z, w_10, w_rise, diffusion_type='KPP'):
+def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
     def to_optimize(z_t):
         dK = utils.get_vertical_diffusion_gradient_profile(w_10, z_t, diffusion_type)
         dt = SET.dt_int.seconds
-        K = utils.get_vertical_diffusion_profile(w_10, k_z, z_t + 0.5 * dK * dt, diffusion_type)
+        K = utils.get_vertical_diffusion_profile(w_10, z_t + 0.5 * dK * dt, diffusion_type)
         RHS = dK*dt + np.sqrt(6 * K * dt) + w_rise * dt
         return np.abs(z_t - RHS)
     mixing_depth = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
@@ -92,11 +92,11 @@ def determine_particle_size(w_rise):
     print('The particle size according to Poulain et al. (2019) is {} m'.format(particle_size))
 
 
-def create_fieldset(k_z, w_10, w_rise, diffusion_type, boundary):
+def create_fieldset(w_10, w_rise, diffusion_type, boundary):
     # Creating the lon and lat grids
     lon = np.linspace(0, 1, num=2)
     lat = np.linspace(0, 1, num=2)
-    max_depth = SET.MLD
+    max_depth = SET.max_depth
     depth = np.linspace(0, max_depth, num=1000)
     time = np.array([0])
     Time, Depth, Lon, Lat = np.meshgrid(time, depth, lon, lat)
@@ -106,7 +106,7 @@ def create_fieldset(k_z, w_10, w_rise, diffusion_type, boundary):
     U = Field('U', data=UV, depth=depth, lon=lon, lat=lat)
     V = Field('V', data=UV, depth=depth, lon=lon, lat=lat)
     # Getting the diffusivity fields
-    K_z = Field('K_z', data=utils.get_vertical_diffusion_profile(w_10, k_z, Depth, diffusion_type),
+    K_z = Field('K_z', data=utils.get_vertical_diffusion_profile(w_10, Depth, diffusion_type),
                 depth=depth, lon=lon, lat=lat)
     dK_z = Field('dK_z', data=utils.get_vertical_diffusion_gradient_profile(w_10, Depth, diffusion_type),
                 depth=depth, lon=lon, lat=lat)
@@ -120,7 +120,7 @@ def create_fieldset(k_z, w_10, w_rise, diffusion_type, boundary):
     fieldset.add_constant(name='max_depth', value=max_depth)
     # Define the random mixing depth for the mixing boundary condition
     if boundary is 'Mixed':
-        fieldset.add_constant(name='mix_depth', value=determine_mixed_layer(k_z, w_10, w_rise, diffusion_type))
+        fieldset.add_constant(name='mix_depth', value=determine_mixed_layer(w_10, w_rise, diffusion_type))
     if boundary is 'Reduce_dt':
         fieldset.add_constant(name='dt_max', value=SET.dt_int.seconds)
         fieldset.add_constant(name='dt_min', value=SET.dt_int.seconds / 2 ** 3)

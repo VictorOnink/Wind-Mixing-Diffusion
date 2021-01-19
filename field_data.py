@@ -25,7 +25,7 @@ def standardization_kukulka():
     """
     prefix = 'Kukulka'
     file_name = utils.get_data_output_name(prefix)
-    if not utils._check_file_exist(file_name):
+    if not utils._check_file_exist(file_name + '.pkl'):
         data = np.genfromtxt(SET.data_dir + 'atlantic_prf.dat')
         # Convert wind data from knots to m/s
         data[:, -2] *= 0.514
@@ -60,7 +60,7 @@ def standardization_kooi():
     """
     prefix = 'Kooi'
     file_name = utils.get_data_output_name(prefix)
-    if not utils._check_file_exist(file_name):
+    if not utils._check_file_exist(file_name + '.pkl'):
         data_trawl = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='trawls')
         data_plastic = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='nets')
 
@@ -81,7 +81,7 @@ def standardization_kooi():
         data_plastic['Station'] -= 1
 
         # Creating an array that will contain all the concentrations for each station and depth
-        concentration = pd.DataFrame(columns=station_numbers.values, index=depth_levels).fillna(0)
+        concentration = pd.DataFrame(columns=station_numbers.values, index=depth_levels).fillna(0.0)
 
         # Now, cycling through all the stations to get the concentration as counts per depth level (essentially
         # concentrations)
@@ -96,7 +96,7 @@ def standardization_kooi():
         # Getting the wind_data and depth_levels into the same shape as the concentration array
         wind_data = pd.concat([wind_data]*depth_levels.shape[0], axis=1).transpose().values
         depth_levels = np.array([depth_levels, ]*station_numbers.shape[0]).transpose()
-        MLD = np.array([MLD, ]*depth_levels.shape[0])
+        MLD = np.array([MLD]*depth_levels.shape[0]).reshape(depth_levels.shape)
 
         # Normalising the depth array
         depth_norm = np.divide(depth_levels, MLD)
@@ -123,7 +123,7 @@ def standardization_Pieper():
     """
     prefix = 'Pieper'
     file_name = utils.get_data_output_name(prefix)
-    if not utils._check_file_exist(file_name):
+    if not utils._check_file_exist(file_name + '.pkl'):
         data_bottle = pd.read_excel(SET.data_dir + '2020_PE442_MPs.xlsx')
 
         # Get the station indicators, sample concentrations, sample depths, and sample types
@@ -135,8 +135,8 @@ def standardization_Pieper():
         type_list = np.unique(type)
 
         # Creating a dataframe in which all the concentrations will go
-        concentration = pd.DataFrame(columns=station_numbers, index=type_list).fillna(0)
-        depth_dataframe = pd.DataFrame(columns=station_numbers, index=type_list).fillna(0)
+        concentration = pd.DataFrame(columns=station_numbers, index=type_list).fillna(0.0)
+        depth_dataframe = pd.DataFrame(columns=station_numbers, index=type_list).fillna(0.0)
 
         # Go through all the stations, and get the concentration at each depth, where we subtract the blanks and air
         # contamination counts
@@ -154,17 +154,17 @@ def standardization_Pieper():
                     depth_dataframe[station][sample] = np.mean(depths[(station == station_sample) & (type == sample)].values)
 
         # Normalizing everything by the max concentration
-        concentration = concentration.apply(lambda x: x / x.max(), axis=0).fillna(0)
+        concentration = concentration.apply(lambda x: x / x.max(), axis=0).fillna(0.0)
 
         # The Casino data from the PE442 cruise is corrupted, so unless Erik Zettler is able to share this data I'll
         # keep this blank for now
-        wind_data = pd.DataFrame(columns=station_numbers, index=type_list).fillna(0)
+        wind_data = pd.DataFrame(columns=station_numbers, index=type_list).fillna(0.0)
 
         # Getting the mixing layer depth from the CTD data
         MLD = determine_MLD(prefix=prefix, station_numbers=station_numbers).values
         MLD = np.array([MLD, ]*type_list.shape[0]).reshape(type_list.shape[0], station_numbers.shape[0])
 
-        # Normalising the depth according to
+        # Normalising the depth according to MLD depth
         depth_norm = np.divide(depth_dataframe.values, MLD)
 
         # Saving everything into a dictionary
@@ -180,16 +180,58 @@ def standardization_Zettler():
     Data collected during the PE448 South Atlantic cruise in January 2019. The data has been shared by Erik Zettler and
     is currently not published yet. Samples reflect sampled microplastic concentrations using a multinet, and samples
     using manta trawl data at the ocean surface.
-
-    Note: for the manta-trawl I have an estimate of the filtered volume, but I don't have such estimates for the
-    multi-net at the moment. So, I can compare this with my trawl at the surface, but it's not very clear how similar
-    the filtered volumes are.
     """
     prefix = 'Zettler'
     file_name = utils.get_data_output_name(prefix)
-    if not utils._check_file_exist(file_name):
+    if not utils._check_file_exist(file_name + '.pkl'):
         data_multi = pd.read_excel(SET.data_dir + 'PE448_multinet_data.xlsx')
         data_surf = pd.read_excel(SET.data_dir + 'Sample Log-PE448b-20190121.xlsx', sheet_name='MT')
+
+        # Get the sample depths, counts, and volumes for the multi-net, and then the concentration (counts/volume)
+        depth = data_multi.depth.dropna().reset_index(drop=True)
+        counts_multi = data_multi['#pieces plastic']
+        volume_multi = data_multi['volume m^3 (per flow meter)']
+        concentration_multi = pd.DataFrame(np.divide(counts_multi.values,
+                                                     volume_multi.values)).dropna().reset_index(drop=True)
+
+        # Get the concentration for the surface trawls at the same point as the multi-net trawls
+        counts_surf = data_surf.loc[[4, 13, 17], ['Total # of plastic pieces in tow']]
+        volume_surf = data_surf.loc[[4, 13, 17], ['volume filtered (m^3; net mouth is 15cm high)']]
+        concentration_surf = pd.DataFrame(np.divide(counts_surf.values, volume_surf.values))
+
+        # Get a nice array with three columns corresponding to the three 'super station' sites
+        concentrations = pd.DataFrame(columns=[0, 1, 2], index=[0, 1, 2, 3, 4, 5]).fillna(0.0)
+        depths = pd.DataFrame(columns=[0, 1, 2], index=[0, 1, 2, 3, 4, 5]).fillna(0.0)
+        for station in [0, 1, 2]:
+            for rows in [0, 1, 2, 3, 4, 5]:
+                if rows is 0:
+                    concentrations[station][rows] = concentration_surf[0][station]
+                else:
+                    concentrations[station][rows] = concentration_multi[0][(rows - 1) + station * 5]
+                    depths[station][rows] = depth[(rows - 1) + station * 5]
+
+        # I don't have CTD data at the moment for these stations, so we'll just have an empty array for this for now
+        MLD = pd.DataFrame(columns=[0, 1, 2], index=[0, 1, 2, 3, 4, 5])
+
+        # Normalizing the concentrations and depths
+        depth_norm = np.divide(depths.values, MLD.values)
+        concentrations = concentrations.apply(lambda x: x / x.max(), axis=0).fillna(0.0)
+
+        # Getting the wind data
+        wind_data = pd.DataFrame(casino_wind(device='MultiNet', cruise='PE448'))
+        wind_data = pd.concat([wind_data] * depths.shape[0], axis=1).transpose().values
+
+        # Getting just the concentrations that are greater than 0
+        greater_than = concentrations.values.flatten() > 0
+
+        # Saving everything into a dictionary
+        output_dic = {'concentration': concentrations.values.flatten()[greater_than],
+                      'depth': depths.values.flatten()[greater_than],
+                      'depth_norm': depth_norm.flatten()[greater_than],
+                      'wind_speed': wind_data.flatten()[greater_than]}
+
+        # Pickling the array
+        utils.save_obj(filename=file_name, object=output_dic)
 
 
 
@@ -230,7 +272,7 @@ def determine_MLD(prefix: str, station_numbers=None):
                 MLD[0, station] = depth[np.where(np.abs(temp - temp_10) > dif_ref)[0][0]]
 
     if prefix is 'Pieper':
-        MLD = pd.DataFrame(columns=station_numbers, index=[0]).fillna(0)
+        MLD = pd.DataFrame(columns=station_numbers, index=[0]).fillna(0.0)
         # Check if there is a CTD file for the station in question
         for station in station_numbers:
             file_name = SET.data_dir + 'CTD_PE442/PE442_' + station + 'avg.cnv'
@@ -249,3 +291,18 @@ def determine_MLD(prefix: str, station_numbers=None):
             else:
                 MLD[station] = np.nan
     return MLD
+
+
+def casino_wind(device: str, cruise:str):
+    data = pd.read_excel(SET.data_dir + 'casino_{}.xlsx'.format(cruise))
+
+    # Now, we want the wind data for the points in time when the device in question starts it's deployment
+    wind_data = data.loc[(data['Device name'] == device) &
+                         (data['Action name'] == 'Begin')]['PE_WEATHER_01_weather_trueairspeed'].reset_index(drop=True)
+
+    if cruise is 'PE448':
+        # There is an issue with the casino file. Based on my own recollection and examining a number of data points
+        # that appeared to escape corruption, these corrections should now yield the true wind speed
+        wind_data = np.divide(wind_data.values, [1000, 1, 10000])
+
+    return wind_data
