@@ -60,6 +60,19 @@ def run():
     #                                   boundary=boundary)
     # visualization.boundary_condition_comparison(w_10_list=[5], w_rise_list=[-0.003], close_up=(0, -30),
     #                                             diffusion_type=diffusion, boundary=boundary)
+    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+                                                   wind_sort=True, single_select=2, close_up=(0, -10),
+                                                   diffusion_type='KPP', boundary='Reflect')
+    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+                                                   wind_sort=True, single_select=2, close_up=(0, -10),
+                                                   diffusion_type='KPP', boundary='Reflect_Markov')
+    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+                                                   wind_sort=True, single_select=2, close_up=(0, -10),
+                                                   diffusion_type='Kukulka', boundary='Reflect')
+    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+                                                   wind_sort=True, single_select=2, close_up=(0, -10),
+                                                   diffusion_type='Kukulka', boundary='Reflect_Markov')
+
 
 
 if __name__ == '__main__':

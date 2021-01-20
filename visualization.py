@@ -250,3 +250,87 @@ def plot_field_data_overview(norm_depth=False, wind_sort=False, y_label='Depth (
         ax[-1].legend(line, label, fontsize=legend_size, loc='lower right')
 
     plt.savefig(utils_v.field_data_figure_names(close_up, wind_sort, norm_depth), bbox_inches='tight')
+
+
+def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', output_step=-1, single_select=1,
+                                     norm_depth=False, wind_sort=True, y_label='Depth (m)', close_up=None,
+                                     x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(16, 8), ax_label_size=16,
+                                     legend_size=12, diffusion_type='Kukulka', boundary='Reflect_Markov',alpha=0.3):
+    if norm_depth:
+        if close_up == None:
+            ymax, ymin = 0, -1.5
+        else:
+            ymax, ymin = close_up
+        y_label = 'Depth/MLD'
+    else:
+        if close_up == None:
+            ymax, ymin = 0, -1 * settings.max_depth
+        else:
+            # Allowing for easy close up for a specific part of the depth profile
+            ymax, ymin = close_up
+    ax_range = (1, 0, ymax, ymin)
+
+    # Plotting all data points, with no sorting based on wind conditions
+    if not wind_sort:
+        profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
+                                                      output_step=output_step, diffusion_type=diffusion_type,
+                                                      boundary=boundary)
+        # Get the base figure axis
+        ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
+
+        # Plotting the field data points
+        legend_line, legend_label = utils_v.add_observations(ax, norm_depth=norm_depth, alpha=alpha)
+
+        # Plotting the distribution according to the Kukulka parametrization
+        if diffusion_type is 'Kukulka':
+            for counter in range(len(profile_dict['concentration_list'])):
+                ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
+                        label=utils_v.label_kukulka(selection=selection,
+                                                    parameters=profile_dict['parameter_kukulka'][counter]),
+                        linestyle='-', color=utils.return_color(counter))
+
+        # Plotting the distribution according to the KPP parametrization
+        if diffusion_type is 'KPP':
+            for counter in range(len(profile_dict['concentration_list'])):
+                ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
+                        label=utils_v.label_KPP(parameters=profile_dict['parameter_kukulka'][counter]),
+                        linestyle='-', color=utils.return_color(counter))
+        lines, labels = ax.get_legend_handles_labels()
+
+        # Adding the legend
+        ax.legend(fontsize=legend_size, loc='lower right')
+
+    # Plotting data points, split over multiple plots according to Beaufort wind scale
+    if wind_sort:
+        profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, 'all', single_select,
+                                                      output_step=output_step, diffusion_type=diffusion_type,
+                                                      boundary=boundary)
+        # Titles for the subplots
+        sub_titles = ['(a) Beaufort 1', '(b) Beaufort 2', '(c) Beaufort 3', '(d) Beaufort 4', '(e) Beaufort 5',
+                      '(f) Beaufort 6']
+        # Get the base figure axis
+        plot_num = 6
+        ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(2, 3), plot_num=plot_num)
+        beaufort = utils.beaufort_limits()
+
+        for scale in range(plot_num - 1):
+            line, label = utils_v.add_observations(ax[scale], norm_depth=norm_depth, wind_range=beaufort[scale + 1],
+                                                   alpha=alpha)
+            ax[scale].set_title(sub_titles[scale], fontsize=ax_label_size)
+            for model in range(len(w_rise_list)):
+                _, w_rise = profile_dict['parameter_kukulka'][scale + model * len(w_10_list)]
+                concentration = profile_dict['concentration_list'][scale + model * len(w_10_list)]
+                ax[scale].plot(concentration, profile_dict['depth_bins'],
+                               label=utils_v.label_model_field_comparison(w_rise, diffusion_type, boundary),
+                               linestyle='-', color=utils.return_color(model))
+            lines, labels = ax[scale].get_legend_handles_labels()
+
+        # Adding the legend to the last plot, and hiding the grid
+        ax[-1].legend(lines, labels, fontsize=legend_size, loc='lower right')
+        ax[-1].axis('off')
+
+    # Saving the figure
+    save_name = utils_v.model_field_data_comparison_name(diffusion_type, boundary, close_up=close_up,
+                                                         wind_sort=wind_sort, norm_depth=norm_depth)
+    plt.savefig(save_name, bbox_inches='tight')
+

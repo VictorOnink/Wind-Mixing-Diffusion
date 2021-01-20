@@ -120,6 +120,11 @@ def label_KPP(parameters):
     return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
 
 
+def label_model_field_comparison(w_rise, diffusion_type, boundary):
+    boundary_dict = {'Reflect': 'Markov 0', 'Reflect_Markov': 'Markov 1'}
+    return diffusion_type + ', {}, w_rise = {} m s'.format(boundary_dict[boundary], w_rise) + r'$^{-1}$'
+
+
 def get_axes_range(depth_bins, concentrations):
     output_dict = {'max_depth': np.round(depth_bins.max(), -1), 'min_depth': np.round(depth_bins.min(), -1),
                    'max_count': 0, 'min_count': 0}
@@ -137,6 +142,7 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
         w_rise_list = [w_rise_list[single_select]]
     elif selection == 'w_rise':
         w_10_list = [w_10_list[single_select]]
+    # selection == 'all' will just return all simulations for a particular diffusion_type and boundary
 
     for w_rise in w_rise_list:
         for w_10 in w_10_list:
@@ -203,6 +209,19 @@ def field_data_figure_names(close_up=None, wind_sort=False, norm_depth=False, ou
     if close_up is not None:
         max, min = close_up
         figure_name += 'max_{}_min_{}'.format(max, min)
+    if wind_sort:
+        figure_name += '_wind_sort'
+    if norm_depth:
+        figure_name += '_normalized_depth'
+    return figure_name + output_type
+
+
+def model_field_data_comparison_name(diffusion_type, boundary, close_up=None, wind_sort=False, norm_depth=False,
+                                     output_type='.png'):
+    figure_name = settings.figure_dir + 'model_field_data_{}_{}'.format(diffusion_type, boundary)
+    if close_up is not None:
+        max, min = close_up
+        figure_name += '_max_{}_min_{}'.format(max, min)
     if wind_sort:
         figure_name += '_wind_sort'
     if norm_depth:
