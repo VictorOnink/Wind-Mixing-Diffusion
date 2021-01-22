@@ -29,7 +29,7 @@ def run():
     """
     w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
     w_rise = [-0.03, -0.003, -0.0003]
-    diffusion = 'KPP'  # 'KPP'
+    diffusion = 'Kukulka'  # 'KPP'
     boundary = 'Reflect'  # 'Reflect_Markov'
     pbar = ProgressBar()
     for wind in pbar(w_10):
@@ -55,23 +55,39 @@ def run():
     # visualization.basic_profile_figure(w_10_list=w_10, w_rise_list=w_rise, selection='w_rise',
     #                                    single_select=2, close_up=(0, -20), diffusion_type=diffusion,
     #                                    boundary=boundary)
-    # visualization.timestep_comparison(w_10_list=[10], w_rise_list=[-0.003], selection='k_z',
+    # visualization.timestep_comparison(w_10_list=[9.3], w_rise_list=[-0.003], selection='k_z',
     #                                   close_up=(0, -100), diffusion_type=diffusion, interval=2,
     #                                   boundary=boundary)
     # visualization.boundary_condition_comparison(w_10_list=[5], w_rise_list=[-0.003], close_up=(0, -30),
     #                                             diffusion_type=diffusion, boundary=boundary)
-    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
-                                                   wind_sort=True, single_select=2, close_up=(0, -10),
-                                                   diffusion_type='KPP', boundary='Reflect')
-    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
-                                                   wind_sort=True, single_select=2, close_up=(0, -10),
-                                                   diffusion_type='KPP', boundary='Reflect_Markov')
-    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
-                                                   wind_sort=True, single_select=2, close_up=(0, -10),
-                                                   diffusion_type='Kukulka', boundary='Reflect')
-    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
-                                                   wind_sort=True, single_select=2, close_up=(0, -10),
-                                                   diffusion_type='Kukulka', boundary='Reflect_Markov')
+    boundary = ['Reflect', 'Reflect_Markov', 'all', 'all']
+    diffusion = ['all', 'all', 'Kukulka', 'KPP']
+    # for ind in range(len(diffusion)):
+    #     visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+    #                                                    wind_sort=True, single_select=2, close_up=(0, -10),
+    #                                                    diffusion_type=diffusion[ind], boundary=boundary[ind])
+    #     visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+    #                                                    wind_sort=True, single_select=2, close_up=(0, -1),
+    #                                                    diffusion_type=diffusion[ind], boundary=boundary[ind],
+    #                                                    norm_depth=True)
+    # for beaufort in range(1, 6):
+    #     visualization.plot_model_field_data_comparison(w_10, w_rise, wind_sort=False, close_up=(0, -1),
+    #                                                    diffusion_type='all', boundary='Reflect', single_select=0,
+    #                                                    norm_depth=True, beaufort=beaufort, selection='w_rise')
+    #     visualization.plot_model_field_data_comparison(w_10, w_rise, wind_sort=False, close_up=(0, -10),
+    #                                                    diffusion_type='all', boundary='Reflect', single_select=0,
+    #                                                    norm_depth=False, beaufort=beaufort, selection='w_rise')
+    #     visualization.plot_model_field_data_comparison(w_10, w_rise, wind_sort=False, close_up=(0, -10),
+    #                                                    diffusion_type='KPP', boundary='all', single_select=0,
+    #                                                    norm_depth=False, beaufort=beaufort, selection='w_rise')
+    #     visualization.plot_model_field_data_comparison(w_10, w_rise, wind_sort=False, close_up=(0, -10),
+    #                                                    diffusion_type='Kukulka', boundary='all', single_select=0,
+    #                                                    norm_depth=False, beaufort=beaufort, selection='w_rise')
+
+    for beaufort in range(1, 6):
+        visualization.mld_depth_influence(w_rise_list=w_rise, MLD_list=[15.0, 20.0, 30.0], beaufort=beaufort)
+        visualization.mld_depth_influence(w_rise_list=w_rise, MLD_list=[15.0, 20.0, 30.0], beaufort=beaufort,
+                                          diffusion_type='Kukulka')
 
 
 

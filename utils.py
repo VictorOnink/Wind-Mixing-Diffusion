@@ -5,12 +5,14 @@ import os
 import numpy as np
 
 
-def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary):
-    return settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}.nc'.format(w_10, w_rise)
+def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD):
+    return settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}_MLD_{}.nc'.format(w_10, w_rise,
+                                                                                                        mld)
 
 
-def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary):
-    return settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}'.format(w_10, w_rise)
+def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD):
+    return settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
+                                                                                                        mld)
 
 
 def get_data_output_name(prefix: str):
@@ -78,7 +80,7 @@ def determine_kukulka_e_length(w_10, w_rise):
     return math.fabs(w_rise) / A0
 
 
-def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str):
+def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD):
     rho_w = settings.rho_w  # density sea water (kg/m^3)
     rho_a = settings.rho_a  # density air (kg/m^3)
     u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w)  # shear velocity
@@ -86,19 +88,18 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str):
     k = settings.vk  # von Karman constant
     phi = settings.phi
     z0 = determine_wave_height(w_10)
-    MLD = settings.MLD
+
     if diffusion_type == 'Kukulka':
         profile = 1.5 * k * u_s * H_s * np.ones(depth.shape)
         profile[depth > H_s] *= (H_s ** 1.5 * np.power(depth[depth > H_s], -1.5))
-        return profile + settings.bulk_diff
-    if diffusion_type == 'KPP':
+    elif diffusion_type == 'KPP':
         alpha = (k * u_s) / phi
-        profile = alpha * (depth + z0) * np.power(1 - depth / MLD, 2)
-        profile[depth > settings.MLD] = 0
-        return profile + settings.bulk_diff
+        profile = alpha * (depth + z0) * np.power(1 - depth / mld, 2)
+        profile[depth > mld] = 0
+    return profile + settings.bulk_diff
 
 
-def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str):
+def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD):
     rho_w = settings.rho_w  # density sea water (kg/m^3)
     rho_a = settings.rho_a  # density air (kg/m^3)
     u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w)  # shear velocity
@@ -106,13 +107,11 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
     H_s = determine_wave_height(w_10)  # significant wave height (m)
     phi = settings.phi
     z0 = determine_wave_height(w_10)
-    MLD = settings.MLD
     if diffusion_type == 'Kukulka':
         profile = -2.25 * k * u_s * H_s * H_s ** 1.5 * np.power(depth, -2.5) * np.ones(depth.shape)
         profile[depth < H_s] = 0
-        return profile
-    if diffusion_type == 'KPP':
-        alpha = (k * u_s) / (phi * MLD ** 2)
-        profile = alpha * (MLD - depth) * (MLD - 3 * depth - 2 * z0)
-        profile[depth > MLD] = 0
-        return profile
+    elif diffusion_type == 'KPP':
+        alpha = (k * u_s) / (phi * mld ** 2)
+        profile = alpha * (mld - depth) * (mld - 3 * depth - 2 * z0)
+        profile[depth > mld] = 0
+    return profile

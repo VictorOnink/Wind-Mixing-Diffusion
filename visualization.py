@@ -2,6 +2,7 @@ import settings
 import matplotlib.pyplot as plt
 import utils
 import utils_visualization as utils_v
+import numpy as np
 
 
 def basic_profile_figure(w_10_list, w_rise_list, selection='w_10', close_up=None,
@@ -38,7 +39,7 @@ def basic_profile_figure(w_10_list, w_rise_list, selection='w_10', close_up=None
     if diffusion_type is 'KPP':
         for counter in range(len(profile_dict['concentration_list'])):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                    label=utils_v.label_KPP(parameters=profile_dict['parameter_kukulka'][counter]),
+                    label=utils_v.label_KPP(parameters=profile_dict['parameter_kukulka'][counter], selection=selection),
                     linestyle='-', color=utils.return_color(counter))
     lines, labels = ax.get_legend_handles_labels()
 
@@ -255,46 +256,65 @@ def plot_field_data_overview(norm_depth=False, wind_sort=False, y_label='Depth (
 def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', output_step=-1, single_select=1,
                                      norm_depth=False, wind_sort=True, y_label='Depth (m)', close_up=None,
                                      x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(16, 8), ax_label_size=16,
-                                     legend_size=12, diffusion_type='Kukulka', boundary='Reflect_Markov',alpha=0.3):
+                                     legend_size=12, diffusion_type='Kukulka', boundary='Reflect_Markov', alpha=0.3,
+                                     beaufort=4):
     if norm_depth:
         if close_up == None:
             ymax, ymin = 0, -1.5
         else:
             ymax, ymin = close_up
         y_label = 'Depth/MLD'
+        correction = settings.MLD
     else:
         if close_up == None:
             ymax, ymin = 0, -1 * settings.max_depth
         else:
             # Allowing for easy close up for a specific part of the depth profile
             ymax, ymin = close_up
+        correction = 1.0
     ax_range = (1, 0, ymax, ymin)
 
-    # Plotting all data points, with no sorting based on wind conditions
+    # Selecting which model data we want to plot based on the diffusion type
+    kukulka, kpp = utils_v.boolean_diff_type(diffusion_type)
+    # Selecting which model data we want to plot based on the diffusion scheme
+    if boundary is 'Reflect' or 'Reflect_Markov':
+        boundary_list = [boundary]
+    if boundary is 'all':
+        boundary_list = ['Reflect', 'Reflect_Markov']
+
+    # Plotting data points for just one set of wind conditions
     if not wind_sort:
-        profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
-                                                      output_step=output_step, diffusion_type=diffusion_type,
-                                                      boundary=boundary)
+        wind_range = utils.beaufort_limits()[beaufort]
+
         # Get the base figure axis
         ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
 
         # Plotting the field data points
-        legend_line, legend_label = utils_v.add_observations(ax, norm_depth=norm_depth, alpha=alpha)
+        _, _ = utils_v.add_observations(ax, norm_depth=norm_depth, alpha=alpha, wind_range=wind_range)
 
-        # Plotting the distribution according to the Kukulka parametrization
-        if diffusion_type is 'Kukulka':
-            for counter in range(len(profile_dict['concentration_list'])):
-                ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                        label=utils_v.label_kukulka(selection=selection,
+        mean_wind = np.mean(utils.beaufort_limits()[beaufort])
+        for boundary in boundary_list:
+            # Plotting the distribution according to the Kukulka parametrization
+            if kukulka:
+                profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
+                                                              output_step=output_step, diffusion_type='Kukulka',
+                                                              boundary=boundary)
+                for counter in range(len(profile_dict['concentration_list'])):
+                    ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
+                            label=utils_v.label_kukulka(selection=selection,
+                                                        parameters=profile_dict['parameter_kukulka'][counter]),
+                            linestyle='-', color=utils.return_color(counter))
+
+            # Plotting the distribution according to the KPP parametrization
+            if kpp:
+                profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
+                                                              output_step=output_step, diffusion_type='KPP',
+                                                              boundary=boundary)
+                for counter in range(len(profile_dict['concentration_list'])):
+                    ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
+                            label=utils_v.label_KPP(selection=selection,
                                                     parameters=profile_dict['parameter_kukulka'][counter]),
-                        linestyle='-', color=utils.return_color(counter))
-
-        # Plotting the distribution according to the KPP parametrization
-        if diffusion_type is 'KPP':
-            for counter in range(len(profile_dict['concentration_list'])):
-                ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                        label=utils_v.label_KPP(parameters=profile_dict['parameter_kukulka'][counter]),
-                        linestyle='-', color=utils.return_color(counter))
+                            linestyle='--', color=utils.return_color(counter))
         lines, labels = ax.get_legend_handles_labels()
 
         # Adding the legend
@@ -302,27 +322,43 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', o
 
     # Plotting data points, split over multiple plots according to Beaufort wind scale
     if wind_sort:
-        profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, 'all', single_select,
-                                                      output_step=output_step, diffusion_type=diffusion_type,
-                                                      boundary=boundary)
         # Titles for the subplots
         sub_titles = ['(a) Beaufort 1', '(b) Beaufort 2', '(c) Beaufort 3', '(d) Beaufort 4', '(e) Beaufort 5',
                       '(f) Beaufort 6']
         # Get the base figure axis
         plot_num = 6
         ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(2, 3), plot_num=plot_num)
-        beaufort = utils.beaufort_limits()
 
+        beaufort = utils.beaufort_limits()
         for scale in range(plot_num - 1):
-            line, label = utils_v.add_observations(ax[scale], norm_depth=norm_depth, wind_range=beaufort[scale + 1],
-                                                   alpha=alpha)
+            _, _ = utils_v.add_observations(ax[scale], norm_depth=norm_depth, wind_range=beaufort[scale + 1],
+                                            alpha=alpha)
             ax[scale].set_title(sub_titles[scale], fontsize=ax_label_size)
-            for model in range(len(w_rise_list)):
-                _, w_rise = profile_dict['parameter_kukulka'][scale + model * len(w_10_list)]
-                concentration = profile_dict['concentration_list'][scale + model * len(w_10_list)]
-                ax[scale].plot(concentration, profile_dict['depth_bins'],
-                               label=utils_v.label_model_field_comparison(w_rise, diffusion_type, boundary),
-                               linestyle='-', color=utils.return_color(model))
+            for boundary in boundary_list:
+                if kukulka:
+                    profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, 'all', single_select,
+                                                                  output_step=output_step, diffusion_type='Kukulka',
+                                                                  boundary=boundary)
+                    for model in range(len(w_rise_list)):
+                        _, w_rise = profile_dict['parameter_kukulka'][scale + model * len(w_10_list)]
+                        concentration = profile_dict['concentration_list'][scale + model * len(w_10_list)]
+                        ax[scale].plot(concentration, profile_dict['depth_bins'] / correction,
+                                       label=utils_v.label_model_field_comparison(w_rise, 'Kukulka', boundary),
+                                       linestyle=utils_v.determine_linestyle(boundary, boundary_list, kpp, kukulka,
+                                                                             'Kukulka'),
+                                       color=utils.return_color(model))
+                if kpp:
+                    profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, 'all', single_select,
+                                                                  output_step=output_step, diffusion_type='KPP',
+                                                                  boundary=boundary)
+                    for model in range(len(w_rise_list)):
+                        _, w_rise = profile_dict['parameter_kukulka'][scale + model * len(w_10_list)]
+                        concentration = profile_dict['concentration_list'][scale + model * len(w_10_list)]
+                        ax[scale].plot(concentration, profile_dict['depth_bins'] / correction,
+                                       label=utils_v.label_model_field_comparison(w_rise, 'KPP', boundary),
+                                       linestyle=utils_v.determine_linestyle(boundary, boundary_list, kpp, kukulka,
+                                                                             'KPP'),
+                                       color=utils.return_color(model))
             lines, labels = ax[scale].get_legend_handles_labels()
 
         # Adding the legend to the last plot, and hiding the grid
@@ -331,6 +367,61 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', o
 
     # Saving the figure
     save_name = utils_v.model_field_data_comparison_name(diffusion_type, boundary, close_up=close_up,
-                                                         wind_sort=wind_sort, norm_depth=norm_depth)
+                                                         wind_sort=wind_sort, norm_depth=norm_depth, beaufort=beaufort)
     plt.savefig(save_name, bbox_inches='tight')
 
+
+def mld_depth_influence(w_rise_list, MLD_list, selection='w_rise', output_step=-1, single_select=0,
+                        y_label='Depth/MLD', close_up=None, beaufort=5,
+                        x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(16, 8), ax_label_size=16,
+                        legend_size=12, diffusion_type='KPP', boundary='Reflect', alpha=0.3):
+    if close_up == None:
+        ymax, ymin = 0, -1.5
+    else:
+        ymax, ymin = close_up
+    correction = settings.MLD
+    ax_range = (1, 0, ymax, ymin)
+
+    # Selecting which model data we want to plot based on the diffusion type
+    kukulka, kpp = utils_v.boolean_diff_type(diffusion_type)
+
+    # Get the base figure axis
+    ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
+
+    # Plotting the field data points
+    wind_range = utils.beaufort_limits()[beaufort]
+    _, _ = utils_v.add_observations(ax, norm_depth=True, alpha=alpha, wind_range=wind_range)
+
+    line_style = ['-', '--', '-.']
+    for count_mld, mld in enumerate(MLD_list):
+        # Plotting the distribution according to the Kukulka parametrization
+        if kukulka:
+            profile_dict = utils_v.get_concentration_list([np.mean(wind_range)], w_rise_list, selection,
+                                                          single_select,
+                                                          output_step=output_step, diffusion_type='Kukulka',
+                                                          boundary=boundary, mld=mld)
+            for counter in range(len(profile_dict['concentration_list'])):
+                ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
+                        label=utils_v.label_MLD_Comparison(parameters=profile_dict['parameter_kukulka'][counter],
+                                                           mld=mld, diffusion_type='Kukulka'),
+                        linestyle=line_style[counter], color=utils.return_color(count_mld))
+
+        # Plotting the distribution according to the KPP parametrization
+        if kpp:
+            profile_dict = utils_v.get_concentration_list([np.mean(wind_range)], w_rise_list, selection,
+                                                          single_select,
+                                                          output_step=output_step, diffusion_type='KPP',
+                                                          boundary=boundary, mld=mld)
+            for counter in range(len(profile_dict['concentration_list'])):
+                ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
+                        label=utils_v.label_MLD_Comparison(parameters=profile_dict['parameter_kukulka'][counter],
+                                                           mld=mld, diffusion_type='KPP'),
+                        linestyle=line_style[counter], color=utils.return_color(count_mld))
+    lines, labels = ax.get_legend_handles_labels()
+    # Adding the legend
+    ax.legend(fontsize=legend_size, loc='lower right')
+
+    ax.set_title('Beaufort {}'.format(beaufort), fontsize=ax_label_size)
+
+    plt.savefig(utils_v.mld_comparison_name(diffusion_type, boundary, beaufort=beaufort, close_up=close_up),
+                bbox_inches='tight')

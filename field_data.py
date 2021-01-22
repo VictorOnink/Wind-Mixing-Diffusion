@@ -156,9 +156,10 @@ def standardization_Pieper():
         # Normalizing everything by the max concentration
         concentration = concentration.apply(lambda x: x / x.max(), axis=0).fillna(0.0)
 
-        # The Casino data from the PE442 cruise is corrupted, so unless Erik Zettler is able to share this data I'll
-        # keep this blank for now
-        wind_data = pd.DataFrame(columns=station_numbers, index=type_list).fillna(0.0)
+        # Wind speed from the PE442 Casino file
+        wind_data = pd.DataFrame(casino_wind(device='CTD with samples', cruise='PE442'))
+        wind_data = pd.concat([wind_data] * type_list.shape[0], axis=1).transpose().values
+
 
         # Getting the mixing layer depth from the CTD data
         MLD = determine_MLD(prefix=prefix, station_numbers=station_numbers).values
@@ -169,7 +170,7 @@ def standardization_Pieper():
 
         # Saving everything into a dictionary
         output_dic = {'concentration': concentration.values.flatten(), 'depth': depth_dataframe.values.flatten(),
-                      'depth_norm': depth_norm.flatten(), 'wind_speed': wind_data.values.flatten()}
+                      'depth_norm': depth_norm.flatten(), 'wind_speed': wind_data.flatten()}
 
         # Pickling the array
         utils.save_obj(filename=file_name, object=output_dic)
@@ -294,7 +295,10 @@ def determine_MLD(prefix: str, station_numbers=None):
 
 
 def casino_wind(device: str, cruise:str):
-    data = pd.read_excel(SET.data_dir + 'casino_{}.xlsx'.format(cruise))
+    if cruise is 'PE442':
+        data = pd.read_csv(SET.data_dir + 'casino_{}.csv'.format(cruise), delimiter='\t')
+    elif cruise is 'PE448':
+        data = pd.read_excel(SET.data_dir + 'casino_{}.xlsx'.format(cruise))
 
     # Now, we want the wind data for the points in time when the device in question starts it's deployment
     wind_data = data.loc[(data['Device name'] == device) &
@@ -303,6 +307,9 @@ def casino_wind(device: str, cruise:str):
     if cruise is 'PE448':
         # There is an issue with the casino file. Based on my own recollection and examining a number of data points
         # that appeared to escape corruption, these corrections should now yield the true wind speed
-        wind_data = np.divide(wind_data.values, [1000, 1, 10000])
-
-    return wind_data
+        wind_data = pd.DataFrame(np.divide(wind_data.values, [1000, 1, 10000]))
+    # For PE442, there was one occasion where the CTD malfunctioned, so we have three measurements that actually
+    # correspond to just one station, namely points 4 and 5 are actually for station 5
+    if cruise is 'PE442':
+        wind_data = wind_data.drop(labels=[4, 5])
+    return wind_data.values

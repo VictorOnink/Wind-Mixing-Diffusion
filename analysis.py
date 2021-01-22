@@ -7,10 +7,10 @@ import math
 
 
 def depth_concentration(w_10, w_rise, diffusion_type, boundary):
-    dataset = Dataset(utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary))
+    dataset = Dataset(utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD))
     time = dataset.variables['time'][0, :]
     # Bins, at 0.5 meter intervals
-    depth_bins = np.arange(0, settings.max_depth, 0.1)
+    depth_bins = np.arange(0, settings.max_depth, 0.2)
     # Saving the depth profiles
     output_dir = {}
     for t in range(len(time)):

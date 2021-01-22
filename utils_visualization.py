@@ -2,12 +2,11 @@ import settings
 import numpy as np
 import matplotlib.pyplot as plt
 import utils
-import math
 
 
 def label_boundary(w_10, diffusion_type, boundary):
     if diffusion_type == 'Kukulka':
-        return 'Kukulka et al. (2012),  w_10 = {}'.format(w_10) + ' m s$^{-1}$, ' + boundary
+        return 'Kukulka & Poulain,  w_10 = {}'.format(w_10) + ' m s$^{-1}$, ' + boundary
     elif diffusion_type == 'KPP':
         return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD) + ', ' + boundary
 
@@ -32,7 +31,7 @@ def label_time_step(steps, interval):
 
 def label_diffusivity_profile(w_10, diffusion_type):
     if diffusion_type == 'Kukulka':
-        return 'Kukulka et al. (2012) & Poulain $K_z$,  w_10 = {}'.format(w_10) + ' m s$^{-1}$'
+        return 'Kukulka & Poulain $K_z$,  w_10 = {}'.format(w_10) + ' m s$^{-1}$'
     elif diffusion_type == 'KPP':
         return r'KPP $K_z$, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
 
@@ -110,14 +109,27 @@ def label_profile(selection, parameters):
 def label_kukulka(selection, parameters):
     w_10, w_rise = parameters
     if selection is 'w_rise':
-        return 'Kukulka et al. (2012) & Poulain, w_rise = {} m s'.format(w_rise) + r'$^{-1}$'
+        return 'Kukulka & Poulain, w_rise = {} m s'.format(w_rise) + r'$^{-1}$'
     elif selection is 'w_10':
-        return 'Kukulka et al. (2012) & Poulain, w_10 = {} m s'.format(w_10) + r'$^{-1}$'
+        return 'Kukulka & Poulain, w_10 = {} m s'.format(w_10) + r'$^{-1}$'
 
 
-def label_KPP(parameters):
+def label_KPP(selection, parameters, mld=settings.MLD):
     w_10, w_rise = parameters
-    return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
+    if selection is 'w_rise':
+        return r'KPP, w_rise = {}'.format(w_rise) + 'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
+    elif selection is 'w_10':
+        return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
+
+
+def label_MLD_Comparison(parameters, diffusion_type, mld=settings.MLD):
+    w_10, w_rise = parameters
+    if diffusion_type == 'KPP':
+        return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$,' + 'w_rise = {}'.format(w_rise) + \
+               'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
+    elif diffusion_type == 'Kukulka':
+        return r'Kukulka & Poulain, w_10 = {}'.format(w_10) + 'm s$^{-1}$,' + 'w_rise = {}'.format(w_rise) + \
+               'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
 
 
 def label_model_field_comparison(w_rise, diffusion_type, boundary):
@@ -134,8 +146,34 @@ def get_axes_range(depth_bins, concentrations):
     return output_dict
 
 
+def determine_linestyle(boundary, boundary_list, kpp, kukulka, diffusion_type):
+    if len(boundary_list) is 1:
+        if kukulka and kpp:
+            if diffusion_type is 'Kukulka':
+                return '-'
+            elif diffusion_type is 'KPP':
+                return '--'
+        elif kukulka:
+            return '-'
+        elif kpp:
+            return '--'
+    else:
+        line_style = {'Reflect': '-', 'Reflect_Markov': '--'}
+        return line_style[boundary]
+
+
+def boolean_diff_type(diffusion_type):
+    if diffusion_type is 'Kukulka':
+        kukulka, kpp = True, False
+    elif diffusion_type is 'KPP':
+        kukulka, kpp = False, True
+    elif diffusion_type is 'all':
+        kukulka, kpp = True, True
+    return kukulka, kpp
+
+
 def get_concentration_list(w_10_list, w_rise_list, selection, single_select, diffusion_type, output_step=-1,
-                           all_timesteps=False, boundary='Mixed'):
+                           all_timesteps=False, boundary='Mixed', mld=settings.MLD):
     output_dic = {'concentration_list': [], 'parameter_concentrations': [],
                   'parameter_kukulka': []}
     if selection == 'w_10':
@@ -148,7 +186,7 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
         for w_10 in w_10_list:
             # Loading the dictionary containing the concentrations
             input_dir = utils.load_obj(
-                utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary))
+                utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=mld))
             # Selecting the timeslice of interest
             if output_step == -1:
                 concentration = [input_dir['last_time_slice']]
@@ -217,13 +255,26 @@ def field_data_figure_names(close_up=None, wind_sort=False, norm_depth=False, ou
 
 
 def model_field_data_comparison_name(diffusion_type, boundary, close_up=None, wind_sort=False, norm_depth=False,
-                                     output_type='.png'):
-    figure_name = settings.figure_dir + 'model_field_data_{}_{}'.format(diffusion_type, boundary)
+                                     output_type='.png', beaufort=1):
+    diff_dict = {'Kukulka': 'Kukulka', 'KPP': 'KPP', 'all': 'Kukulka_KPP'}
+    figure_name = settings.figure_dir + 'model_field_data_{}_{}'.format(diff_dict[diffusion_type], boundary)
     if close_up is not None:
         max, min = close_up
         figure_name += '_max_{}_min_{}'.format(max, min)
     if wind_sort:
         figure_name += '_wind_sort'
+    elif not wind_sort:
+        figure_name += '_Bft{}_'.format(beaufort)
     if norm_depth:
         figure_name += '_normalized_depth'
+    return figure_name + output_type
+
+
+def mld_comparison_name(diffusion_type, boundary, beaufort, close_up=None, output_type='.png'):
+    diff_dict = {'Kukulka': 'Kukulka', 'KPP': 'KPP', 'all': 'Kukulka_KPP'}
+    figure_name = settings.figure_dir + 'norm_comparison_{}_{}_Bft{}'.format(diff_dict[diffusion_type], boundary,
+                                                                             beaufort)
+    if close_up is not None:
+        max, min = close_up
+        figure_name += '_max_{}_min_{}'.format(max, min)
     return figure_name + output_type
