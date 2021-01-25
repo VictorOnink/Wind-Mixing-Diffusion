@@ -125,82 +125,54 @@ def timestep_comparison(w_10_list, w_rise_list, selection='w_10', close_up=None,
                 bbox_inches='tight', dpi=600)
 
 
-def boundary_condition_comparison(w_10_list, w_rise_list, selection='w_10', close_up=None,
+def boundary_condition_comparison(w_rise_list, selection='w_10', close_up=None, output_step=-1,
                                   y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
-                                  ax_label_size=16, legend_size=12, kukulka=True, model=True, single_select=0,
-                                  diffusion_type='KPP', interval=1, boundary='Mixed', diffusion_curve=True):
-    # Load the relevant data for the figure
-    profile_dict_mix = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
-                                                      diffusion_type, boundary='Mixed')
-    profile_dict_zero = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
-                                                       diffusion_type, boundary='Zero_Ceiling')
-    profile_dict_reflect = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
-                                                          diffusion_type, boundary='Reflect')
-    profile_dict_reduce = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
-                                                         diffusion_type, boundary='Reduce_dt')
-    profile_dict_markov1 = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
-                                                          diffusion_type, boundary='Reflect_Markov')
-
-    # Preparing for the actual plotting
-    range_dict = utils_v.get_axes_range(profile_dict_mix['depth_bins'], profile_dict_mix['concentration_list'])
-    xmax, xmin = range_dict['max_count'], range_dict['min_count']
+                                  ax_label_size=16, legend_size=12, single_select=0,
+                                  diffusion_type='KPP', interval=1, alpha=0.3):
     if close_up == None:
-        ymax, ymin = range_dict['max_depth'], range_dict['min_depth']
+        ymax, ymin = 0, -1 * settings.MLD
     else:
         # Allowing for easy close up for a specific part of the depth profile
         ymax, ymin = close_up
-    ax_range = (xmax, xmin, ymax, ymin)
+    ax_range = (1, 0, ymax, ymin)
 
-    # Creating the axis
+    # Selecting which model data we want to plot based on the diffusion type
+    kukulka, kpp = utils_v.boolean_diff_type(diffusion_type)
+    # Selecting which model data we want to plot based on the diffusion scheme
+    boundary_list = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
+
     ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
+    line_style = ['-', '-', '-', '--', '--', '--']
 
-    # First the mixed boundary layer
-    for counter in range(len(profile_dict_mix['concentration_list'])):
-        _, w_10, _ = profile_dict_mix['parameter_concentrations'][counter]
-        ax.plot(profile_dict_mix['concentration_list'][counter], profile_dict_mix['depth_bins'],
-                label=utils_v.label_boundary(w_10, diffusion_type, 'Random Mixed Layer'),
-                color=utils.return_color(0))
+    mean_wind = np.mean(utils.beaufort_limits()[4])
+    _, _ = utils_v.add_observations(ax, norm_depth=True, alpha=alpha, wind_range=utils.beaufort_limits()[4])
 
-    # Next the zero ceiling boundary condition
-    for counter in range(len(profile_dict_zero['concentration_list'])):
-        _, w_10, _ = profile_dict_mix['parameter_concentrations'][counter]
-        ax.plot(profile_dict_zero['concentration_list'][counter], profile_dict_zero['depth_bins'],
-                label=utils_v.label_boundary(w_10, diffusion_type, 'Zero Ceiling'),
-                color=utils.return_color(1))
+    for count, boundary in enumerate(boundary_list):
+        # Plotting the distribution according to the Kukulka parametrization
+        if kukulka:
+            profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
+                                                          output_step=output_step, diffusion_type='Kukulka',
+                                                          boundary=boundary)
+            for counter in range(len(profile_dict['concentration_list'])):
+                ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
+                        label=utils_v.label_boundary(w_10=mean_wind, diffusion_type='KPP', boundary=boundary),
+                        linestyle=line_style[count], color=utils.return_color(count % 3))
 
-    # Then, the reflecting boundary condition
-    for counter in range(len(profile_dict_reflect['concentration_list'])):
-        _, w_10, _ = profile_dict_reflect['parameter_concentrations'][counter]
-        ax.plot(profile_dict_reflect['concentration_list'][counter], profile_dict_reflect['depth_bins'],
-                label=utils_v.label_boundary(w_10, diffusion_type, 'Reflect'),
-                color=utils.return_color(2))
+        # Plotting the distribution according to the KPP parametrization
+        if kpp:
+            profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
+                                                          output_step=output_step, diffusion_type='KPP',
+                                                          boundary=boundary)
+            for counter in range(len(profile_dict['concentration_list'])):
+                ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
+                        label=utils_v.label_boundary(w_10=mean_wind, diffusion_type='KPP', boundary=boundary),
+                        linestyle=line_style[count], color=utils.return_color(count % 3))
+
     lines, labels = ax.get_legend_handles_labels()
-
-    # Then, the reducing dt boundary condition
-    for counter in range(len(profile_dict_reduce['concentration_list'])):
-        _, w_10, _ = profile_dict_reduce['parameter_concentrations'][counter]
-        ax.plot(profile_dict_reduce['concentration_list'][counter], profile_dict_reduce['depth_bins'],
-                label=utils_v.label_boundary(w_10, diffusion_type, 'Reduce dt'),
-                color=utils.return_color(3))
-
-    # Then, the Markov 1 reflecting boundary condition
-    for counter in range(len(profile_dict_markov1['concentration_list'])):
-        _, w_10, _ = profile_dict_markov1['parameter_concentrations'][counter]
-        ax.plot(profile_dict_markov1['concentration_list'][counter], profile_dict_markov1['depth_bins'],
-                label=utils_v.label_boundary(w_10, diffusion_type, 'Markov-1, Reflect'),
-                color=utils.return_color(4))
-    lines, labels = ax.get_legend_handles_labels()
-
-    # Plotting the diffusion curve
-    if diffusion_curve:
-        w_10, w_rise = profile_dict_mix['parameter_concentrations'][0]
-        ax2 = utils_v.diffusion_curve_axis(ax, ax_label_size, w_10, w_rise, profile_dict_mix, diffusion_type, 'black')
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        lines += lines2
-        labels += labels2
-
     # Adding the legend
     ax.legend(lines, labels, fontsize=legend_size, loc='lower right')
+    ax.set_title('Beaufort 4 - Boundary Conditions', fontsize=ax_label_size)
+
     # Saving the figure
     plt.savefig(utils_v.saving_filename_boundary(settings.figure_dir, selection, close_up, diffusion_type),
                 bbox_inches='tight', dpi=600)

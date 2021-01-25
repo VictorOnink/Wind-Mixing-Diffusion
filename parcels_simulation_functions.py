@@ -89,9 +89,9 @@ def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
     the boundary condition approach of Ross & Sharples (2004)
     """
     def to_optimize(z_t):
-        dK = utils.get_vertical_diffusion_gradient_profile(w_10, z_t, diffusion_type)
+        dK = utils.get_vertical_diffusion_gradient_profile(w_10, np.array([z_t]), diffusion_type)
         dt = SET.dt_int.seconds
-        K = utils.get_vertical_diffusion_profile(w_10, z_t + 0.5 * dK * dt, diffusion_type)
+        K = utils.get_vertical_diffusion_profile(w_10, np.array([z_t + 0.5 * dK * dt]), diffusion_type)
         RHS = dK*dt + np.sqrt(6 * K * dt) + w_rise * dt
         return np.abs(z_t - RHS)
     mixing_depth = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
@@ -156,7 +156,7 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary):
         fieldset.add_constant(name='mix_depth', value=determine_mixed_layer(w_10, w_rise, diffusion_type))
     if 'Reduce_dt' in boundary:
         fieldset.add_constant(name='dt_max', value=SET.dt_int.seconds)
-        fieldset.add_constant(name='dt_min', value=SET.dt_int.seconds / 2 ** 3)
+        fieldset.add_constant(name='dt_min', value=SET.dt_int.seconds / 2 ** 2)
     if 'Markov' in boundary:
         fieldset.add_constant(name='T_L', value=lagrangian_integral_timescale(w_10))
 
@@ -319,13 +319,15 @@ def markov_1_reduce_dt(particle, fieldset, time):
     particle.w_prime += dw_prime
 
     # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
-    particle.depth += (particle.w_prime + fieldset.wrise) * particle.dt
+    potential = particle.depth + (particle.w_prime + fieldset.wrise) * particle.dt
 
-    if particle.depth > 0 and particle.dt < fieldset.dt_max:
-        particle.update_next_dt(particle.dt * 2)
-    elif particle.depth <= 0:
+    if potential > 0:
+        particle.depth = potential
+        if particle.dt < fieldset.dt_max:
+            particle.update_next_dt(particle.dt * 2)
+    else:
         particle.dt /= 2
         if particle.dt < fieldset.dt_min:
-            particle.depth = math.fabs(particle.depth)
+            particle.depth = -1 * potential
         else:
             return OperationCode.Repeat

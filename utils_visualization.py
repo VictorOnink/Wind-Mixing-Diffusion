@@ -5,10 +5,14 @@ import utils
 
 
 def label_boundary(w_10, diffusion_type, boundary):
+    boundary_dict = {'Mixed':'Markov 0 Mixed', 'Reflect':'Markov 0 Reflect', 'Reduce_dt': 'Markov 0 Reduce dt',
+                     'Mixed_Markov': 'Markov 1 Mixed', 'Reflect_Markov':'Markov 1 Reflect',
+                     'Reduce_dt_Markov':'Markov 1 Reduce dt'}
     if diffusion_type == 'Kukulka':
-        return 'Kukulka & Poulain,  w_10 = {}'.format(w_10) + ' m s$^{-1}$, ' + boundary
+        return 'Kukulka & Poulain,  w_10 = {}'.format(w_10) + ' m s$^{-1}$, ' + boundary_dict[boundary]
     elif diffusion_type == 'KPP':
-        return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD) + ', ' + boundary
+        return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD) + ', ' \
+               + boundary_dict[boundary]
 
 
 def diffusion_curve_axis(ax, ax_label_size, w_10, w_rise, profile_dict, diffusion_type, color):
