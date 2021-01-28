@@ -22,3 +22,7 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary):
     output_dir['last_time_slice'] = t
     utils.save_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary),
                    object=output_dir)
+
+
+def correlation_depth_concentration():
+    pass

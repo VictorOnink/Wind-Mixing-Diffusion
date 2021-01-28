@@ -5,17 +5,17 @@ import utils
 
 
 def label_boundary(w_10, diffusion_type, boundary):
-    boundary_dict = {'Mixed':'Markov 0 Mixed', 'Reflect':'Markov 0 Reflect', 'Reduce_dt': 'Markov 0 Reduce dt',
-                     'Mixed_Markov': 'Markov 1 Mixed', 'Reflect_Markov':'Markov 1 Reflect',
-                     'Reduce_dt_Markov':'Markov 1 Reduce dt'}
+    boundary_dict = {'Mixed': 'M-0 Mixed', 'Reflect': 'M-0 Reflect', 'Reduce_dt': 'M-0 Reduce dt',
+                     'Mixed_Markov': 'M-1 Mixed', 'Reflect_Markov':'M-1 Reflect',
+                     'Reduce_dt_Markov':'M-1 Reduce dt'}
     if diffusion_type == 'Kukulka':
-        return 'Kukulka & Poulain,  w_10 = {}'.format(w_10) + ' m s$^{-1}$, ' + boundary_dict[boundary]
+        return r'PZK,  w$_{10}$ '+'= {}'.format(w_10) + ' m s$^{-1}$, ' + boundary_dict[boundary]
     elif diffusion_type == 'KPP':
-        return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD) + ', ' \
+        return r'KPP, w$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD) + ', ' \
                + boundary_dict[boundary]
 
 
-def diffusion_curve_axis(ax, ax_label_size, w_10, w_rise, profile_dict, diffusion_type, color):
+def diffusion_curve_axis(ax, ax_label_size, w_10, profile_dict, diffusion_type, color, linestyle='dotted'):
     ax2 = ax.twiny()
     # Get the proper diffusion curve
     depth = profile_dict['depth_bins']
@@ -24,7 +24,7 @@ def diffusion_curve_axis(ax, ax_label_size, w_10, w_rise, profile_dict, diffusio
     ax2.set_xlabel(r'$K_z$ (m$^2$ s$^{-1}$)', fontsize=ax_label_size)
     ax2.set_xlim((0, 0.05))
     # The actual plotting
-    ax2.plot(profile, depth, color=color, linestyle='dotted', label=label_diffusivity_profile(w_10, diffusion_type))
+    ax2.plot(profile, depth, color=color, linestyle=linestyle, label=label_diffusivity_profile(w_10, diffusion_type))
     return ax2
 
 
@@ -35,9 +35,9 @@ def label_time_step(steps, interval):
 
 def label_diffusivity_profile(w_10, diffusion_type):
     if diffusion_type == 'Kukulka':
-        return 'Kukulka & Poulain $K_z$,  w_10 = {}'.format(w_10) + ' m s$^{-1}$'
+        return r'PZK,  w$_{10}$' + ' = {}'.format(w_10) + ' m s$^{-1}$'
     elif diffusion_type == 'KPP':
-        return r'KPP $K_z$, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
+        return r'KPP, w$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
 
 
 def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1), plot_num=1):
@@ -107,47 +107,65 @@ def saving_filename_boundary(save_location, selection, close_up, diffusion_type)
 
 def label_profile(selection, parameters):
     w_10, w_rise = parameters
+    w_rise = np.abs(w_rise)
     return r'$w_{10} = $ ' + '{}'.format(w_10) + r' m s$^{-1}$, $w_r = $ ' + '{}'.format(w_rise) + ' m s$^{-1}$'
 
 
 def label_kukulka(selection, parameters):
     w_10, w_rise = parameters
+    w_rise = np.abs(w_rise)
     if selection is 'w_rise':
-        return 'Kukulka & Poulain, w_rise = {} m s'.format(w_rise) + r'$^{-1}$'
+        return r'PZK, w$_{rise}$ '+'= {} m s'.format(w_rise) + r'$^{-1}$'
     elif selection is 'w_10':
-        return 'Kukulka & Poulain, w_10 = {} m s'.format(w_10) + r'$^{-1}$'
+        return r'PZK, w$_{10}$ '+'= {} m s'.format(w_10) + r'$^{-1}$'
 
 
 def label_KPP(selection, parameters, mld=settings.MLD):
     w_10, w_rise = parameters
+    w_rise = np.abs(w_rise)
     if selection is 'w_rise':
-        return r'KPP, w_rise = {}'.format(w_rise) + 'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
+        return r'KPP, w$_{rise}$ '+'= {}'.format(w_rise) + 'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
     elif selection is 'w_10':
-        return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
+        return r'KPP, w$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
 
 
 def label_MLD_Comparison(parameters, diffusion_type, mld=settings.MLD):
     w_10, w_rise = parameters
+    w_rise = np.abs(w_rise)
     if diffusion_type == 'KPP':
-        return r'KPP, w_10 = {}'.format(w_10) + 'm s$^{-1}$,' + 'w_rise = {}'.format(w_rise) + \
+        return r'KPP, w$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$,' + 'w$_{rise}$ '+'= {}'.format(w_rise) + \
                'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
     elif diffusion_type == 'Kukulka':
-        return r'Kukulka & Poulain, w_10 = {}'.format(w_10) + 'm s$^{-1}$,' + 'w_rise = {}'.format(w_rise) + \
+        return r'PZK, w$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$,' + 'w$_{rise}$ '+'= {}'.format(w_rise) + \
                'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
 
 
 def label_model_field_comparison(w_rise, diffusion_type, boundary):
     boundary_dict = {'Reflect': 'Markov 0', 'Reflect_Markov': 'Markov 1'}
-    return diffusion_type + ', {}, w_rise = {} m s'.format(boundary_dict[boundary], w_rise) + r'$^{-1}$'
+    w_rise = np.abs(w_rise)
+    if diffusion_type is 'Kukulka':
+        diff = 'PZK'
+    elif diffusion_type is 'KPP':
+        diff = 'KPP'
+    return diff + ', {}, w$_{rise}$ '+'= {} m s'.format(boundary_dict[boundary], w_rise) + r'$^{-1}$'
 
 
-def get_axes_range(depth_bins, concentrations):
-    output_dict = {'max_depth': np.round(depth_bins.max(), -1), 'min_depth': np.round(depth_bins.min(), -1),
-                   'max_count': 0, 'min_count': 0}
-    for conc in concentrations:
-        if conc.max() > output_dict['max_count']:
-            output_dict['max_count'] = conc.max()
-    return output_dict
+def get_axes_range(close_up, norm_depth, delta_x=0.01, delta_y=0.5):
+    # The x-axis shows the relative concentration
+    xmax, xmin = 1 + delta_x, 0 - delta_x
+    if norm_depth:
+        delta_y = 0.1
+    # If we have a close_up plot
+    if close_up is not None:
+        ymax, ymin = close_up
+        ymax += delta_y
+    else:
+        # If we have normalized depths
+        if norm_depth:
+            ymax, ymin = 0 + delta_y, -1
+        else:
+            ymax, ymin = 0 + delta_y, -1 * settings.max_depth - delta_y
+    return xmax, xmin, ymax, ymin
 
 
 def determine_linestyle(boundary, boundary_list, kpp, kukulka, diffusion_type):
@@ -239,7 +257,7 @@ def add_observations(ax, sources=None, wind_range=None, norm_depth=False, alpha=
                 source_conc = source_conc[wind_select]
 
         # Making the actual plot
-        ax.scatter(source_conc, -1 * source_depth, marker=data_markers[count], c=utils.return_color(count),
+        ax.scatter(source_conc, -1 * source_depth, marker=data_markers[count], c='black',
                    alpha=alpha, label=data_labels[source])
 
     lines, labels = ax.get_legend_handles_labels()
