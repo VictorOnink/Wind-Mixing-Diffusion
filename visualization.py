@@ -216,10 +216,10 @@ def plot_field_data_overview(norm_depth=False, wind_sort=False, y_label='Depth (
     # Plotting data points, split over multiple plots according to Beaufort wind scale
     if wind_sort:
         # Titles for the subplots
-        sub_titles = [r'(a) w$_{10}=0.2-1.5 m s$^{-1}$', r'(b) w$_{10}=1.5-3.3 m s$^{-1}$',
-                      r'(c) w$_{10}=3.3-5.4 m s$^{-1}$', r'(d) w$_{10}=5.4-7.9 m s$^{-1}$',
-                      r'(e) w$_{10}=7.9-10.7 m s$^{-1}$',
-                      ' ']
+        sub_titles = [r'(a) w$_{10}$=0.2-1.5 m s$^{-1}$', r'(b) w$_{10}$=1.5-3.3 m s$^{-1}$',
+                      r'(c) w$_{10}$=3.3-5.4 m s$^{-1}$', r'(d) w$_{10}$=5.4-7.9 m s$^{-1}$',
+                      r'(e) w$_{10}$=7.9-10.7 m s$^{-1}$',
+                      r' ']
         # Get the base figure axis
         plot_num = 6
         ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(2, 3), plot_num=plot_num)
@@ -297,9 +297,9 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', o
     # Plotting data points, split over multiple plots according to Beaufort wind scale
     if wind_sort:
         # Titles for the subplots
-        sub_titles = [r'(a) w$_{10}=0.2-1.5 m s$^{-1}$', r'(b) w$_{10}=1.5-3.3 m s$^{-1}$',
-                      r'(c) w$_{10}=3.3-5.4 m s$^{-1}$', r'(d) w$_{10}=5.4-7.9 m s$^{-1}$',
-                      r'(e) w$_{10}=7.9-10.7 m s$^{-1}$',
+        sub_titles = [r'(a) w$_{10}$=0.2-1.5 m s$^{-1}$', r'(b) w$_{10}$=1.5-3.3 m s$^{-1}$',
+                      r'(c) w$_{10}$=3.3-5.4 m s$^{-1}$', r'(d) w$_{10}$=5.4-7.9 m s$^{-1}$',
+                      r'(e) w$_{10}$=7.9-10.7 m s$^{-1}$',
                       ' ']
         # Get the base figure axis
         plot_num = 6
@@ -392,7 +392,7 @@ def mld_depth_influence(w_rise_list, MLD_list, selection='w_rise', output_step=-
     # Adding the legend
     ax.legend(fontsize=legend_size, loc='lower right')
 
-    ax.set_title('w$_{10}' + '={}-{}'.format(*wind_range) + ' m s$^{-1}$', fontsize=ax_label_size)
+    ax.set_title(r'w$_{10}$' + '={}-{}'.format(*wind_range) + r' m s$^{-1}$', fontsize=ax_label_size)
 
     plt.savefig(utils_v.mld_comparison_name(diffusion_type, boundary, beaufort=beaufort, close_up=close_up),
                 bbox_inches='tight')

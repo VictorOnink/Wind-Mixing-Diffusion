@@ -24,6 +24,8 @@ def run():
             utils_v.field_data_figure_names(wind_sort=False, norm_depth=True, close_up=(0, -10))):
         visualization.plot_field_data_overview(wind_sort=False, norm_depth=True, close_up=(0, -10))
 
+    # Determining correlations for field-measured concentrations and depth
+    analysis.correlation_depth_concentration()
     """
     Parcels simulations
     """
@@ -54,16 +56,16 @@ def run():
     # visualization.just_diffusion_profile(w_10_list=[0.85, 2.4, 4.35, 6.65, 9.3])
 
     # Plotting the profiles with different boundary conditions
-    visualization.boundary_condition_comparison(w_rise_list=[-0.003], diffusion_type='KPP', close_up=(0, -10),)
+    # visualization.boundary_condition_comparison(w_rise_list=[-0.003], diffusion_type='KPP', close_up=(0, -10),)
     # visualization.boundary_condition_comparison(w_rise_list=[-0.003], diffusion_type='Kukulka', close_up=(0, -10))
 
     # Plotting the multi-wind condition figures
-    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
-                                                   wind_sort=True, single_select=2, close_up=(0, -10),
-                                                   diffusion_type='KPP', boundary='all')
-    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
-                                                   wind_sort=True, single_select=2, close_up=(0, -10),
-                                                   diffusion_type='Kukulka', boundary='all')
+    # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+    #                                                wind_sort=True, single_select=2, close_up=(0, -10),
+    #                                                diffusion_type='KPP', boundary='all')
+    # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+    #                                                wind_sort=True, single_select=2, close_up=(0, -10),
+    #                                                diffusion_type='Kukulka', boundary='all')
 
     # Plotting for the depth profiles for multiple MLD levels
     # for beaufort in range(1, 6):

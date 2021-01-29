@@ -10,6 +10,9 @@ def data_standardization():
     Running all the data standardization functions. Each standardization function contains a check if the standardized
     file hasn't already been created, and so we only have to rerun this if we lose one of the standardized files for
     some reason
+    Note: some of the datasets have data at depths much greater than the MLD. While concentrations at depth are
+    interesting and worth further study, this part of the vertical concentration profile is likely not due to wind-driven
+    mixing. Therefore, we only keep the concentrations that were measured in the first 100m
     """
     standardization_kukulka()
     standardization_kooi()
@@ -41,7 +44,7 @@ def standardization_kukulka():
 
         # Create a dictionary containing the normalized concentration, the depth, the normalized depth and wind speed
         output_dic = {'concentration': data[:, 5], 'depth': data[:, 1], 'depth_norm': depth_norm,
-                      'wind_speed': data[:, -2]}
+                      'wind_speed': data[:, -2], 'MLD': data[:, -1]}
 
         # Pickling the array
         utils.save_obj(filename=file_name, object=output_dic)
@@ -103,7 +106,7 @@ def standardization_kooi():
 
         # Create a dictionary containing the normalized concentration, the depth, the normalized depth and wind speed
         output_dic = {'concentration': concentration.flatten(), 'depth': depth_levels.flatten(),
-                      'depth_norm': depth_norm.flatten(), 'wind_speed': wind_data.flatten()}
+                      'depth_norm': depth_norm.flatten(), 'wind_speed': wind_data.flatten(), 'MLD': MLD.flatten()}
 
         # Pickling the array
         utils.save_obj(filename=file_name, object=output_dic)
@@ -153,9 +156,6 @@ def standardization_Pieper():
                     concentration[station][sample] = max(0, np.mean(replicas) - control)
                     depth_dataframe[station][sample] = np.mean(depths[(station == station_sample) & (type == sample)].values)
 
-        # Normalizing everything by the max concentration
-        concentration = concentration.apply(lambda x: x / x.max(), axis=0).fillna(0.0)
-
         # Wind speed from the PE442 Casino file
         wind_data = pd.DataFrame(casino_wind(device='CTD with samples', cruise='PE442'))
         wind_data = pd.concat([wind_data] * type_list.shape[0], axis=1).transpose().values
@@ -168,9 +168,18 @@ def standardization_Pieper():
         # Normalising the depth according to MLD depth
         depth_norm = np.divide(depth_dataframe.values, MLD)
 
+        # Keeping just the measurements within the first 100m
+        depth = depth_dataframe.values.flatten()
+        concentration = concentration.values.flatten()[depth < 100]
+        concentration /= concentration.max()
+        depth_norm = depth_norm.flatten()[depth < 100]
+        wind_data = wind_data.flatten()[depth < 100]
+        MLD = MLD.flatten()[depth < 100]
+
+
         # Saving everything into a dictionary
-        output_dic = {'concentration': concentration.values.flatten(), 'depth': depth_dataframe.values.flatten(),
-                      'depth_norm': depth_norm.flatten(), 'wind_speed': wind_data.flatten()}
+        output_dic = {'concentration': concentration, 'depth': depth[depth < 100],
+                      'depth_norm': depth_norm, 'wind_speed': wind_data, 'MLD': MLD}
 
         # Pickling the array
         utils.save_obj(filename=file_name, object=output_dic)
@@ -222,14 +231,12 @@ def standardization_Zettler():
         wind_data = pd.DataFrame(casino_wind(device='MultiNet', cruise='PE448'))
         wind_data = pd.concat([wind_data] * depths.shape[0], axis=1).transpose().values
 
-        # Getting just the concentrations that are greater than 0
-        greater_than = concentrations.values.flatten() > 0
-
         # Saving everything into a dictionary
-        output_dic = {'concentration': concentrations.values.flatten()[greater_than],
-                      'depth': depths.values.flatten()[greater_than],
-                      'depth_norm': depth_norm.flatten()[greater_than],
-                      'wind_speed': wind_data.flatten()[greater_than]}
+        output_dic = {'concentration': concentrations.values.flatten(),
+                      'depth': depths.values.flatten(),
+                      'depth_norm': depth_norm.flatten(),
+                      'wind_speed': wind_data.flatten(),
+                      'MLD': MLD.values.flatten()}
 
         # Pickling the array
         utils.save_obj(filename=file_name, object=output_dic)
