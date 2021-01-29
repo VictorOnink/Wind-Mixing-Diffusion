@@ -26,6 +26,7 @@ def run():
 
     # Determining correlations for field-measured concentrations and depth
     analysis.correlation_depth_concentration()
+    analysis.range_MLD_values()
     """
     Parcels simulations
     """

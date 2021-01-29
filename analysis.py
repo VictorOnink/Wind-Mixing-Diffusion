@@ -27,9 +27,7 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary):
 
 def correlation_depth_concentration(exclude=None, get_r=[]):
     sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka']
-    if exclude is not None:
-        for source in exclude:
-            sources.remove(source)
+    sources = utils.exclude_field_data(exclude, sources)
 
     # Loading in the data
     concentration, norm_depth, depth = [], [], []
@@ -63,3 +61,20 @@ def determine_correlation(concentration, depth, norm_depth, subset='all data', z
           '{}'.format(r ** 2))
     print('For concentrations and log of norm. depth for {}, r = {}, p = {}, '.format(subset, r_norm, p_norm)
           + r'r^2 = ' + '{}\n'.format(r_norm ** 2))
+
+
+def range_MLD_values(exclude=None):
+    sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka']
+    sources = utils.exclude_field_data(exclude, sources)
+
+    # Loading all the determined MLD depths, and then get the mean, std, max and min value over all data
+    MLD = []
+    for source in sources:
+        data_dict = utils.load_obj(utils.get_data_output_name(source))
+        MLD += list(data_dict['MLD'])
+    # Remove all nan values
+    MLD = np.array(MLD)[~np.isnan(MLD)]
+
+    Max, Min, STD, Mean = np.max(MLD), np.min(MLD), np.std(MLD), np.mean(MLD)
+    print('The average MLD over all field data is {:.2f}±{:.2f}m, min = {:.2f}m, max = {:.2f}m'.format(Mean, STD, Min,
+                                                                                                       Max))

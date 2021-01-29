@@ -117,3 +117,9 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
     return profile
 
 
+def exclude_field_data(exclude, sources):
+    if exclude is not None:
+        if exclude is not None:
+            for source in exclude:
+                sources.remove(source)
+    return sources
