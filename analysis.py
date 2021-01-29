@@ -57,9 +57,9 @@ def determine_correlation(concentration, depth, norm_depth, subset='all data', z
     # Calculating the correlation coefficient
     r, p = stats.pearsonr(concentration, log_depth)
     r_norm, p_norm = stats.pearsonr(concentration, log_norm)
-    print('For concentrations and log of depth for {}, r = {}, p = {}, '.format(subset, r, p) + r'r^2 = ' +
+    print('For concentrations and log of depth for {}, r = {:.2f}, p = {:.2f}, '.format(subset, r, p) + r'r^2 = ' +
           '{}'.format(r ** 2))
-    print('For concentrations and log of norm. depth for {}, r = {}, p = {}, '.format(subset, r_norm, p_norm)
+    print('For concentrations and log of norm. depth for {}, r = {:.2f}, p = {:.2f}, '.format(subset, r_norm, p_norm)
           + r'r^2 = ' + '{}\n'.format(r_norm ** 2))
 
 
@@ -76,5 +76,5 @@ def range_MLD_values(exclude=None):
     MLD = np.array(MLD)[~np.isnan(MLD)]
 
     Max, Min, STD, Mean = np.max(MLD), np.min(MLD), np.std(MLD), np.mean(MLD)
-    print('The average MLD over all field data is {:.2f}±{:.2f}m, min = {:.2f}m, max = {:.2f}m'.format(Mean, STD, Min,
-                                                                                                       Max))
+    print('The average MLD over all field data is {:.2f} ± {:.2f}m, min = {:.2f}m, max = {:.2f}m'.format(Mean, STD, Min,
+                                                                                                         Max))
