@@ -147,7 +147,7 @@ def label_model_field_comparison(w_rise, diffusion_type, boundary):
         diff = 'PZK'
     elif diffusion_type is 'KPP':
         diff = 'KPP'
-    return diff + ', {}, w$_{rise}$ '+'= {} m s'.format(boundary_dict[boundary], w_rise) + r'$^{-1}$'
+    return diff + ', {}'.format(boundary_dict[boundary]) + ', w$_{rise}$ ' + '= {} m s'.format(w_rise) + r'$^{-1}$'
 
 
 def get_axes_range(close_up, norm_depth, delta_x=0.01, delta_y=0.5):

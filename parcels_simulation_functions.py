@@ -6,6 +6,7 @@ for wind mixing for use with particle simulations.
 
 from parcels import FieldSet, ParticleSet, JITParticle, Field, OperationCode, Variable
 from parcels import ParcelsRandom
+from operator import attrgetter
 import math
 import numpy as np
 import settings as SET
@@ -28,12 +29,14 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed'):
     # Determine the type of particle class (dependent on whether we have a Markov 0 or Markov 1 diffusion approach)
     if 'Markov' in boundary:
         pclass = MarkovParticle
+        initial_w_prime = (np.random.rand(SET.p_number) - 1) * 2 * SET.w_prime
     else:
         pclass = JITParticle
+        initial_w_prime = 0
 
     # Creating the particle set
     pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[0.5]*SET.p_number, lat=[0.5]*SET.p_number,
-                       depth=[SET.p_start_depth]*SET.p_number)
+                       depth=[SET.p_start_depth]*SET.p_number, w_prime=initial_w_prime)
 
     # Setting the output file
     output_file = pset.ParticleFile(name=utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary),
@@ -54,7 +57,7 @@ class MarkovParticle(JITParticle):
     """
     If using Markov-1 diffusion, we need to keep track of the w' term (Koszalka et al., 2013)
     """
-    w_prime = Variable('w_prime', initial=0.0, dtype=np.float32, to_write=False)
+    w_prime = Variable('w_prime', initial=attrgetter('w_prime'), dtype=np.float32, to_write=False)
 
 
 def lagrangian_integral_timescale(w_10):
@@ -80,7 +83,7 @@ def lagrangian_integral_timescale(w_10):
     else:
         T_L = SET.MLD / u_t
     print("The lagrangian integral timescale is {} minutes".format(T_L / 60.))
-    return T_L
+    return SET.dt_int.seconds
 
 
 def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):

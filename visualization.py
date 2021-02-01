@@ -171,7 +171,7 @@ def boundary_condition_comparison(w_rise_list, selection='w_10', close_up=None, 
                                                           boundary=boundary)
             for counter in range(len(profile_dict['concentration_list'])):
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                        label=utils_v.label_boundary(w_10=mean_wind, diffusion_type='KPP', boundary=boundary),
+                        label=utils_v.label_boundary(w_10=mean_wind, diffusion_type='Kukulka', boundary=boundary),
                         linestyle=line_style[count], color=utils.return_color(count % 3))
 
         # Plotting the distribution according to the KPP parametrization
