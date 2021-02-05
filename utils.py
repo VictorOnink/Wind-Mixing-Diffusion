@@ -71,6 +71,18 @@ def determine_wave_height(w_10):
     return H_s
 
 
+def determine_surface_roughness(w_10):
+    # the surface roughness z_0, following Zhao & Li (2019)
+    g, rho_a = settings.g, settings.rho_a
+    u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_a)  # frictional velocity
+    # Rewriting the wave age in terms of the w_10 wind speed, instead of the frictional velocity used by
+    # Kukulka et al. (2012)
+    beta = settings.wave_age * u_s / w_10
+    # Since beta > 0.4 (corresponding to relative mature wind waves), we have from eq. 36 that:
+    z_0 = 3.5153e-5 * beta ** (-0.42) * w_10 **2 / g
+    return z_0
+
+
 def determine_kukulka_e_length(w_10, w_rise):
     # Getting environmental parameters
     tau_wind = determine_tau(w_10, settings.rho_a)  # wind stress at the ocean surface
@@ -80,18 +92,18 @@ def determine_kukulka_e_length(w_10, w_rise):
     return math.fabs(w_rise) / A0
 
 
-def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD):
+def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD, H_s_frac=1.):
     rho_w = settings.rho_w  # density sea water (kg/m^3)
     rho_a = settings.rho_a  # density air (kg/m^3)
     u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w)  # shear velocity
     H_s = determine_wave_height(w_10)  # significant wave height (m)
     k = settings.vk  # von Karman constant
     phi = settings.phi
-    z0 = determine_wave_height(w_10)
+    z0 = determine_surface_roughness(w_10)
 
     if diffusion_type == 'Kukulka':
         profile = 1.5 * k * u_s * H_s * np.ones(depth.shape)
-        profile[depth > H_s] *= (H_s ** 1.5 * np.power(depth[depth > H_s], -1.5))
+        profile[depth > (H_s * H_s_frac)] *= ((H_s * H_s_frac) ** 1.5 * np.power(depth[depth > (H_s * H_s_frac)], -1.5))
     elif diffusion_type == 'KPP':
         alpha = (k * u_s) / phi
         profile = alpha * (depth + z0) * np.power(1 - depth / mld, 2)
@@ -99,7 +111,8 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, m
     return profile + settings.bulk_diff
 
 
-def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD):
+def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD,
+                                            H_s_frac=1.):
     rho_w = settings.rho_w  # density sea water (kg/m^3)
     rho_a = settings.rho_a  # density air (kg/m^3)
     u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w)  # shear velocity
@@ -108,8 +121,8 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
     phi = settings.phi
     z0 = determine_wave_height(w_10)
     if diffusion_type == 'Kukulka':
-        profile = -2.25 * k * u_s * H_s * H_s ** 1.5 * np.power(depth, -2.5) * np.ones(depth.shape)
-        profile[depth < H_s] = 0
+        profile = -2.25 * k * u_s * H_s * (H_s * H_s_frac) ** 1.5 * np.power(depth, -2.5) * np.ones(depth.shape)
+        profile[depth < (H_s * H_s_frac)] = 0
     elif diffusion_type == 'KPP':
         alpha = (k * u_s) / (phi * mld ** 2)
         profile = alpha * (mld - depth) * (mld - 3 * depth - 2 * z0)

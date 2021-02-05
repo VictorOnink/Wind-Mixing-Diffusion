@@ -15,7 +15,8 @@ def label_boundary(w_10, diffusion_type, boundary):
                + boundary_dict[boundary]
 
 
-def diffusion_curve_axis(ax, ax_label_size, w_10, profile_dict, diffusion_type, color, linestyle='dotted'):
+def diffusion_curve_axis(ax, ax_label_size, w_10, profile_dict, diffusion_type, color, linestyle='dotted',
+                         gradient=False):
     ax2 = ax.twiny()
     # Get the proper diffusion curve
     depth = profile_dict['depth_bins']
@@ -25,6 +26,11 @@ def diffusion_curve_axis(ax, ax_label_size, w_10, profile_dict, diffusion_type, 
     ax2.set_xlim((0, 0.05))
     # The actual plotting
     ax2.plot(profile, depth, color=color, linestyle=linestyle, label=label_diffusivity_profile(w_10, diffusion_type))
+    if gradient:
+        ax2.set_xlim((-0.005, 0.05))
+        profile = utils.get_vertical_diffusion_gradient_profile(w_10, depth * -1, diffusion_type)
+        ax2.plot(profile, depth, color='red', linestyle='-.',
+                 label=label_diffusivity_profile(w_10, diffusion_type))
     return ax2
 
 
@@ -35,7 +41,7 @@ def label_time_step(steps, interval):
 
 def label_diffusivity_profile(w_10, diffusion_type):
     if diffusion_type == 'Kukulka':
-        return r'PZK,  w$_{10}$' + ' = {}'.format(w_10) + ' m s$^{-1}$'
+        return r'PZK, w$_{10}$' + ' = {}'.format(w_10) + ' m s$^{-1}$'
     elif diffusion_type == 'KPP':
         return r'KPP, w$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
 
@@ -89,12 +95,12 @@ def saving_filename_basic_profile(save_location, selection, close_up, diffusion_
                                                                                                       selection)
 
 
-def saving_filename_time_step(save_location, selection, close_up, diffusion_type):
+def saving_filename_time_step(save_location, close_up, diffusion_type):
     if close_up is None:
-        return save_location + diffusion_type + '_time_step_full_variable={}.png'.format(selection)
+        return save_location + diffusion_type + '_time_step_full.png'
     else:
         ymax, ymin = close_up
-        return save_location + diffusion_type + '_time_step_max={}_min={}_variable={}.png'.format(ymax, ymin, selection)
+        return save_location + diffusion_type + '_time_step_max={}_min={}.png'.format(ymax, ymin)
 
 
 def saving_filename_boundary(save_location, selection, close_up, diffusion_type):
@@ -300,3 +306,8 @@ def mld_comparison_name(diffusion_type, boundary, beaufort, close_up=None, outpu
         max, min = close_up
         figure_name += '_max_{}_min_{}'.format(max, min)
     return figure_name + output_type
+
+
+def discrete_color_from_cmap(index, subdivisions, cmap='viridis_r'):
+    cmap_steps = plt.cm.get_cmap(cmap, subdivisions)
+    return cmap_steps(index)

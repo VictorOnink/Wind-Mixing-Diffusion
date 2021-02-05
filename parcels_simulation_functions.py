@@ -4,7 +4,7 @@ for wind mixing for use with particle simulations.
 
 """
 
-from parcels import FieldSet, ParticleSet, JITParticle, Field, OperationCode, Variable
+from parcels import FieldSet, ParticleSet, JITParticle, Field, OperationCode, Variable, ErrorCode
 from parcels import ParcelsRandom
 from operator import attrgetter
 import math
@@ -12,6 +12,7 @@ import numpy as np
 import settings as SET
 import utils
 import scipy.optimize
+
 
 def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed'):
     """
@@ -30,13 +31,14 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed'):
     if 'Markov' in boundary:
         pclass = MarkovParticle
         initial_w_prime = (np.random.rand(SET.p_number) - 1) * 2 * SET.w_prime
+        # Creating the particle set
+        pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[0.5] * SET.p_number, lat=[0.5] * SET.p_number,
+                           depth=[SET.p_start_depth] * SET.p_number, w_prime=initial_w_prime)
     else:
         pclass = JITParticle
-        initial_w_prime = 0
-
-    # Creating the particle set
-    pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[0.5]*SET.p_number, lat=[0.5]*SET.p_number,
-                       depth=[SET.p_start_depth]*SET.p_number, w_prime=initial_w_prime)
+        # Creating the particle set
+        pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[0.5] * SET.p_number, lat=[0.5] * SET.p_number,
+                           depth=[SET.p_start_depth] * SET.p_number)
 
     # Setting the output file
     output_file = pset.ParticleFile(name=utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary),
@@ -49,7 +51,8 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed'):
     kernel = pset.Kernel(boundary_dict[boundary])
 
     # The actual integration
-    pset.execute(kernel, runtime=SET.runtime, dt=SET.dt_int, output_file=output_file)
+    pset.execute(kernel, runtime=SET.runtime, dt=SET.dt_int, output_file=output_file,
+                 recovery={ErrorCode.ErrorOutOfBounds: DeleteParticle})
     output_file.export()
 
 
@@ -83,7 +86,7 @@ def lagrangian_integral_timescale(w_10):
     else:
         T_L = SET.MLD / u_t
     print("The lagrangian integral timescale is {} minutes".format(T_L / 60.))
-    return SET.dt_int.seconds
+    return T_L
 
 
 def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
@@ -91,12 +94,14 @@ def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
     Determining the depth of the surface layer within particles are assumed to be distributed homogeneously, following
     the boundary condition approach of Ross & Sharples (2004)
     """
+
     def to_optimize(z_t):
         dK = utils.get_vertical_diffusion_gradient_profile(w_10, np.array([z_t]), diffusion_type)
         dt = SET.dt_int.seconds
         K = utils.get_vertical_diffusion_profile(w_10, np.array([z_t + 0.5 * dK * dt]), diffusion_type)
-        RHS = dK*dt + np.sqrt(6 * K * dt) + w_rise * dt
+        RHS = dK * dt + np.sqrt(6 * K * dt) + w_rise * dt
         return np.abs(z_t - RHS)
+
     mixing_depth = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
     print('The surface turbulent mixed layer depth {} m'.format(mixing_depth))
     return mixing_depth
@@ -145,7 +150,7 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary):
     K_z = Field('K_z', data=utils.get_vertical_diffusion_profile(w_10, Depth, diffusion_type),
                 depth=depth, lon=lon, lat=lat)
     dK_z = Field('dK_z', data=utils.get_vertical_diffusion_gradient_profile(w_10, Depth, diffusion_type),
-                depth=depth, lon=lon, lat=lat)
+                 depth=depth, lon=lon, lat=lat)
     fieldset = FieldSet(U, V)
     fieldset.add_field(K_z)
     fieldset.add_field(dK_z)
@@ -161,7 +166,7 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary):
         fieldset.add_constant(name='dt_max', value=SET.dt_int.seconds)
         fieldset.add_constant(name='dt_min', value=SET.dt_int.seconds / 2 ** 2)
     if 'Markov' in boundary:
-        fieldset.add_constant(name='T_L', value=lagrangian_integral_timescale(w_10))
+        fieldset.add_constant(name='T_L', value=SET.dt_int.seconds)
 
     return fieldset
 
@@ -268,13 +273,19 @@ def markov_1_mixed_layer_boundary(particle, fieldset, time):
     randomly throughout this mixing layer (and the particle will never fly through the ocean surface)
     """
 
-    # First, the Wiener increment with zero mean and std = dt
-    dWz = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(particle.dt)))
-    # Next, the vertical diffusion term, and then the total stochastic term
+    # First, the Wiener increment with zero mean and variance = dt
+    dt = particle.dt
+    dWz = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(dt)))
+    # Next, the vertical diffusion term, and the gradient of the vertical diffusion
     Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
+    dKz = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
 
     # The new random velocity perturbation, following Koszalka et al. (2013)
-    dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
+    # dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
+    # The new random velocity perturbation, following eq. 5 of Brickman & Smith (2002)
+    w = particle.w_prime
+    dw_prime = 1. / fieldset.T_L * (
+            (-1 * w + 0.5 * dKz * (w ** 2 * fieldset.T_L / Kz + 1)) * dt + math.sqrt(2 * Kz) * dWz)
     particle.w_prime += dw_prime
 
     # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
@@ -284,22 +295,33 @@ def markov_1_mixed_layer_boundary(particle, fieldset, time):
     # then we have simple diffusion according to the equation
     if particle.depth < fieldset.mix_depth:
         particle.depth = ParcelsRandom.uniform(0, 1.) * fieldset.mix_depth
+    # If a particle would go deeper than max_depth, it needs to bounce back uo
+    if particle.depth > fieldset.max_depth:
+        overshoot = particle.depth - fieldset.max_depth
+        particle.depth = fieldset.max_depth - overshoot
+
 
 
 def markov_1_reflect(particle, fieldset, time):
-    # First, the Wiener increment with zero mean and std = dt
-    dWz = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(particle.dt)))
-    # Next, the vertical diffusion term, and then the total stochastic term
+    # First, the Wiener increment with zero mean and variance = dt
+    dt = particle.dt
+    dWz = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(dt)))
+    # Next, the vertical diffusion term, and the gradient of the vertical diffusion
     Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
+    dKz = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
 
     # The new random velocity perturbation, following Koszalka et al. (2013)
-    dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
+    # dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
+    # The new random velocity perturbation, following eq. 5 of Brickman & Smith (2002)
+    w = particle.w_prime
+    dw_prime = 1. / fieldset.T_L * (
+            (-1 * w + 0.5 * dKz * ((w ** 2) * fieldset.T_L / Kz + 1)) * dt + math.sqrt(2 * Kz) * dWz)
     particle.w_prime += dw_prime
 
     # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
     particle.depth = math.fabs(particle.depth + (particle.w_prime + fieldset.wrise) * particle.dt)
 
-    # So, if a particle would go deeper than max_depth, it needs to bounce back uo
+    # If a particle would go deeper than max_depth, it needs to bounce back uo
     if particle.depth > fieldset.max_depth:
         overshoot = particle.depth - fieldset.max_depth
         particle.depth = fieldset.max_depth - overshoot
@@ -312,15 +334,20 @@ def markov_1_reduce_dt(particle, fieldset, time):
 
     Note: The approach generally works, but it is very slow
     """
-    # First, the Wiener increment with zero mean and std = dt
-    dWz = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(particle.dt)))
-    # Next, the vertical diffusion term, and then the total stochastic term
+    # First, the Wiener increment with zero mean and variance = dt
+    dt = particle.dt
+    dWz = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(dt)))
+    # Next, the vertical diffusion term, and the gradient of the vertical diffusion
     Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
+    dKz = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
 
     # The new random velocity perturbation, following Koszalka et al. (2013)
-    dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
+    # dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
+    # The new random velocity perturbation, following eq. 5 of Brickman & Smith (2002)
+    w = particle.w_prime
+    dw_prime = 1. / fieldset.T_L * (
+            (-1 * w + 0.5 * dKz * (w ** 2 * fieldset.T_L / Kz + 1)) * dt + math.sqrt(2 * Kz) * dWz)
     particle.w_prime += dw_prime
-
     # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
     potential = particle.depth + (particle.w_prime + fieldset.wrise) * particle.dt
 
@@ -334,3 +361,7 @@ def markov_1_reduce_dt(particle, fieldset, time):
             particle.depth = -1 * potential
         else:
             return OperationCode.Repeat
+
+
+def DeleteParticle(particle, fieldset, time):
+    particle.delete()

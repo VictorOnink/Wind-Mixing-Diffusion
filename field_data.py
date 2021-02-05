@@ -168,17 +168,18 @@ def standardization_Pieper():
         # Normalising the depth according to MLD depth
         depth_norm = np.divide(depth_dataframe.values, MLD)
 
-        # Keeping just the measurements within the first 100m
+        # Keeping just the measurements above the maximum depth
+        max_depth = 50
         depth = depth_dataframe.values.flatten()
-        concentration = concentration.values.flatten()[depth < 100]
+        concentration = concentration.values.flatten()[depth < max_depth]
         concentration /= concentration.max()
-        depth_norm = depth_norm.flatten()[depth < 100]
-        wind_data = wind_data.flatten()[depth < 100]
-        MLD = MLD.flatten()[depth < 100]
+        depth_norm = depth_norm.flatten()[depth < max_depth]
+        wind_data = wind_data.flatten()[depth < max_depth]
+        MLD = MLD.flatten()[depth < max_depth]
 
 
         # Saving everything into a dictionary
-        output_dic = {'concentration': concentration, 'depth': depth[depth < 100],
+        output_dic = {'concentration': concentration, 'depth': depth[depth < max_depth],
                       'depth_norm': depth_norm, 'wind_speed': wind_data, 'MLD': MLD}
 
         # Pickling the array
@@ -231,12 +232,15 @@ def standardization_Zettler():
         wind_data = pd.DataFrame(casino_wind(device='MultiNet', cruise='PE448'))
         wind_data = pd.concat([wind_data] * depths.shape[0], axis=1).transpose().values
 
+        # Keeping just the measurements taken above max-depth
+        max_depth = 50
+        depth_selec = depths.values.flatten() > 50
         # Saving everything into a dictionary
-        output_dic = {'concentration': concentrations.values.flatten(),
-                      'depth': depths.values.flatten(),
-                      'depth_norm': depth_norm.flatten(),
-                      'wind_speed': wind_data.flatten(),
-                      'MLD': MLD.values.flatten()}
+        output_dic = {'concentration': concentrations.values.flatten()[depth_selec],
+                      'depth': depths.values.flatten()[depth_selec],
+                      'depth_norm': depth_norm.flatten()[depth_selec],
+                      'wind_speed': wind_data.flatten()[depth_selec],
+                      'MLD': MLD.values.flatten()[depth_selec]}
 
         # Pickling the array
         utils.save_obj(filename=file_name, object=output_dic)

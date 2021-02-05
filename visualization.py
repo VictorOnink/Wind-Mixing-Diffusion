@@ -45,7 +45,7 @@ def basic_profile_figure(w_10_list, w_rise_list, selection='w_10', close_up=None
                                                           boundary=boundary)
             for counter in range(len(profile_dict['parameter_concentrations'])):
                 w_10, w_rise = profile_dict['parameter_concentrations'][counter]
-                ax2 = utils_v.diffusion_curve_axis(ax, ax_label_size, w_10, w_rise, profile_dict, 'Kukulka',
+                ax2 = utils_v.diffusion_curve_axis(ax, ax_label_size, w_10, profile_dict, 'Kukulka',
                                                    utils.return_color(counter))
                 lines2, labels2 = ax2.get_legend_handles_labels()
                 lines += lines2
@@ -56,12 +56,13 @@ def basic_profile_figure(w_10_list, w_rise_list, selection='w_10', close_up=None
                                                           boundary=boundary)
             if selection is 'w_rise':
                 range_lim = 1
-            if selection is 'w_10':
+            elif selection is 'w_10':
                 range_lim = len(profile_dict['parameter_concentrations'])
+
             for counter in range(range_lim):
                 w_10, w_rise = profile_dict['parameter_concentrations'][counter]
-                ax2 = utils_v.diffusion_curve_axis(ax, ax_label_size, w_10, w_rise, profile_dict, "KPP",
-                                                   'black')
+                ax2 = utils_v.diffusion_curve_axis(ax, ax_label_size, w_10, profile_dict, "KPP",
+                                                   'black', gradient=True)
                 lines2, labels2 = ax2.get_legend_handles_labels()
                 lines += lines2
                 labels += labels2
@@ -77,7 +78,7 @@ def basic_profile_figure(w_10_list, w_rise_list, selection='w_10', close_up=None
 def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ ($10^{-2}$ m$^2$ s$^{-1}$)',
                            fig_size=(8, 8), ax_label_size=16, legend_size=12):
     ymax, ymin = 0, -1 * (settings.MLD + 10)
-    ax_range = (2.5, 0, ymax, ymin)
+    ax_range = (1.55, 0, ymax, ymin)
     depth = np.linspace(ymax, np.abs(ymin), 1000)
 
     # Creating the axis
@@ -86,14 +87,14 @@ def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ ($10^
     # Plotting the diffusion profile according to the Kukulka approach
     for count, w_10 in enumerate(w_10_list):
         profile = utils.get_vertical_diffusion_profile(w_10, depth, 'Kukulka')
-        ax.plot(profile * 100, -1 * depth, color=utils.return_color(count), linestyle='-',
+        ax.plot(profile * 100, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)), linestyle='-',
                 label=utils_v.label_diffusivity_profile(w_10, 'Kukulka'))
 
     # Plotting the diffusion profile according the KPP approach
     for count, w_10 in enumerate(w_10_list):
         profile = utils.get_vertical_diffusion_profile(w_10, depth, 'KPP')
-        ax.plot(profile * 100, -1 * depth, color=utils.return_color(count), linestyle='--',
-                label=utils_v.label_diffusivity_profile(w_10, 'KPP'))
+        ax.plot(profile * 100, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)),
+                linestyle='--', label=utils_v.label_diffusivity_profile(w_10, 'KPP'))
 
     # Adding the legend
     ax.legend(fontsize=legend_size, loc='lower right')
@@ -142,7 +143,7 @@ def timestep_comparison(w_10_list, w_rise_list, selection='w_10', close_up=None,
     ax.legend(lines, labels, fontsize=legend_size, loc='lower right')
 
     # Saving the figure
-    plt.savefig(utils_v.saving_filename_time_step(settings.figure_dir, selection, close_up, diffusion_type),
+    plt.savefig(utils_v.saving_filename_time_step(settings.figure_dir, close_up, diffusion_type),
                 bbox_inches='tight', dpi=600)
 
 
