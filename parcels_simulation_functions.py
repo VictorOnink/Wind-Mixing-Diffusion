@@ -86,7 +86,7 @@ def lagrangian_integral_timescale(w_10):
     else:
         T_L = SET.MLD / u_t
     print("The lagrangian integral timescale is {} minutes".format(T_L / 60.))
-    return T_L
+    return SET.dt_int.seconds
 
 
 def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
@@ -166,7 +166,7 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary):
         fieldset.add_constant(name='dt_max', value=SET.dt_int.seconds)
         fieldset.add_constant(name='dt_min', value=SET.dt_int.seconds / 2 ** 2)
     if 'Markov' in boundary:
-        fieldset.add_constant(name='T_L', value=SET.dt_int.seconds)
+        fieldset.add_constant(name='T_L', value=lagrangian_integral_timescale(w_10))
 
     return fieldset
 
@@ -301,7 +301,6 @@ def markov_1_mixed_layer_boundary(particle, fieldset, time):
         particle.depth = fieldset.max_depth - overshoot
 
 
-
 def markov_1_reflect(particle, fieldset, time):
     # First, the Wiener increment with zero mean and variance = dt
     dt = particle.dt
@@ -313,9 +312,12 @@ def markov_1_reflect(particle, fieldset, time):
     # The new random velocity perturbation, following Koszalka et al. (2013)
     # dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
     # The new random velocity perturbation, following eq. 5 of Brickman & Smith (2002)
-    w = particle.w_prime
-    dw_prime = 1. / fieldset.T_L * (
-            (-1 * w + 0.5 * dKz * ((w ** 2) * fieldset.T_L / Kz + 1)) * dt + math.sqrt(2 * Kz) * dWz)
+    w, T_l = particle.w_prime, fieldset.T_L
+    # dw_prime = 1. / T_L * (
+    #         (-1 * w + 0.5 * dKz * ((w ** 2) * T_L / Kz + 1)) * dt + math.sqrt(2 * Kz) * dWz)
+    dw_prime = 1. / T_l * (
+                (T_l / (2 * dt) * dKz * (w ** 2 * dt / Kz + 1) - w) * dt + math.sqrt(2 * Kz * T_l / dt) * dWz)
+
     particle.w_prime += dw_prime
 
     # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
