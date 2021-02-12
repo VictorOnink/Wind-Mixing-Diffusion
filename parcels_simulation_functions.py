@@ -307,18 +307,14 @@ def markov_1_reflect(particle, fieldset, time):
     dWz = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(dt)))
     # Next, the vertical diffusion term, and the gradient of the vertical diffusion
     Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
-    dKz = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
+    dKz = 0# fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
 
     # The new random velocity perturbation, following Koszalka et al. (2013)
     # dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
     # The new random velocity perturbation, following eq. 5 of Brickman & Smith (2002)
     w, T_l = particle.w_prime, fieldset.T_L
-    # dw_prime = 1. / T_L * (
-    #         (-1 * w + 0.5 * dKz * ((w ** 2) * T_L / Kz + 1)) * dt + math.sqrt(2 * Kz) * dWz)
-    dw_prime = 1. / T_l * (
-                (T_l / (2 * dt) * dKz * (w ** 2 * dt / Kz + 1) - w) * dt + math.sqrt(2 * Kz * T_l / dt) * dWz)
-
-    particle.w_prime += dw_prime
+    particle.w_prime = particle.w_prime * (1 - dt / T_l) + math.sqrt(2 * Kz / (T_l * dt)) * dWz + 0.5 * dKz * (
+                (w ** 2) * dt / Kz + 1)
 
     # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
     particle.depth = math.fabs(particle.depth + (particle.w_prime + fieldset.wrise) * particle.dt)

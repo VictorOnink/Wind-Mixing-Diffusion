@@ -15,7 +15,7 @@ dt_int = timedelta(seconds=30)
 runtime = timedelta(seconds=12*3600)
 
 # Number of particles in a simulation
-p_number = 200000
+p_number = 100000
 p_start_depth = 0.0                                         # starting depth of the particles
 seed = 1
 
