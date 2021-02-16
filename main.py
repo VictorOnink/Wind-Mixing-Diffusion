@@ -64,9 +64,9 @@ def run():
     visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
                                                    wind_sort=True, single_select=2, close_up=(0, -20),
                                                    diffusion_type='KPP', boundary='all')
-    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
-                                                   wind_sort=True, single_select=2, close_up=(0, -20),
-                                                   diffusion_type='Kukulka', boundary='all')
+    # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+    #                                                wind_sort=True, single_select=2, close_up=(0, -20),
+    #                                                diffusion_type='Kukulka', boundary='all')
     # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
     #                                                wind_sort=True, single_select=2, close_up=(0, -10),
     #                                                diffusion_type='all', boundary='Reflect')

@@ -30,6 +30,6 @@ max_depth = 100.                                            # Maximum depth in o
 phi = 0.9                                                   # Stability function in Monin-Obukov boundary layer theory
 mu = 1e-3                                                   # dynamic viscosity
 rho_p = 920                                                 # density polypropylene (kg/m^3)
-latitude = 45 * np.pi / 180                                 # Latitude for the determination
+latitude = 35 * np.pi / 180                                 # Latitude for the determination
 bulk_diff = 3.7e-4                                          # Dianeutral diffusion below MLD (m^2/s) (Ganachaud, 2003)
 w_prime = 0.01                                              # Magnitude of initial w_prime (m/s)

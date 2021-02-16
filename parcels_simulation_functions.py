@@ -30,10 +30,10 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed'):
     # Determine the type of particle class (dependent on whether we have a Markov 0 or Markov 1 diffusion approach)
     if 'Markov' in boundary:
         pclass = MarkovParticle
-        initial_w_prime = (np.random.rand(SET.p_number) - 1) * 2 * SET.w_prime
+        initial_w_total = w_rise + (np.random.rand(SET.p_number) - 1) * 2 * SET.w_prime
         # Creating the particle set
         pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[0.5] * SET.p_number, lat=[0.5] * SET.p_number,
-                           depth=[SET.p_start_depth] * SET.p_number, w_prime=initial_w_prime)
+                           depth=[SET.p_start_depth] * SET.p_number, w_total=initial_w_total)
     else:
         pclass = JITParticle
         # Creating the particle set
@@ -58,9 +58,9 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed'):
 
 class MarkovParticle(JITParticle):
     """
-    If using Markov-1 diffusion, we need to keep track of the w' term (Koszalka et al., 2013)
+    If using Markov-1 diffusion, we need to keep track of the w_total (w' + w_rise) term (Koszalka et al., 2013)
     """
-    w_prime = Variable('w_prime', initial=attrgetter('w_prime'), dtype=np.float32, to_write=False)
+    w_total = Variable('w_total', initial=attrgetter('w_total'), dtype=np.float32, to_write=False)
 
 
 def lagrangian_integral_timescale(w_10):
@@ -86,7 +86,7 @@ def lagrangian_integral_timescale(w_10):
     else:
         T_L = SET.MLD / u_t
     print("The lagrangian integral timescale is {} minutes".format(T_L / 60.))
-    return SET.dt_int.seconds
+    return SET.dt_int.seconds * 2 * 15
 
 
 def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
@@ -283,13 +283,13 @@ def markov_1_mixed_layer_boundary(particle, fieldset, time):
     # The new random velocity perturbation, following Koszalka et al. (2013)
     # dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
     # The new random velocity perturbation, following eq. 5 of Brickman & Smith (2002)
-    w = particle.w_prime
+    w = particle.w_total
     dw_prime = 1. / fieldset.T_L * (
             (-1 * w + 0.5 * dKz * (w ** 2 * fieldset.T_L / Kz + 1)) * dt + math.sqrt(2 * Kz) * dWz)
-    particle.w_prime += dw_prime
+    particle.w_total += dw_prime
 
     # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
-    particle.depth += (particle.w_prime + fieldset.wrise) * particle.dt
+    particle.depth += (particle.w_total + fieldset.wrise) * particle.dt
 
     # Dealing with boundary condition by having a thin mixed layer, and if the particle is not within the mixed layer,
     # then we have simple diffusion according to the equation
@@ -303,21 +303,30 @@ def markov_1_mixed_layer_boundary(particle, fieldset, time):
 
 def markov_1_reflect(particle, fieldset, time):
     # First, the Wiener increment with zero mean and variance = dt
-    dt = particle.dt
+    dt, T_l = particle.dt, fieldset.T_L
     dWz = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(dt)))
+
     # Next, the vertical diffusion term, and the gradient of the vertical diffusion
     Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
-    dKz = 0# fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
+    dKz = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
 
-    # The new random velocity perturbation, following Koszalka et al. (2013)
-    # dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
-    # The new random velocity perturbation, following eq. 5 of Brickman & Smith (2002)
-    w, T_l = particle.w_prime, fieldset.T_L
-    particle.w_prime = particle.w_prime * (1 - dt / T_l) + math.sqrt(2 * Kz / (T_l * dt)) * dWz + 0.5 * dKz * (
-                (w ** 2) * dt / Kz + 1)
+    # Now, the variance of the turbulent displacements from K_z. For dt < T_l, Kz ~= sig^2 dt, else Kz ~= sig^2 T_l
+    sig2 = max(Kz / dt, Kz / T_l)
+    dsig2 = max(dKz / dt, dKz / T_l)
+
+    # Getting the total (w_T), rise (w_r) and perturbation (w_p) velocities, where w_T = w_r + w_p
+    w_T, w_r = particle.w_total, fieldset.wrise
+    w_p = w_T - w_r
+
+    # The change in particle velocity, following eq. 4 of Brickman & Smith (2002) but assuming constant w_rise and
+    # stationary turbulence. The various terms are:
+    d_history = - (w_p / T_l) * dt
+    d_gradient = 0.5 * dsig2 * dt * (1 + w_p * (w_p + w_r) / sig2)
+    d_random = math.sqrt(2 * sig2 / T_l) * dWz
+    particle.w_total += (d_history + d_gradient + d_random)
 
     # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
-    particle.depth = math.fabs(particle.depth + (particle.w_prime + fieldset.wrise) * particle.dt)
+    particle.depth = math.fabs(particle.depth + particle.w_total * particle.dt)
 
     # If a particle would go deeper than max_depth, it needs to bounce back uo
     if particle.depth > fieldset.max_depth:
@@ -342,12 +351,12 @@ def markov_1_reduce_dt(particle, fieldset, time):
     # The new random velocity perturbation, following Koszalka et al. (2013)
     # dw_prime = 1. / fieldset.T_L * (math.sqrt(2 * Kz) * dWz - particle.w_prime * particle.dt)
     # The new random velocity perturbation, following eq. 5 of Brickman & Smith (2002)
-    w = particle.w_prime
-    dw_prime = 1. / fieldset.T_L * (
+    w = particle.w_total
+    dw_total = 1. / fieldset.T_L * (
             (-1 * w + 0.5 * dKz * (w ** 2 * fieldset.T_L / Kz + 1)) * dt + math.sqrt(2 * Kz) * dWz)
-    particle.w_prime += dw_prime
+    particle.w_total += dw_total
     # The ocean surface acts as a lid off of which the plastic bounces if tries to cross the ocean surface
-    potential = particle.depth + (particle.w_prime + fieldset.wrise) * particle.dt
+    potential = particle.depth + (particle.w_total + fieldset.wrise) * particle.dt
 
     if potential > 0:
         particle.depth = potential
