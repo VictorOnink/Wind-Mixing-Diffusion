@@ -185,7 +185,7 @@ def markov_0_mixed_layer_boundary(particle, fieldset, time):
 
     # The random walk component
     R = ParcelsRandom.uniform(-1., 1.) * math.sqrt(math.fabs(particle.dt) * 3)
-    bz = math.sqrt(fieldset.K_z[time, particle.depth + 0.5 * dK_z_p * particle.dt, particle.lat, particle.lon])
+    bz = math.sqrt(2 * fieldset.K_z[time, particle.depth + 0.5 * dK_z_p * particle.dt, particle.lat, particle.lon])
 
     # Rise velocity component
     rise = fieldset.wrise * particle.dt
@@ -212,7 +212,7 @@ def markov_0_reflect(particle, fieldset, time):
 
     # The random walk component
     R = ParcelsRandom.uniform(-1., 1.) * math.sqrt(math.fabs(particle.dt) * 3)
-    bz = math.sqrt(fieldset.K_z[time, particle.depth + 0.5 * dK_z_p * particle.dt, particle.lat, particle.lon])
+    bz = math.sqrt(2 * fieldset.K_z[time, particle.depth + 0.5 * dK_z_p * particle.dt, particle.lat, particle.lon])
 
     # Rise velocity component
     rise = fieldset.wrise * particle.dt
@@ -241,7 +241,7 @@ def markov_0_reduce_dt(particle, fieldset, time):
 
     # The random walk component
     R = ParcelsRandom.uniform(-1., 1.) * math.sqrt(math.fabs(particle.dt) * 3)
-    bz = math.sqrt(fieldset.K_z[time, particle.depth + 0.5 * dK_z_p * particle.dt, particle.lat, particle.lon])
+    bz = math.sqrt(2 * fieldset.K_z[time, particle.depth + 0.5 * dK_z_p * particle.dt, particle.lat, particle.lon])
 
     # Rise velocity component
     rise = fieldset.wrise * particle.dt
