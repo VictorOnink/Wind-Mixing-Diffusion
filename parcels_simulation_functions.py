@@ -86,7 +86,7 @@ def lagrangian_integral_timescale(w_10):
     else:
         T_L = SET.MLD / u_t
     print("The lagrangian integral timescale is {} minutes".format(T_L / 60.))
-    return SET.dt_int.seconds * 2 * 15
+    return T_L  # SET.dt_int.seconds * 2 * 15
 
 
 def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
@@ -272,7 +272,6 @@ def markov_1_mixed_layer_boundary(particle, fieldset, time):
     Basically, if the new particle position is within the mixed layer (or above it), then the particle is distributed
     randomly throughout this mixing layer (and the particle will never fly through the ocean surface)
     """
-
     # First, the Wiener increment with zero mean and variance = dt
     dt = particle.dt
     dWz = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(dt)))

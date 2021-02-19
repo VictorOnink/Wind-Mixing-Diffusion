@@ -108,6 +108,7 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, m
         alpha = (k * u_s) / phi
         profile = alpha * (depth + z0) * np.power(1 - depth / mld, 2)
         profile[depth > mld] = 0
+        # profile = depth * 0
     return profile + settings.bulk_diff
 
 
@@ -127,12 +128,12 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
         alpha = (k * u_s) / (phi * mld ** 2)
         profile = alpha * (mld - depth) * (mld - 3 * depth - 2 * z0)
         profile[depth > mld] = 0
+        # profile = depth * 0
     return profile
 
 
 def exclude_field_data(exclude, sources):
     if exclude is not None:
-        if exclude is not None:
-            for source in exclude:
-                sources.remove(source)
+        for source in exclude:
+            sources.remove(source)
     return sources
