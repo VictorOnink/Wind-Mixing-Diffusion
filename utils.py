@@ -120,7 +120,7 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
     k = settings.vk  # von Karman constant
     H_s = determine_wave_height(w_10)  # significant wave height (m)
     phi = settings.phi
-    z0 = determine_wave_height(w_10)
+    z0 = determine_surface_roughness(w_10)
     if diffusion_type == 'Kukulka':
         profile = -2.25 * k * u_s * H_s * (H_s * H_s_frac) ** 1.5 * np.power(depth, -2.5) * np.ones(depth.shape)
         profile[depth < (H_s * H_s_frac)] = 0
