@@ -32,7 +32,7 @@ def run():
     """
     w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
     w_rise = [-0.03, -0.003, -0.0003]
-    diffusion = 'Kukulka'  # 'KPP'
+    diffusion = 'KPP'  # 'KPP'
     # boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
     boundary = 'Reflect_Markov'
     pbar = ProgressBar()
@@ -61,12 +61,12 @@ def run():
     # visualization.boundary_condition_comparison(w_rise_list=[-0.003], diffusion_type='Kukulka', close_up=(0, -10))
 
     # Plotting the multi-wind condition figures
+    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
+                                                   wind_sort=True, single_select=2, close_up=(0, -20),
+                                                   diffusion_type='KPP', boundary='all')
     # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
     #                                                wind_sort=True, single_select=2, close_up=(0, -20),
-    #                                                diffusion_type='KPP', boundary='all')
-    # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
-    #                                                wind_sort=True, single_select=2, close_up=(0, -20),
-    #                                                diffusion_type='Kukulka', boundary='all')
+    #                                                diffusion_type='Kukulka', boundary='Reflect')
     # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
     #                                                wind_sort=True, single_select=2, close_up=(0, -20),
     #                                                diffusion_type='all', boundary='Reflect')
