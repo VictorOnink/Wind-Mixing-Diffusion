@@ -47,7 +47,8 @@ def create_pset(fieldset, w_rise, boundary):
     xy = 0.5  # position in lon and lat, which is at the center of the domain
     if 'Markov' in boundary:
         pclass = Markov_1_Particle
-        initial_w_total = w_rise + (np.random.rand(SET.p_number) - 0.5) * 2 * SET.w_prime
+        # initial_w_total = w_rise + (np.random.rand(SET.p_number) - 0.5) * 2 * SET.w_prime
+        initial_w_total = (np.random.rand(SET.p_number) - 0.5) * 2 * SET.w_prime
         # Creating the particle set
         pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[xy] * SET.p_number, lat=[xy] * SET.p_number,
                            depth=[SET.p_start_depth] * SET.p_number, w_total=initial_w_total)
@@ -106,7 +107,7 @@ def lagrangian_integral_timescale(w_10):
     else:
         T_L = SET.MLD / u_t
     print("The lagrangian integral timescale is {} minutes".format(T_L / 60.))
-    return SET.dt_int.seconds  # SET.dt_int.seconds * 2 * 15
+    return SET.dt_int.seconds*20  # SET.dt_int.seconds * 2 * 15
 
 
 def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
@@ -145,6 +146,10 @@ def determine_particle_size(w_rise):
 
     particle_size = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
     print('The particle size according to Poulain et al. (2019) is {} m'.format(particle_size))
+
+
+def DeleteParticle(particle, fieldset, time):
+    particle.delete()
 
 
 def create_fieldset(w_10, w_rise, diffusion_type, boundary):
@@ -202,7 +207,8 @@ def markov_0_potential_position(particle, fieldset, time):
 
     # The wiener increment, and then the random component
     dW = ParcelsRandom.normalvariate(0, math.sqrt(math.fabs(particle.dt)))
-    d_random = math.sqrt(2 * fieldset.K_z[time, particle.depth + 0.5 * dK * particle.dt, particle.lat, particle.lon]) * dW
+    Kz = fieldset.K_z[time, particle.depth + 0.5 * dK * particle.dt, particle.lat, particle.lon]
+    d_random = math.sqrt(2 * Kz) * dW
 
     # The rise velocity
     d_rise = fieldset.wrise * particle.dt
@@ -226,23 +232,29 @@ def markov_1_potential_position(particle, fieldset, time):
     Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
     dKz = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
 
-    # Now, the variance of the turbulent displacements from K_z. For dt < T_l, Kz ~= sig^2 dt, else Kz ~= sig^2 T_l
+
+    # Now, the variance of the turbulent displacements from K_z. For dt < T_l, Kz ~= sig^2 dt, else Kz ~= sig^2 T_l. We
+    # add 1e-20 to sig2 to prevent numerical issues when Kz -> 0
     T_l = fieldset.T_L
-    sig2 = max(Kz / dt, Kz / T_l)
+    sig2 = max(Kz / dt, Kz / T_l) + 1e-20
     dsig2 = max(dKz / dt, dKz / T_l)
 
     # Getting the total (w_T), rise (w_r) and perturbation (w_p) velocities, where w_T = w_r + w_p
     w_T, w_r = particle.w_total, fieldset.wrise
-    w_p = w_T - w_r
+    # w_p = w_T - w_r
 
     # The change in particle velocity
-    d_history = - (w_p / T_l) * dt
-    d_gradient = 0.5 * dsig2 * dt * (1 + w_p * (w_p + w_r) / sig2)
+    # d_history = - (w_p / T_l) * dt
+    d_history = - (w_T / T_l) * dt
+    # d_gradient = 0.5 * dsig2 * dt * (1 + 0*w_p * (w_p + w_r) / sig2)
+    d_gradient = 0.5 * dsig2 * dt * (1 + w_T ** 2 / sig2)
+    # a = 1 + w_T ** 2 / sig2
+    # print(a)
     d_random = math.sqrt(2 * sig2 / T_l) * dWz
     particle.w_total += (d_history + d_gradient + d_random)
 
     # The potential particle depth
-    particle.potential = particle.depth + particle.w_total * particle.dt
+    particle.potential = particle.depth + (particle.w_total + w_r) * particle.dt
 
 
 def reflect_boundary_condition(particle, fieldset, time):
@@ -299,7 +311,3 @@ def mixed_layer_boundary_condition(particle, fieldset, time):
         particle.depth = fieldset.max_depth - overshoot
     else:
         particle.depth = particle.potential
-
-
-def DeleteParticle(particle, fieldset, time):
-    particle.delete()
