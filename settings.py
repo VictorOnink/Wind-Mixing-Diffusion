@@ -9,10 +9,10 @@ data_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/Data/'
 
 # Timesteps for integration and for printing to the output file
 dt_out = timedelta(seconds=3600)
-dt_int = timedelta(seconds=30)
+dt_int = timedelta(seconds=1)
 
 # Runtime for the entire simulation
-runtime = timedelta(seconds=12*3600)
+runtime = timedelta(seconds=3*3600)
 
 # Number of particles in a simulation
 p_number = 100000
@@ -32,4 +32,4 @@ mu = 1e-3                                                   # dynamic viscosity
 rho_p = 920                                                 # density polypropylene (kg/m^3)
 latitude = 35 * np.pi / 180                                 # Latitude for the determination
 bulk_diff = 3e-5                                            # Dianeutral diffusion below MLD (m^2/s) (Waterhouse et al., 2014)
-w_prime = 0.0                                              # Magnitude of initial w_prime (m/s)
+w_prime = 0.001                                             # Magnitude of initial w_prime (m/s)

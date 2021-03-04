@@ -3,6 +3,8 @@ import settings as SET
 import numpy as np
 import pandas as pd
 from seabird.cnv import fCNV
+from copy import deepcopy
+import scipy.stats as stats
 
 
 def data_standardization():
@@ -18,6 +20,7 @@ def data_standardization():
     standardization_kooi()
     standardization_Pieper()
     standardization_Zettler()
+    standardization_Egger()
 
 
 def standardization_kukulka():
@@ -67,7 +70,6 @@ def standardization_kooi():
         data_trawl = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='trawls')
         data_plastic = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='nets')
 
-
         # Determine the mixed layer depth
         MLD = determine_MLD(prefix)
 
@@ -94,12 +96,12 @@ def standardization_kooi():
                                                                                 (data_plastic['Net'] == depth)].sum()
 
         # Normalizing everything by the max concentration
-        concentration = concentration.apply(lambda x: x/x.max(), axis=0).values
+        concentration = concentration.apply(lambda x: x / x.max(), axis=0).values
 
         # Getting the wind_data and depth_levels into the same shape as the concentration array
-        wind_data = pd.concat([wind_data]*depth_levels.shape[0], axis=1).transpose().values
-        depth_levels = np.array([depth_levels, ]*station_numbers.shape[0]).transpose()
-        MLD = np.array([MLD]*depth_levels.shape[0]).reshape(depth_levels.shape)
+        wind_data = pd.concat([wind_data] * depth_levels.shape[0], axis=1).transpose().values
+        depth_levels = np.array([depth_levels, ] * station_numbers.shape[0]).transpose()
+        MLD = np.array([MLD] * depth_levels.shape[0]).reshape(depth_levels.shape)
 
         # Normalising the depth array
         depth_norm = np.divide(depth_levels, MLD)
@@ -154,29 +156,28 @@ def standardization_Pieper():
                 # and subtracting the number of particles in the control
                 if len(replicas) > 0:
                     concentration[station][sample] = max(0, np.mean(replicas) - control)
-                    depth_dataframe[station][sample] = np.mean(depths[(station == station_sample) & (type == sample)].values)
+                    depth_dataframe[station][sample] = np.mean(
+                        depths[(station == station_sample) & (type == sample)].values)
 
         # Wind speed from the PE442 Casino file
         wind_data = pd.DataFrame(casino_wind(device='CTD with samples', cruise='PE442'))
         wind_data = pd.concat([wind_data] * type_list.shape[0], axis=1).transpose().values
 
-
         # Getting the mixing layer depth from the CTD data
         MLD = determine_MLD(prefix=prefix, station_numbers=station_numbers).values
-        MLD = np.array([MLD, ]*type_list.shape[0]).reshape(type_list.shape[0], station_numbers.shape[0])
+        MLD = np.array([MLD, ] * type_list.shape[0]).reshape(type_list.shape[0], station_numbers.shape[0])
 
         # Normalising the depth according to MLD depth
         depth_norm = np.divide(depth_dataframe.values, MLD)
 
         # Keeping just the measurements above the maximum depth
-        max_depth = 50
+        max_depth = 73
         depth = depth_dataframe.values.flatten()
         concentration = concentration.values.flatten()[depth < max_depth]
         concentration /= concentration.max()
         depth_norm = depth_norm.flatten()[depth < max_depth]
         wind_data = wind_data.flatten()[depth < max_depth]
         MLD = MLD.flatten()[depth < max_depth]
-
 
         # Saving everything into a dictionary
         output_dic = {'concentration': concentration, 'depth': depth[depth < max_depth],
@@ -233,8 +234,8 @@ def standardization_Zettler():
         wind_data = pd.concat([wind_data] * depths.shape[0], axis=1).transpose().values
 
         # Keeping just the measurements taken above max-depth
-        max_depth = 50
-        depth_selec = depths.values.flatten() > 50
+        max_depth = 73
+        depth_selec = depths.values.flatten() > max_depth
         # Saving everything into a dictionary
         output_dic = {'concentration': concentrations.values.flatten()[depth_selec],
                       'depth': depths.values.flatten()[depth_selec],
@@ -246,6 +247,49 @@ def standardization_Zettler():
         utils.save_obj(filename=file_name, object=output_dic)
 
 
+def standardization_Egger():
+    prefix = 'Egger'
+    file_name = utils.get_data_output_name(prefix)
+    if not utils._check_file_exist(file_name + '.pkl'):
+        data_multi = pd.read_excel(SET.data_dir + 'Egger2020_processed.xlsx')
+
+        # Create an empty dataframe to divide up the dataset according to the station
+        concentrations = pd.DataFrame(columns=range(1, 6), index=range(16)).fillna(0.0)
+        depths = pd.DataFrame(columns=range(1, 6), index=range(16)).fillna(0.0)
+        MLD = pd.DataFrame(columns=range(1, 6), index=range(16)).fillna(1.0)
+        wind = pd.DataFrame(columns=range(1, 6), index=range(16)).fillna(0.0)
+
+        MLD_station = determine_MLD(prefix=prefix)
+
+        for station in concentrations.columns:
+            station_data = data_multi.loc[data_multi.Station == station].copy(deep=True).reset_index()
+            concentrations.loc[:station_data.shape[0], station] = station_data['concentration'].copy(deep=True)
+            depths.loc[:station_data.shape[0], station] = station_data['depth'].copy(deep=True)
+            depths.loc[station_data.shape[0]:, station] = np.nan
+            wind.loc[:station_data.shape[0], station] = station_data['wind'].copy(deep=True)
+            MLD.loc[:, station] = MLD_station[station].values[0]
+
+        # Normalizing the concentrations
+        concentrations = concentrations.apply(lambda x: x / x.max(), axis=0)
+
+        # Normalizing depths
+        depth_norm = depths.div(MLD)
+
+        # Drop all nan measurements, and then only keep measurements above max-depth
+        max_depth = 73
+        depth_selec = (deepcopy(depths.values) > max_depth) + (np.isnan(depths.values))
+        keys, arrays = ['concentration', 'depth', 'depth_norm', 'wind_speed', 'MLD'], [concentrations, depths,
+                                                                                       depth_norm, wind, MLD]
+        output_dic = {}
+        for ind, key in enumerate(keys):
+            data = arrays[ind]
+            # Only keep above max_depth, and drop all other values
+            data = data.mask(depth_selec).values.flatten()
+            output_dic[key] = data[~np.isnan(data)]
+
+        # Pickling the array
+        utils.save_obj(filename=file_name, object=output_dic)
+
 
 def determine_MLD(prefix: str, station_numbers=None):
     """
@@ -254,8 +298,8 @@ def determine_MLD(prefix: str, station_numbers=None):
 
     MLD = depth at which there is a 0.2 degree temperature difference relative to the temperature at 10m depth
     """
-    z_ref = 10 # reference depth in meters
-    dif_ref = 0.2 # temperature difference relative to reference depth (degrees celcius)
+    z_ref = 10  # reference depth in meters
+    dif_ref = 0.2  # temperature difference relative to reference depth (degrees celcius)
 
     if prefix is 'Kooi':
         data_ctd = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='CTD')
@@ -302,10 +346,29 @@ def determine_MLD(prefix: str, station_numbers=None):
                 MLD[station] = depth[np.where(np.abs(temp - temp_10) > dif_ref)[0][0]]
             else:
                 MLD[station] = np.nan
+    if prefix is 'Egger':
+        MLD = pd.DataFrame(columns=range(1, 6), index=[0]).fillna(0.0)
+        for station in MLD.columns:
+            data_file = SET.data_dir + 'CTD_EGGER/station_{}/CTD Data/NPM2_Stat-{}_Cast1.txt'.format(station, station)
+            # Loading the data for the depth and temperature (C)
+            data = np.genfromtxt(data_file, skip_header=4, usecols=(1, 2))
+            # Determine index of the max depth, and then only use data from before that point, as we only want to use
+            # data as the CTD was travelling downwards
+            data = data[:np.argmax(data[:, 0]), :]
+            # Bin the temperature data into 0.2 m intervals
+            bin_T, depth, _ = stats.binned_statistic(x=data[:, 0], values=data[:, 1], bins=np.arange(min(data[:, 0]),
+                                                                                                     max(data[:, 0]),
+                                                                                                     0.3))
+            # Determine the index that corresponds to a depth of 10m
+            ind_10 = utils.find_nearest_index(depth=depth, z_ref=z_ref)
+            temp_10 = bin_T[ind_10]
+            # Determine the depth at which the temperature difference is equal to dif_ref with respect to z_ref
+            depth, bin_T = depth[ind_10:], bin_T[ind_10:]
+            MLD[station] = depth[np.where(np.abs(bin_T - temp_10) > dif_ref)[0][0]]
     return MLD
 
 
-def casino_wind(device: str, cruise:str):
+def casino_wind(device: str, cruise: str):
     if cruise is 'PE442':
         data = pd.read_csv(SET.data_dir + 'casino_{}.csv'.format(cruise), delimiter='\t')
     elif cruise is 'PE448':

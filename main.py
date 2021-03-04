@@ -31,7 +31,7 @@ def run():
     Parcels simulations
     """
     w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
-    w_rise = [-0.000]  # [-0.03, -0.003, -0.0003]
+    w_rise = [-0.03]  # [-0.03, -0.003, -0.0003]
     diffusion = 'KPP'  # 'KPP'
     # boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
     boundary = 'Reflect_Markov'
@@ -53,6 +53,7 @@ def run():
     """
     Visualization of simulations
     """
+    # visualization.sanity_check(wind, rise, diffusion_type=diffusion, boundary=boundary)
     # Just plotting the diffusion profiles over various wind conditions
     # visualization.just_diffusion_profile(w_10_list=[0.85, 2.4, 4.35, 6.65, 9.3])
 
@@ -66,7 +67,7 @@ def run():
     #                                                diffusion_type='KPP', boundary='all')
     # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
     #                                                wind_sort=True, single_select=2, close_up=(0, -20),
-    #                                                diffusion_type='Kukulka', boundary='Reflect')
+    #                                                diffusion_type='Kukulka', boundary='all')
     # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, selection='w_10',
     #                                                wind_sort=True, single_select=2, close_up=(0, -20),
     #                                                diffusion_type='all', boundary='Reflect')
@@ -78,6 +79,7 @@ def run():
                                        boundary=boundary, selection='w_10', single_select=0, close_up=(0, -100),
                                        diffusion_curve=False)
 
+
     # Plotting for the depth profiles for multiple MLD levels
     # for beaufort in range(1, 6):
     #     visualization.mld_depth_influence(w_rise_list=w_rise, MLD_list=[15.0, 20.0, 30.0], beaufort=beaufort)
@@ -85,12 +87,12 @@ def run():
     #                                       diffusion_type='Kukulka')
 
     # # Plotting the depth profile for multiple timesteps
-    visualization.timestep_comparison(w_10_list=w_10, w_rise_list=w_rise,
-                                      close_up=(0, -30), diffusion_type=diffusion, interval=1,
-                                      boundary=boundary, mld=20.0, diffusion_curve=False)
-    visualization.timestep_comparison(w_10_list=w_10, w_rise_list=w_rise,
-                                      close_up=(0, -100), diffusion_type=diffusion, interval=1,
-                                      boundary=boundary, mld=20.0, diffusion_curve=False)
+    # visualization.timestep_comparison(w_10_list=w_10, w_rise_list=w_rise,
+    #                                   close_up=(0, -30), diffusion_type=diffusion, interval=1,
+    #                                   boundary=boundary, mld=20.0, diffusion_curve=False)
+    # visualization.timestep_comparison(w_10_list=w_10, w_rise_list=w_rise,
+    #                                   close_up=(0, -100), diffusion_type=diffusion, interval=1,
+    #                                   boundary=boundary, mld=20.0, diffusion_curve=False)
 
 
 

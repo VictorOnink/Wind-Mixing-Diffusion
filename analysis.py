@@ -7,7 +7,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 
 
-def depth_concentration(w_10, w_rise, diffusion_type, boundary):
+def depth_concentration(w_10, w_rise, diffusion_type, boundary, print_removed=True):
     dataset = Dataset(utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD))
     time = dataset.variables['time'][0, :]
     # Bins, at 0.5 meter intervals
@@ -19,6 +19,9 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary):
         # The concentration
         concentrations, bin_edges = np.histogram(depth, bins=depth_bins)
         output_dir[t] = concentrations
+        if print_removed:
+            removed_frac = np.sum(depth.mask) / depth.shape[0] * 100.
+            print(removed_frac)
     output_dir['bin_edges'] = bin_edges
     output_dir['last_time_slice'] = t
     utils.save_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary),
@@ -26,7 +29,7 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary):
 
 
 def correlation_depth_concentration(exclude=None, get_r=[]):
-    sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka']
+    sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
     sources = utils.exclude_field_data(exclude, sources)
 
     # Loading in the data
@@ -64,7 +67,7 @@ def determine_correlation(concentration, depth, norm_depth, subset='all data', z
 
 
 def range_MLD_values(exclude=None):
-    sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka']
+    sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
     sources = utils.exclude_field_data(exclude, sources)
 
     # Loading all the determined MLD depths, and then get the mean, std, max and min value over all data

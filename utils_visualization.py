@@ -236,11 +236,11 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
 def add_observations(ax, sources=None, wind_range=None, norm_depth=False, alpha=0.5):
     # If no individual sources as specified, just assume I want to include all of them
     if sources is None:
-        sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka']
-    data_markers = ['v', 'P', '*', 'o']
+        sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
+    data_markers = ['v', 'P', '*', 'o', 's']
 
     data_labels = {'Kooi': 'Kooi et al. (2016)', 'Pieper': 'Pieper et al. (2020)', 'Zettler': 'PE448 South Atlantic',
-                   'Kukulka': 'Kukulka et al. (2012)'}
+                   'Kukulka': 'Kukulka et al. (2012)', 'Egger': 'Egger et al. (2020)'}
 
     # Adding the actual plotting
     for count, source in enumerate(sources):
