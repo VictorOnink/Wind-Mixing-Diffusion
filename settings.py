@@ -7,11 +7,8 @@ import sys
 hostname = socket.gethostname()
 if socket.gethostname() == 'Victors-MBP.home':
     server = 'laptop'
-elif socket.gethostname() == 'submit01.ubelix.unibe.ch':
-    server = 'ubelix'
 else:
-    print('You are running on a different host than this code is set up for, namely {}.'.format(socket.gethostname()))
-    sys.exit()
+    server = 'ubelix'
 
 # directory for the output files of the parcels simulations
 root_direc = {'laptop': '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/',
