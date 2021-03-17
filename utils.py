@@ -9,19 +9,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD, alpha=main.alpha[0]):
+def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=settings.MLD):
     name = settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
                                                                                                         mld)
     if 'Markov' in boundary:
-        name += 'alpha={}'.format(alpha)
+        name += 'alpha_list={}'.format(alpha)
     return name + '.nc'
 
 
-def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD, alpha=main.alpha[0]):
+def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=settings.MLD):
     name = settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
                                                                                                         mld)
     if 'Markov' in boundary:
-        name += 'alpha={}'.format(alpha)
+        name += 'alpha_list={}'.format(alpha)
     return name
 
 

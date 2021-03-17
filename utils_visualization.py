@@ -112,12 +112,6 @@ def saving_filename_boundary(save_location, selection, close_up, diffusion_type)
         return save_location + diffusion_type + '_boundary_max={}_min={}_variable={}.png'.format(ymax, ymin, selection)
 
 
-def label_profile(selection, parameters):
-    w_10, w_rise = parameters
-    w_rise = np.abs(w_rise)
-    return r'$w_{10} = $ ' + '{}'.format(w_10) + r' m s$^{-1}$, $w_r = $ ' + '{}'.format(w_rise) + ' m s$^{-1}$'
-
-
 def label_kukulka(selection, parameters):
     w_10, w_rise = parameters
     w_rise = np.abs(w_rise)
@@ -147,7 +141,7 @@ def label_MLD_Comparison(parameters, diffusion_type, mld=settings.MLD):
                'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
 
 
-def label_TL_comparison(boundary, alpha):
+def label_alpha_comparison(boundary, alpha):
     if boundary is 'Reflect':
         return 'M-0'
     else:
@@ -210,8 +204,8 @@ def boolean_diff_type(diffusion_type):
     return kukulka, kpp, artificial
 
 
-def get_concentration_list(w_10_list, w_rise_list, selection, single_select, diffusion_type, output_step=-1,
-                           all_timesteps=False, boundary='Mixed', mld=settings.MLD, alpha=main.alpha[0]):
+def get_concentration_list(w_10_list, w_rise_list, selection, single_select, diffusion_type, alpha_list, output_step=-1,
+                           all_timesteps=False, boundary='Mixed', mld=settings.MLD):
     output_dic = {'concentration_list': [], 'parameter_concentrations': [],
                   'parameter_kukulka': []}
     if selection == 'w_10':
@@ -219,6 +213,10 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
     elif selection == 'w_rise':
         w_10_list = [w_10_list[single_select]]
     # selection == 'all' will just return all simulations for a particular diffusion_type and boundary
+    if type(alpha_list) is list:
+        alpha = alpha_list[0]
+    else:
+        alpha = alpha_list
 
     for w_rise in w_rise_list:
         for w_10 in w_10_list:
@@ -292,10 +290,12 @@ def field_data_figure_names(close_up=None, wind_sort=False, norm_depth=False, ou
     return figure_name + output_type
 
 
-def model_field_data_comparison_name(diffusion_type, boundary, close_up=None, wind_sort=False, norm_depth=False,
-                                     output_type='.png', beaufort=1):
+def model_field_data_comparison_name(diffusion_type, boundary, alpha_list,close_up=None, wind_sort=False,
+                                     norm_depth=False, output_type='.png', beaufort=1):
     diff_dict = {'Kukulka': 'Kukulka', 'KPP': 'KPP', 'all': 'Kukulka_KPP'}
     figure_name = settings.figure_dir + 'model_field_data_{}_{}'.format(diff_dict[diffusion_type], boundary)
+    if 'Markov' in boundary:
+        figure_name += '_alpha_{}_'.format(alpha_list[0])
     if close_up is not None:
         max, min = close_up
         figure_name += '_max_{}_min_{}'.format(max, min)

@@ -6,7 +6,7 @@ import numpy as np
 from netCDF4 import Dataset
 
 
-def basic_profile_figure(w_10_list, w_rise_list, selection='w_10', close_up=None,
+def basic_profile_figure(w_10_list, w_rise_list, alpha_list, selection='w_10', close_up=None,
                          y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
                          ax_label_size=16, legend_size=12, single_select=1,
                          output_step=-1, diffusion_type='Kukulka', boundary='Mixed', diffusion_curve=True):
@@ -18,8 +18,8 @@ def basic_profile_figure(w_10_list, w_rise_list, selection='w_10', close_up=None
     # Plotting the distribution according to the Kukulka parametrization
     if diffusion_type is 'Kukulka':
         profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
-                                                      output_step=output_step, diffusion_type=diffusion_type,
-                                                      boundary=boundary)
+                                                      alpha_list=alpha_list, output_step=output_step,
+                                                      diffusion_type=diffusion_type, boundary=boundary)
         for counter in range(len(profile_dict['concentration_list'])):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                     label=utils_v.label_kukulka(selection=selection,
@@ -30,7 +30,7 @@ def basic_profile_figure(w_10_list, w_rise_list, selection='w_10', close_up=None
     if diffusion_type is 'KPP':
         profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
                                                       output_step=output_step, diffusion_type=diffusion_type,
-                                                      boundary=boundary)
+                                                      boundary=boundary, alpha_list=alpha_list)
         for counter in range(len(profile_dict['concentration_list'])):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                     label=utils_v.label_KPP(parameters=profile_dict['parameter_kukulka'][counter], selection=selection),
@@ -38,7 +38,7 @@ def basic_profile_figure(w_10_list, w_rise_list, selection='w_10', close_up=None
     if diffusion_type is 'artificial':
         profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select,
                                                       output_step=output_step, diffusion_type=diffusion_type,
-                                                      boundary=boundary)
+                                                      boundary=boundary, alpha_list=alpha_list)
         for counter in range(len(profile_dict['concentration_list'])):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                     label=utils_v.label_KPP(parameters=profile_dict['parameter_kukulka'][counter], selection=selection),
@@ -111,14 +111,14 @@ def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ ($10^
     plt.savefig(settings.figure_dir + 'diffusion_profile_MLD=20.png', bbox_inches='tight')
 
 
-def timestep_comparison(w_10_list, w_rise_list, selection='w_10', close_up=None,
+def timestep_comparison(w_10_list, w_rise_list, alpha_list, selection='w_10', close_up=None,
                         y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
                         ax_label_size=16, legend_size=12, single_select=0, mld=settings.MLD,
                         diffusion_type='Kukulka', interval=1, boundary='Mixed', diffusion_curve=True):
 
     # Load the relevant data for the figure
     profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, selection, single_select, diffusion_type,
-                                                  all_timesteps=True, boundary=boundary, mld=mld)
+                                                  all_timesteps=True, boundary=boundary, mld=mld, alpha_list=alpha_list)
     # Preparing for the actual plotting
     ax_range = utils_v.get_axes_range(close_up=close_up, norm_depth=False)
 
@@ -156,7 +156,7 @@ def timestep_comparison(w_10_list, w_rise_list, selection='w_10', close_up=None,
                 bbox_inches='tight', dpi=600)
 
 
-def boundary_condition_comparison(w_rise_list, selection='w_10', close_up=None, output_step=-1,
+def boundary_condition_comparison(w_rise_list, alpha_list, selection='w_10', close_up=None, output_step=-1,
                                   y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
                                   ax_label_size=16, legend_size=12, single_select=0,
                                   diffusion_type='KPP', interval=1, alpha=0.3):
@@ -178,7 +178,7 @@ def boundary_condition_comparison(w_rise_list, selection='w_10', close_up=None, 
         if kukulka:
             profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                           output_step=output_step, diffusion_type='Kukulka',
-                                                          boundary=boundary)
+                                                          boundary=boundary, alpha_list=alpha_list)
             for counter in range(len(profile_dict['concentration_list'])):
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                         label=utils_v.label_boundary(w_10=mean_wind, diffusion_type='Kukulka', boundary=boundary),
@@ -188,7 +188,7 @@ def boundary_condition_comparison(w_rise_list, selection='w_10', close_up=None, 
         if kpp:
             profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                           output_step=output_step, diffusion_type='KPP',
-                                                          boundary=boundary)
+                                                          boundary=boundary, alpha_list=alpha_list)
             for counter in range(len(profile_dict['concentration_list'])):
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                         label=utils_v.label_boundary(w_10=mean_wind, diffusion_type='KPP', boundary=boundary),
@@ -201,8 +201,7 @@ def boundary_condition_comparison(w_rise_list, selection='w_10', close_up=None, 
 
     # Saving the figure
     plt.savefig(utils_v.saving_filename_boundary(settings.figure_dir + '/Boundary Conditions/', selection, close_up,
-                                                 diffusion_type),
-                bbox_inches='tight', dpi=600)
+                                                 diffusion_type), bbox_inches='tight', dpi=600)
 
 
 def plot_field_data_overview(norm_depth=False, wind_sort=False, y_label='Depth (m)', close_up=None,
@@ -246,7 +245,8 @@ def plot_field_data_overview(norm_depth=False, wind_sort=False, y_label='Depth (
     plt.savefig(utils_v.field_data_figure_names(close_up, wind_sort, norm_depth), bbox_inches='tight')
 
 
-def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', output_step=-1, single_select=1,
+def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selection='w_10', output_step=-1,
+                                     single_select=1,
                                      norm_depth=False, wind_sort=True, y_label='Depth (m)', close_up=None,
                                      x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(16, 8), ax_label_size=16,
                                      legend_size=12, diffusion_type='Kukulka', boundary='Reflect_Markov', alpha=0.3,
@@ -282,7 +282,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', o
             if kukulka:
                 profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                               output_step=output_step, diffusion_type='Kukulka',
-                                                              boundary=boundary)
+                                                              boundary=boundary, alpha_list=alpha_list)
                 for counter in range(len(profile_dict['concentration_list'])):
                     ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
                             label=utils_v.label_kukulka(selection=selection,
@@ -293,7 +293,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', o
             if kpp:
                 profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                               output_step=output_step, diffusion_type='KPP',
-                                                              boundary=boundary)
+                                                              boundary=boundary, alpha_list=alpha_list)
                 for counter in range(len(profile_dict['concentration_list'])):
                     ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
                             label=utils_v.label_KPP(selection=selection,
@@ -324,7 +324,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', o
                 if kukulka:
                     profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, 'all', single_select,
                                                                   output_step=output_step, diffusion_type='Kukulka',
-                                                                  boundary=boundary)
+                                                                  boundary=boundary, alpha_list=alpha_list)
                     for model in range(len(w_rise_list)):
                         _, w_rise = profile_dict['parameter_kukulka'][scale + model * len(w_10_list)]
                         concentration = profile_dict['concentration_list'][scale + model * len(w_10_list)]
@@ -336,7 +336,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', o
                 if kpp:
                     profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, 'all', single_select,
                                                                   output_step=output_step, diffusion_type='KPP',
-                                                                  boundary=boundary)
+                                                                  boundary=boundary, alpha_list=alpha_list)
                     for model in range(len(w_rise_list)):
                         _, w_rise = profile_dict['parameter_kukulka'][scale + model * len(w_10_list)]
                         concentration = profile_dict['concentration_list'][scale + model * len(w_10_list)]
@@ -352,12 +352,12 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, selection='w_10', o
         ax[-1].axis('off')
 
     # Saving the figure
-    save_name = utils_v.model_field_data_comparison_name(diffusion_type, boundary, close_up=close_up,
+    save_name = utils_v.model_field_data_comparison_name(diffusion_type, boundary, alpha_list, close_up=close_up,
                                                          wind_sort=wind_sort, norm_depth=norm_depth, beaufort=beaufort)
     plt.savefig(save_name, bbox_inches='tight')
 
 
-def mld_depth_influence(w_rise_list, MLD_list, selection='w_rise', output_step=-1, single_select=0,
+def mld_depth_influence(w_rise_list, MLD_list, alpha_list,selection='w_rise', output_step=-1, single_select=0,
                         y_label='Depth/MLD', close_up=None, beaufort=5,
                         x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(16, 8), ax_label_size=16,
                         legend_size=12, diffusion_type='KPP', boundary='Reflect', alpha=0.3):
@@ -379,7 +379,7 @@ def mld_depth_influence(w_rise_list, MLD_list, selection='w_rise', output_step=-
         # Plotting the distribution according to the Kukulka parametrization
         if kukulka:
             profile_dict = utils_v.get_concentration_list([np.mean(wind_range)], w_rise_list, selection,
-                                                          single_select,
+                                                          single_select, alpha_list=alpha_list,
                                                           output_step=output_step, diffusion_type='Kukulka',
                                                           boundary=boundary, mld=mld)
             for counter in range(len(profile_dict['concentration_list'])):
@@ -391,7 +391,7 @@ def mld_depth_influence(w_rise_list, MLD_list, selection='w_rise', output_step=-
         # Plotting the distribution according to the KPP parametrization
         if kpp:
             profile_dict = utils_v.get_concentration_list([np.mean(wind_range)], w_rise_list, selection,
-                                                          single_select,
+                                                          single_select, alpha_list=alpha_list,
                                                           output_step=output_step, diffusion_type='KPP',
                                                           boundary=boundary, mld=mld)
             for counter in range(len(profile_dict['concentration_list'])):
@@ -408,17 +408,17 @@ def mld_depth_influence(w_rise_list, MLD_list, selection='w_rise', output_step=-
                 bbox_inches='tight')
 
 
-def Markov_TL_dependence(w_rise_list, selection='w_10', close_up=None, y_label='Depth (m)', alpha=0.3,
-                         x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
-                         ax_label_size=16, legend_size=12, single_select=1,
-                         output_step=-1, diffusion_type='Kukulka'):
+def Markov_alpha_dependence(w_rise_list, selection='w_10', close_up=None, y_label='Depth (m)', alpha=0.3,
+                            x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
+                            ax_label_size=16, legend_size=12, single_select=1,
+                            output_step=-1, diffusion_type='Kukulka'):
     ax_range = utils_v.get_axes_range(close_up=close_up, norm_depth=False)
 
     # Selecting which model data we want to plot based on the diffusion type
     kukulka, kpp, artificial = utils_v.boolean_diff_type(diffusion_type)
     # Selecting which model data we want to plot based on the diffusion scheme
     boundary_list = ['Reflect', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov']
-    T_L_list = [0, 0, 0.1, 0.3, 0.5, 0.7, 0.95]
+    alpha_list = [0, 0, 0.1, 0.3, 0.5, 0.7, 0.95]
 
     ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
     line_style = ['-', '--', '--', '--', '--', '--', '--']
@@ -431,26 +431,26 @@ def Markov_TL_dependence(w_rise_list, selection='w_10', close_up=None, y_label='
         if kukulka:
             profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                           output_step=output_step, diffusion_type='Kukulka',
-                                                          boundary=boundary, alpha=T_L_list[count])
+                                                          boundary=boundary, alpha_list=alpha_list[count])
             for counter in range(len(profile_dict['concentration_list'])):
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                        label=utils_v.label_TL_comparison(boundary=boundary, alpha=T_L_list[count]),
+                        label=utils_v.label_alpha_comparison(boundary=boundary, alpha=alpha_list[count]),
                         linestyle=line_style[count], color=utils.return_color(count))
         if kpp:
             profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                           output_step=output_step, diffusion_type='KPP',
-                                                          boundary=boundary, alpha=T_L_list[count])
+                                                          boundary=boundary, alpha_list=alpha_list[count])
             for counter in range(len(profile_dict['concentration_list'])):
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                        label=utils_v.label_TL_comparison(boundary=boundary, alpha=T_L_list[count]),
+                        label=utils_v.label_alpha_comparison(boundary=boundary, alpha=alpha_list[count]),
                         linestyle=line_style[count], color=utils.return_color(count))
         if artificial:
             profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                           output_step=output_step, diffusion_type='artificial',
-                                                          boundary=boundary, alpha=T_L_list[count])
+                                                          boundary=boundary, alpha_list=alpha_list[count])
             for counter in range(len(profile_dict['concentration_list'])):
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                        label=utils_v.label_TL_comparison(boundary=boundary, alpha=T_L_list[count]),
+                        label=utils_v.label_alpha_comparison(boundary=boundary, alpha=alpha_list[count]),
                         linestyle=line_style[count], color=utils.return_color(count))
 
     lines, labels = ax.get_legend_handles_labels()
@@ -459,12 +459,13 @@ def Markov_TL_dependence(w_rise_list, selection='w_10', close_up=None, y_label='
     ax.set_title(r'w$_{10}$ = 5.4-7.9 m s$^{-1}$ - $\alpha$', fontsize=ax_label_size)
 
     # Saving the figure
-    plt.savefig(settings.figure_dir + '{}_T_L_check_w_rise={}'.format(diffusion_type, w_rise_list[0]) + '.png',
+    plt.savefig(settings.figure_dir + '{}_alpha_check_w_rise={}'.format(diffusion_type, w_rise_list[0]) + '.png',
                 bbox_inches='tight', dpi=600)
 
 
-def sanity_check(w_10, w_rise, diffusion_type, boundary):
-    dataset = Dataset(utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD))
+def sanity_check(w_10, w_rise, diffusion_type, boundary, alpha_list):
+    dataset = Dataset(utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD,
+                                                    alpha=alpha_list[0]))
     start, end = 0, -1
     depth = dataset.variables['z'][0, start:end]
     ratio = dataset.variables['ratio'][0, start:end]
@@ -489,7 +490,7 @@ def sanity_check(w_10, w_rise, diffusion_type, boundary):
             ax_sub = fig.add_subplot(shape[0], shape[1], count)
             ax_sub.plot(var[count-1])
             ax_sub.set_ylabel(title[count-1])
-            count+=1
+            count += 1
     # ax_sub.set_ylim([0, 600])
 
     plt.tight_layout()

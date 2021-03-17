@@ -7,7 +7,7 @@ import scipy.stats as stats
 import main
 
 
-def depth_concentration(w_10, w_rise, diffusion_type, boundary, print_removed=True, alpha=main.alpha[0]):
+def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, print_removed=True):
     dataset = Dataset(utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD,
                                                     alpha=alpha))
     time = dataset.variables['time'][0, :]

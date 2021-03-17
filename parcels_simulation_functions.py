@@ -9,14 +9,11 @@ from parcels import ParcelsRandom
 from operator import attrgetter
 import math
 import numpy as np
-
-import main
 import settings
 import utils
-from utils import determine_particle_size, determine_mixed_layer, DeleteParticle
 
 
-def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed', alpha=main.alpha[0]):
+def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha, boundary='Mixed'):
     """
     General function that runs a parcels simulation for the given parameters
     """
@@ -24,16 +21,16 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed', alpha
     fieldset = create_fieldset(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary, alpha=alpha)
 
     # The particle size that corresponds to the rise velocity
-    determine_particle_size(w_rise)
+    utils.determine_particle_size(w_rise)
 
     # Set the random seed
     ParcelsRandom.seed(settings.seed)
 
     # Determine the type of particle class (dependent on whether we have a Markov 0 or Markov 1 diffusion approach)
-    pset = create_pset(fieldset=fieldset, w_rise=w_rise, boundary=boundary)
+    pset = create_pset(fieldset=fieldset, boundary=boundary)
 
     # Setting the output file
-    output_file = pset.ParticleFile(name=utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary),
+    output_file = pset.ParticleFile(name=utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha),
                                     outputdt=settings.dt_out)
 
     # Determine the type of boundary condition we use, which in turn relates to which type of diffusion we consider:
@@ -41,15 +38,14 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed', alpha
 
     # The actual integration
     pset.execute(kernel, runtime=settings.runtime, dt=settings.dt_int, output_file=output_file,
-                 recovery={ErrorCode.ErrorOutOfBounds: DeleteParticle})
+                 recovery={ErrorCode.ErrorOutOfBounds: utils.DeleteParticle})
     output_file.export()
 
 
-def create_pset(fieldset, w_rise, boundary):
+def create_pset(fieldset, boundary):
     xy = 0.5  # position in lon and lat, which is at the center of the domain
     if 'Markov' in boundary:
         pclass = Markov_1_Particle
-        # initial_w_total = w_rise + (np.random.rand(settings.p_number) - 0.5) * 2 * settings.w_prime
         initial_w_p = (np.random.rand(settings.p_number) - 0.5) * 2 * settings.w_prime
         # Creating the particle set
         pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[xy] * settings.p_number, lat=[xy] * settings.p_number,
@@ -121,7 +117,7 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha):
     fieldset.add_constant(name='max_depth', value=max_depth)
     # Define the random mixing depth for the mixing boundary condition
     if 'Mixed' in boundary:
-        fieldset.add_constant(name='mix_depth', value=determine_mixed_layer(w_10, w_rise, diffusion_type))
+        fieldset.add_constant(name='mix_depth', value=utils.determine_mixed_layer(w_10, w_rise, diffusion_type))
     if 'Reduce_dt' in boundary:
         fieldset.add_constant(name='dt_max', value=settings.dt_int.seconds)
         fieldset.add_constant(name='dt_min', value=settings.dt_int.seconds / 2 ** 2)
@@ -185,8 +181,8 @@ def markov_0_potential_position(particle, fieldset, time):
 #
 #     # Now, the variance of the turbulent displacements from K_z. For dt < T_l, Kz ~= sig^2 dt, else Kz ~= sig^2 T_l. We
 #     # add 1e-20 to sig2 to prevent numerical issues when Kz -> 0
-#     T_l = fieldset.alpha
-#     # T_l = fieldset.alpha[time, particle.depth, particle.lat, particle.lon]
+#     T_l = fieldset.alpha_list
+#     # T_l = fieldset.alpha_list[time, particle.depth, particle.lat, particle.lon]
 #     sig2 = max(Kz / dt, Kz / T_l) + 1e-20
 #     dsig2 = max(dKz / dt, dKz / T_l)
 #
@@ -217,7 +213,7 @@ def markov_1_potential_position(particle, fieldset, time):
 
     # Now, the variance of the turbulent displacements from K_z. For dt < T_l, Kz ~= sig^2 dt, else Kz ~= sig^2 T_l. We
     # add 1e-20 to sig2 to prevent numerical issues when Kz -> 0
-    alp = main.alpha
+    alp = fieldset.alpha
     sig2 = Kz / dt
     dsig2 = dKz / dt
 
