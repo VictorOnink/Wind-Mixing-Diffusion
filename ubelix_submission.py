@@ -11,6 +11,7 @@ def ubelix_submission(diffusion, boundary, wind, rise):
     """
     # Creating the submission file
     file_name = settings.bin_dir + 'ubelix_submission.sh'
+    print(file_name)
     file = open(file_name, "w+")
     file.write("#!/bin/sh\n")
     file.write("#SBATCH --mail-type=begin,end,fail\n")
