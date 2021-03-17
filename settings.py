@@ -7,7 +7,7 @@ server = server_dict[1]
 
 # directory for the output files of the parcels simulations
 root_direc = {'laptop': '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/',
-              'ubelix': '/home/ubelix/climate/vo18e689/Wind\ Mixing/'}
+              'ubelix': '/home/ubelix/climate/vo18e689/Wind Mixing/'}
 output_dir = root_direc[server] + 'parcels_output/'
 conc_dir = root_direc[server] + 'concentration_output/'
 figure_dir = root_direc[server] + 'Figures/'
