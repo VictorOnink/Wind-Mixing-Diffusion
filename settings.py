@@ -7,13 +7,13 @@ server = server_dict[1]
 
 # directory for the output files of the parcels simulations
 root_direc = {'laptop': '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/',
-              'ubelix': r'/home/ubelix/climate/vo18e689/Wind\ Mixing/'}
+              'ubelix': r'/home/ubelix/climate/vo18e689/Wind Mixing/'}
 output_dir = root_direc[server] + 'parcels_output/'
 conc_dir = root_direc[server] + 'concentration_output/'
 figure_dir = root_direc[server] + 'Figures/'
 data_dir = root_direc[server] + 'Data/'
 code_dir = root_direc[server] + 'Codes/Wind-Mixing-Diffusion/'
-bin_dir = root_direc[server] + 'Codes/Wind-Mixing-Diffusion/bin/'
+bin_dir = root_direc[server] + r'Codes/Wind-Mixing-Diffusion/bin/'
 
 # Timesteps for integration and for printing to the output file
 dt_out = timedelta(seconds=3600)  # timedelta(seconds=100)

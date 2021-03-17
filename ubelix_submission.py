@@ -10,7 +10,7 @@ def ubelix_submission(diffusion, boundary, wind, rise):
     Creating a bash script that can be used to submit a simulation on the ubelix server
     """
     # Creating the submission file
-    file_name = settings.bin_dir + 'ubelix_submission.sh'
+    file_name = settings.bin_dir + r'ubelix_submission.sh'
     print(file_name)
     file = open(file_name, "w+")
     file.write("#!/bin/sh\n")
