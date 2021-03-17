@@ -12,7 +12,7 @@ def ubelix_submission(diffusion, boundary, wind, rise):
     # Creating the submission file
     file_name = settings.bin_dir + r'ubelix_submission.sh'
     print(file_name)
-    file = open(file_name, "w+")
+    file = open(file_name, "w")
     file.write("#!/bin/sh\n")
     file.write("#SBATCH --mail-type=begin,end,fail\n")
     file.write("#SBATCH --mail-user=victor.onink@climate.unibe.ch\n")
