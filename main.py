@@ -8,46 +8,30 @@ from progressbar import ProgressBar
 import settings
 import ubelix_submission
 
-
-def run():
-    """
-    Field data standardization and other processing
-    """
-    field_data_processing()
-    """
-    Synchronize with the data stored on the ubelix server
-    """
-    ubelix_submission.ubelix_synchronization(update=True)
-    """
-    Parcels simulations
-    """
-    w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
-    w_rise = [-0.003]  # [-0.03, -0.003, -0.0003]
-    diffusion = 'KPP'
-    # boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
-    boundary = 'Reflect_Markov'
-    pbar = ProgressBar()
-    for wind in pbar(w_10):
-        for rise in w_rise:
-            if settings.server is 'laptop':
-                # Option to remove a previous file if it exists in case I want to rerun a simulation. Setting conduct to
-                # False deactivates the remove file function
-                conc_file = utils.get_concentration_output_name(w_10, w_rise, diffusion, boundary)
-                utils.remove_file(conduct=False, file_name=conc_file)
-                if not utils.check_file_exist(conc_file):
-                    parcels_simulation_functions.vertical_diffusion_run(wind, rise, diffusion_type=diffusion,
-                                                                        boundary=boundary)
-                    analysis.depth_concentration(wind, rise, diffusion_type=diffusion, boundary=boundary)
-                else:
-                    print('This simulation has already been carried out')
-            elif settings.server is 'ubelix':
-                ubelix_submission.ubelix_submission(diffusion, boundary, wind, rise)
+w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
+w_rise = [-0.003]  # [-0.03, -0.003, -0.0003]
+alpha = [0.95]
+diffusion = 'KPP'
+# boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
+boundary = 'Reflect_Markov'
 
 
-    """
-    Visualization of simulations
-    """
-    plotting(w_10, w_rise, diffusion, boundary)
+def parcels_simulations(wind, rise, alpha):
+    if settings.server is 'laptop':
+        # Option to remove a previous file if it exists in case I want to rerun a simulation. Setting
+        # conduct to False deactivates the remove file function
+        concentration_file = utils.get_concentration_output_name(w_10, w_rise, diffusion, boundary,
+                                                                 alpha=alpha)
+        utils.remove_file(conduct=False, file_name=concentration_file)
+        if not utils.check_file_exist(concentration_file):
+            parcels_simulation_functions.vertical_diffusion_run(wind, rise, diffusion_type=diffusion,
+                                                                boundary=boundary, alpha=alpha)
+            analysis.depth_concentration(wind, rise, diffusion_type=diffusion, boundary=boundary,
+                                         alpha=alpha)
+        else:
+            print('This simulation has already been carried out')
+    elif settings.server is 'ubelix':
+        ubelix_submission.ubelix_submission(diffusion, boundary, wind, rise)
 
 
 def field_data_processing():
@@ -120,4 +104,23 @@ def plotting(w_10, w_rise, diffusion, boundary):
 
 
 if __name__ == '__main__':
-    run()
+    """
+    Field data standardization and other processing
+    """
+    field_data_processing()
+    """
+    Synchronize with the data stored on the ubelix server
+    """
+    ubelix_submission.ubelix_synchronization(update=True)
+    """
+    Parcels simulations
+    """
+    pbar = ProgressBar()
+    for wind in pbar(w_10):
+        for rise in w_rise:
+            for alpha_val in alpha:
+                parcels_simulations(wind=wind, rise=rise, alpha=alpha_val)
+    """
+    Visualization of simulations
+    """
+    plotting(w_10, w_rise, diffusion, boundary)

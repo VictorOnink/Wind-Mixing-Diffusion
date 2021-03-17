@@ -1,3 +1,4 @@
+import main
 import settings
 import numpy as np
 import matplotlib.pyplot as plt
@@ -210,7 +211,7 @@ def boolean_diff_type(diffusion_type):
 
 
 def get_concentration_list(w_10_list, w_rise_list, selection, single_select, diffusion_type, output_step=-1,
-                           all_timesteps=False, boundary='Mixed', mld=settings.MLD, alpha=settings.alpha):
+                           all_timesteps=False, boundary='Mixed', mld=settings.MLD, alpha=main.alpha[0]):
     output_dic = {'concentration_list': [], 'parameter_concentrations': [],
                   'parameter_kukulka': []}
     if selection == 'w_10':

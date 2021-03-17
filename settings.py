@@ -49,4 +49,3 @@ rho_p = 920                                                 # density polypropyl
 latitude = 35 * np.pi / 180                                 # Latitude for the determination
 bulk_diff = 3e-5                                            # Dianeutral diffusion below MLD (m^2/s) (Waterhouse et al., 2014)
 w_prime = 0.001                                             # Magnitude of initial w_prime (m/s)
-alpha = 0.95                                                    # Lagrangian integral timescale as multiple of dt_int

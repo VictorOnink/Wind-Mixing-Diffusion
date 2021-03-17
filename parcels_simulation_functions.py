@@ -9,17 +9,18 @@ from parcels import ParcelsRandom
 from operator import attrgetter
 import math
 import numpy as np
+
+import main
 import settings
 import utils
 from utils import determine_particle_size, determine_mixed_layer, DeleteParticle
 
 
-def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed'):
+def vertical_diffusion_run(w_10, w_rise, diffusion_type, boundary='Mixed', alpha=main.alpha[0]):
     """
     General function that runs a parcels simulation for the given parameters
     """
     # Create the fieldset
-    alpha = settings.alpha  # * settings.dt_int.seconds
     fieldset = create_fieldset(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary, alpha=alpha)
 
     # The particle size that corresponds to the rise velocity
@@ -216,7 +217,7 @@ def markov_1_potential_position(particle, fieldset, time):
 
     # Now, the variance of the turbulent displacements from K_z. For dt < T_l, Kz ~= sig^2 dt, else Kz ~= sig^2 T_l. We
     # add 1e-20 to sig2 to prevent numerical issues when Kz -> 0
-    alp = fieldset.alpha
+    alp = main.alpha
     sig2 = Kz / dt
     dsig2 = dKz / dt
 

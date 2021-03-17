@@ -4,11 +4,12 @@ import utils
 from netCDF4 import Dataset
 import numpy as np
 import scipy.stats as stats
-import matplotlib.pyplot as plt
+import main
 
 
-def depth_concentration(w_10, w_rise, diffusion_type, boundary, print_removed=True):
-    dataset = Dataset(utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD))
+def depth_concentration(w_10, w_rise, diffusion_type, boundary, print_removed=True, alpha=main.alpha[0]):
+    dataset = Dataset(utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD,
+                                                    alpha=alpha))
     time = dataset.variables['time'][0, :]
     # Bins, at 0.5 meter intervals
     depth_bins = np.arange(0, settings.max_depth, 0.2)
@@ -25,7 +26,7 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary, print_removed=Tr
     output_dir['bin_edges'] = bin_edges
     output_dir['last_time_slice'] = t
 
-    utils.save_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary),
+    utils.save_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=alpha),
                    item=output_dir)
 
 

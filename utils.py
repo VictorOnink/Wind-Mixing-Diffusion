@@ -1,5 +1,6 @@
 import scipy.optimize
 
+import main
 import settings
 import pickle
 import math
@@ -8,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD, alpha=settings.alpha):
+def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD, alpha=main.alpha[0]):
     name = settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
                                                                                                         mld)
     if 'Markov' in boundary:
@@ -16,7 +17,7 @@ def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings
     return name + '.nc'
 
 
-def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD, alpha=settings.alpha):
+def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD, alpha=main.alpha[0]):
     name = settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
                                                                                                         mld)
     if 'Markov' in boundary:
