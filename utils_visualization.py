@@ -146,6 +146,13 @@ def label_MLD_Comparison(parameters, diffusion_type, mld=settings.MLD):
                'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
 
 
+def label_TL_comparison(boundary, alpha):
+    if boundary is 'Reflect':
+        return 'M-0'
+    else:
+        return r'M-1, $\alpha$ = ' + '{}'.format(alpha)
+
+
 def label_model_field_comparison(w_rise, diffusion_type, boundary):
     boundary_dict = {'Reflect': 'Markov 0', 'Reflect_Markov': 'Markov 1'}
     w_rise = np.abs(w_rise)
@@ -192,16 +199,18 @@ def determine_linestyle(boundary, boundary_list, kpp, kukulka, diffusion_type):
 
 def boolean_diff_type(diffusion_type):
     if diffusion_type is 'Kukulka':
-        kukulka, kpp = True, False
+        kukulka, kpp, artificial = True, False, False
     elif diffusion_type is 'KPP':
-        kukulka, kpp = False, True
+        kukulka, kpp, artificial = False, True, False
     elif diffusion_type is 'all':
-        kukulka, kpp = True, True
-    return kukulka, kpp
+        kukulka, kpp, artificial = True, True, False
+    elif diffusion_type is 'artificial':
+        kukulka, kpp, artificial = False, False, True
+    return kukulka, kpp, artificial
 
 
 def get_concentration_list(w_10_list, w_rise_list, selection, single_select, diffusion_type, output_step=-1,
-                           all_timesteps=False, boundary='Mixed', mld=settings.MLD):
+                           all_timesteps=False, boundary='Mixed', mld=settings.MLD, alpha=settings.alpha):
     output_dic = {'concentration_list': [], 'parameter_concentrations': [],
                   'parameter_kukulka': []}
     if selection == 'w_10':
@@ -214,7 +223,7 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
         for w_10 in w_10_list:
             # Loading the dictionary containing the concentrations
             input_dir = utils.load_obj(
-                utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=mld))
+                utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=mld, alpha=alpha))
             # Selecting the timeslice of interest
             if output_step == -1:
                 concentration = [input_dir['last_time_slice']]

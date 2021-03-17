@@ -31,7 +31,7 @@ def standardization_kukulka():
     """
     prefix = 'Kukulka'
     file_name = utils.get_data_output_name(prefix)
-    if not utils._check_file_exist(file_name + '.pkl'):
+    if not utils.check_file_exist(file_name + '.pkl'):
         data = np.genfromtxt(SET.data_dir + 'atlantic_prf.dat')
         # Convert wind data from knots to m/s
         data[:, -2] *= 0.514
@@ -50,7 +50,7 @@ def standardization_kukulka():
                       'wind_speed': data[:, -2], 'MLD': data[:, -1]}
 
         # Pickling the array
-        utils.save_obj(filename=file_name, object=output_dic)
+        utils.save_obj(filename=file_name, item=output_dic)
 
 
 def standardization_kooi():
@@ -66,7 +66,7 @@ def standardization_kooi():
     """
     prefix = 'Kooi'
     file_name = utils.get_data_output_name(prefix)
-    if not utils._check_file_exist(file_name + '.pkl'):
+    if not utils.check_file_exist(file_name + '.pkl'):
         data_trawl = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='trawls')
         data_plastic = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='nets')
 
@@ -111,7 +111,7 @@ def standardization_kooi():
                       'depth_norm': depth_norm.flatten(), 'wind_speed': wind_data.flatten(), 'MLD': MLD.flatten()}
 
         # Pickling the array
-        utils.save_obj(filename=file_name, object=output_dic)
+        utils.save_obj(filename=file_name, item=output_dic)
 
 
 def standardization_Pieper():
@@ -128,7 +128,7 @@ def standardization_Pieper():
     """
     prefix = 'Pieper'
     file_name = utils.get_data_output_name(prefix)
-    if not utils._check_file_exist(file_name + '.pkl'):
+    if not utils.check_file_exist(file_name + '.pkl'):
         data_bottle = pd.read_excel(SET.data_dir + '2020_PE442_MPs.xlsx')
 
         # Get the station indicators, sample concentrations, sample depths, and sample types
@@ -184,7 +184,7 @@ def standardization_Pieper():
                       'depth_norm': depth_norm, 'wind_speed': wind_data, 'MLD': MLD}
 
         # Pickling the array
-        utils.save_obj(filename=file_name, object=output_dic)
+        utils.save_obj(filename=file_name, item=output_dic)
 
 
 def standardization_Zettler():
@@ -195,7 +195,7 @@ def standardization_Zettler():
     """
     prefix = 'Zettler'
     file_name = utils.get_data_output_name(prefix)
-    if not utils._check_file_exist(file_name + '.pkl'):
+    if not utils.check_file_exist(file_name + '.pkl'):
         data_multi = pd.read_excel(SET.data_dir + 'PE448_multinet_data.xlsx')
         data_surf = pd.read_excel(SET.data_dir + 'Sample Log-PE448b-20190121.xlsx', sheet_name='MT')
 
@@ -244,13 +244,13 @@ def standardization_Zettler():
                       'MLD': MLD.values.flatten()[depth_selec]}
 
         # Pickling the array
-        utils.save_obj(filename=file_name, object=output_dic)
+        utils.save_obj(filename=file_name, item=output_dic)
 
 
 def standardization_Egger():
     prefix = 'Egger'
     file_name = utils.get_data_output_name(prefix)
-    if not utils._check_file_exist(file_name + '.pkl'):
+    if not utils.check_file_exist(file_name + '.pkl'):
         data_multi = pd.read_excel(SET.data_dir + 'Egger2020_processed.xlsx')
 
         # Create an empty dataframe to divide up the dataset according to the station
@@ -288,7 +288,7 @@ def standardization_Egger():
             output_dic[key] = data[~np.isnan(data)]
 
         # Pickling the array
-        utils.save_obj(filename=file_name, object=output_dic)
+        utils.save_obj(filename=file_name, item=output_dic)
 
 
 def determine_MLD(prefix: str, station_numbers=None):
@@ -332,7 +332,7 @@ def determine_MLD(prefix: str, station_numbers=None):
         # Check if there is a CTD file for the station in question
         for station in station_numbers:
             file_name = SET.data_dir + 'CTD_PE442/PE442_' + station + 'avg.cnv'
-            if utils._check_file_exist(file_name):
+            if utils.check_file_exist(file_name):
                 # Load the depth and temperature data for the particular station
                 temperature = fCNV(file_name)['TEMP']
                 depth = fCNV(file_name)['DEPTH']

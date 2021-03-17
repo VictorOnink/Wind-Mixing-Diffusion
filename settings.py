@@ -1,18 +1,26 @@
 from datetime import timedelta
 import numpy as np
 
+# Computer this is running on. 0 = my laptop, 1 = Ubelix
+server_dict = {0: 'laptop', 1: 'ubelix'}
+server = server_dict[1]
+
 # directory for the output files of the parcels simulations
-output_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/parcels_output/'
-conc_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/concentration_output/'
-figure_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/Figures/'
-data_dir = '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/Data/'
+root_direc = {'laptop': '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/',
+              'ubelix': '/home/ubelix/climate/vo18e689/Wind Mixing/'}
+output_dir = root_direc[server] + 'parcels_output/'
+conc_dir = root_direc[server] + 'concentration_output/'
+figure_dir = root_direc[server] + 'Figures/'
+data_dir = root_direc[server] + 'Data/'
+code_dir = root_direc[server] + 'Codes/Wind-Mixing-Diffusion/'
+bin_dir = root_direc[server] + 'Codes/Wind-Mixing-Diffusion/bin/'
 
 # Timesteps for integration and for printing to the output file
-dt_out = timedelta(seconds=3600)
-dt_int = timedelta(seconds=1)
+dt_out = timedelta(seconds=3600)  # timedelta(seconds=100)
+dt_int = timedelta(seconds=1)  # timedelta(seconds=1)
 
 # Runtime for the entire simulation
-runtime = timedelta(seconds=3*3600)
+runtime = timedelta(seconds=6*3600)  # timedelta(seconds=3600)
 
 # Number of particles in a simulation
 p_number = 100000
@@ -33,3 +41,4 @@ rho_p = 920                                                 # density polypropyl
 latitude = 35 * np.pi / 180                                 # Latitude for the determination
 bulk_diff = 3e-5                                            # Dianeutral diffusion below MLD (m^2/s) (Waterhouse et al., 2014)
 w_prime = 0.001                                             # Magnitude of initial w_prime (m/s)
+alpha = 0.95                                                    # Lagrangian integral timescale as multiple of dt_int

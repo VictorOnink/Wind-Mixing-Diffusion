@@ -1,27 +1,36 @@
+import scipy.optimize
+
 import settings
 import pickle
 import math
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 
-def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD):
-    return settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}_MLD_{}.nc'.format(w_10, w_rise,
+def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD, alpha=settings.alpha):
+    name = settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
                                                                                                         mld)
+    if 'Markov' in boundary:
+        name += 'alpha={}'.format(alpha)
+    return name + '.nc'
 
 
-def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD):
-    return settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
+def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=settings.MLD, alpha=settings.alpha):
+    name = settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
                                                                                                         mld)
+    if 'Markov' in boundary:
+        name += 'alpha={}'.format(alpha)
+    return name
 
 
 def get_data_output_name(prefix: str):
     return settings.data_dir + 'standardized_data_' + prefix
 
 
-def save_obj(filename, object):
+def save_obj(filename, item):
     with open(filename + '.pkl', 'wb') as f:
-        pickle.dump(object, f, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)
 
 
 def load_obj(filename):
@@ -29,14 +38,14 @@ def load_obj(filename):
         return pickle.load(f)
 
 
-def _check_file_exist(File: str):
-    return os.path.isfile(File)
+def check_file_exist(file_name: str):
+    return os.path.isfile(file_name)
 
 
-def remove_file(conduct: bool, File: str):
+def remove_file(conduct: bool, file_name: str):
     if conduct:
-        if _check_file_exist(File):
-            os.remove(File)
+        if check_file_exist(file_name):
+            os.remove(file_name)
 
 
 def find_nearest_index(depth, z_ref):
@@ -104,12 +113,19 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, m
     if diffusion_type == 'Kukulka':
         profile = 1.5 * k * u_s * H_s * np.ones(depth.shape)
         profile[depth > (H_s * H_s_frac)] *= ((H_s * H_s_frac) ** 1.5 * np.power(depth[depth > (H_s * H_s_frac)], -1.5))
+        profile += settings.bulk_diff
     elif diffusion_type == 'KPP':
         alpha = (k * u_s) / phi
         profile = alpha * (depth + z0) * np.power(1 - depth / mld, 2)
         profile[depth > mld] = 0
-        # profile = depth * 0
-    return profile + settings.bulk_diff
+        profile += settings.bulk_diff
+    elif diffusion_type == 'artificial':
+        A = 1e-1
+        z_f = 5
+        profile = A * np.exp(-depth / z_f) * np.sin(np.pi * depth / mld)
+        # profile[(depth > 5) & (depth < 7)] = 0.0002
+        profile += math.fabs(profile.min()) + settings.bulk_diff
+    return profile
 
 
 def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD,
@@ -128,8 +144,61 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
         alpha = (k * u_s) / (phi * mld ** 2)
         profile = alpha * (mld - depth) * (mld - 3 * depth - 2 * z0)
         profile[depth > mld] = 0
-        # profile = depth * 0
+    elif diffusion_type == 'artificial':
+        A = 1e-2
+        z_f = 5
+        profile = -A / z_f * np.exp(-depth / z_f) * (-10*np.pi*np.cos(np.pi * depth / mld) + mld * np.sin(np.pi * depth / mld)) / (z_f * mld)
+        # profile[(depth > 5) & (depth < 7)] = 0
     return profile
+
+
+def plot_diffusion_comp(depth, kz, dkz):
+    fig=plt.figure()
+    ax1=fig.add_subplot(121)
+    ax1.plot(kz, -depth)
+    ax2=fig.add_subplot(122)
+    ax2.plot(dkz, -depth)
+    plt.show()
+
+# import utils
+# import numpy as np
+# depth = np.linspace(0, 100, 1000)
+# w_10=10
+# diffusion_type='artificial'
+# dkz=utils.get_vertical_diffusion_gradient_profile(w_10, depth, diffusion_type)
+# kz=utils.get_vertical_diffusion_profile(w_10, depth, diffusion_type)
+# utils.plot_diffusion_comp(depth, kz, dkz)
+
+def get_T_L_profile(T_L_amp: float, depth: np.array, T_L_min: float = 2 * settings.dt_int.seconds):
+    profile = T_L_min + T_L_amp * np.sin(np.pi * depth / settings.MLD)
+    profile[depth > settings.MLD] = T_L_min
+    return profile
+
+
+def lagrangian_integral_timescale(w_10):
+    """
+    Determining the Lagrangian integral timescale following Denman & Gargett (1983). If the mixed layer depth is deeper
+    than the turbulent Ekman layer thickness, then the Lagrangian integral timescale is dependent only on the coriolis
+    parameter. Otherwise, when the mixed layer depth is less than the Ekman layer thickness, then the timescale becomes
+    inversely proportional to the surface wind speed
+
+    The ekman timescale is approximately 30 minutes at latitude 45 (MLD > L_E)
+    """
+    # Friction velocity
+    u_w = math.sqrt(determine_tau(w_10, settings.rho_a) / settings.rho_w)
+    # RMS eddy velocity
+    u_t = 2 * u_w
+    # Coriolis parameter
+    f = 2 * 7.2921e-5 * math.sin(settings.latitude)
+    # The turbulent Ekman layer thickness
+    L_e = 0.4 * u_w / f
+    # Now determining the time scale
+    if L_e < settings.MLD:
+        T_L = 0.2 / f
+    else:
+        T_L = settings.MLD / u_t
+    print("The lagrangian integral timescale is {} minutes".format(T_L / 60.))
+    return T_L
 
 
 def exclude_field_data(exclude, sources):
@@ -137,3 +206,45 @@ def exclude_field_data(exclude, sources):
         for source in exclude:
             sources.remove(source)
     return sources
+
+
+def determine_particle_size(w_rise):
+    """
+    Determining the size of an elliptical particle that corresponds to the rise velocity, following the approach
+    of Poulain et al. (2019)
+    """
+
+    def Re(L):
+        # Return the Reynolds number
+        return L * np.abs(w_rise) / (settings.mu / settings.rho_w)
+
+    def to_optimize(L):
+        Reynold = Re(L)
+        left = 240. / (np.pi * Reynold) * (1 + 0.138 * Reynold ** 0.792) * w_rise ** 2
+        right = 2. / 15 * L * (settings.rho_p / settings.rho_w - 1) * settings.g
+        return np.abs(left - right)
+
+    particle_size = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
+    print('The particle size according to Poulain et al. (2019) is {} m'.format(particle_size))
+
+
+def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
+    """
+    Determining the depth of the surface layer within particles are assumed to be distributed homogeneously, following
+    the boundary condition approach of Ross & Sharples (2004)
+    """
+
+    def to_optimize(z_t):
+        dK = get_vertical_diffusion_gradient_profile(w_10, np.array([z_t]), diffusion_type)
+        dt = settings.dt_int.seconds
+        K = get_vertical_diffusion_profile(w_10, np.array([z_t + 0.5 * dK * dt]), diffusion_type)
+        RHS = dK * dt + np.sqrt(6 * K * dt) + w_rise * dt
+        return np.abs(z_t - RHS)
+
+    mixing_depth = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
+    print('The surface turbulent mixed layer depth {} m'.format(mixing_depth))
+    return mixing_depth
+
+
+def DeleteParticle(particle, fieldset, time):
+    particle.delete()
