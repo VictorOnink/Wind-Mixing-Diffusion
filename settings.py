@@ -10,7 +10,7 @@ if socket.gethostname() == 'Victors-MBP.home':
 elif socket.gethostname() == 'submit01.ubelix.unibe.ch':
     server = 'ubelix'
 else:
-    print('You are running on a different host than this code is set up for.')
+    print('You are running on a different host than this code is set up for, namely {}.'.format(socket.gethostname()))
     sys.exit()
 
 # directory for the output files of the parcels simulations
