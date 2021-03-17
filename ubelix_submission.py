@@ -45,6 +45,18 @@ def run_name(diffusion, boundary, wind, rise):
     return name
 
 
+def ubelix_synchronization(update: bool = False):
+    """ Download any concentration files computed on the ubelix server to my laptop """
+    if settings.server is 'laptop':
+        if update:
+            current_folder = os.getcwd()
+            ubelix_folder = settings.root_direc['ubelix'] + 'concentration_output/'
+            os.chdir(settings.conc_dir)
+            command = 'rsync -av ubelix:{}* .'.format(ubelix_folder)
+            os.system(command)
+            os.chdir(current_folder)
+
+
 if __name__ == '__main__':
     diffusion, boundary = os.getenv('diffusion'), os.getenv('boundary')
     wind, rise = float(os.getenv('wind')), float(os.getenv('rise'))

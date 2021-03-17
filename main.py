@@ -15,6 +15,10 @@ def run():
     """
     field_data_processing()
     """
+    Synchronize with the data stored on the ubelix server
+    """
+    ubelix_submission.ubelix_synchronization(update=True)
+    """
     Parcels simulations
     """
     w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
@@ -29,12 +33,11 @@ def run():
                 # Option to remove a previous file if it exists in case I want to rerun a simulation. Setting conduct to
                 # False deactivates the remove file function
                 conc_file = utils.get_concentration_output_name(w_10, w_rise, diffusion, boundary)
-                utils.remove_file(conduct=True, file_name=conc_file)
+                utils.remove_file(conduct=False, file_name=conc_file)
                 if not utils.check_file_exist(conc_file):
                     parcels_simulation_functions.vertical_diffusion_run(wind, rise, diffusion_type=diffusion,
                                                                         boundary=boundary)
                     analysis.depth_concentration(wind, rise, diffusion_type=diffusion, boundary=boundary)
-
                 else:
                     print('This simulation has already been carried out')
             elif settings.server is 'ubelix':

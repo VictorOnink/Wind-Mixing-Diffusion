@@ -1,9 +1,17 @@
 from datetime import timedelta
 import numpy as np
+import socket
+import sys
 
-# Computer this is running on. 0 = my laptop, 1 = Ubelix
-server_dict = {0: 'laptop', 1: 'ubelix'}
-server = server_dict[1]
+# Checking which computer this is all running on
+hostname = socket.gethostname()
+if socket.gethostname() == 'Victors-MBP.home':
+    server = 'laptop'
+elif socket.gethostname() == 'submit01.ubelix.unibe.ch':
+    server = 'ubelix'
+else:
+    print('You are running on a different host than this code is set up for.')
+    sys.exit()
 
 # directory for the output files of the parcels simulations
 root_direc = {'laptop': '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/',
