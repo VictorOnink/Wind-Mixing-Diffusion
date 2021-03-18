@@ -418,7 +418,7 @@ def Markov_alpha_dependence(w_rise_list, selection='w_10', close_up=None, y_labe
     kukulka, kpp, artificial = utils_v.boolean_diff_type(diffusion_type)
     # Selecting which model data we want to plot based on the diffusion scheme
     boundary_list = ['Reflect', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov']
-    alpha_list = [0, 0, 0.1, 0.3, 0.5, 0.7, 0.95]
+    alpha_list = [0, 0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
 
     ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
     line_style = ['-', '--', '--', '--', '--', '--', '--']
@@ -459,7 +459,8 @@ def Markov_alpha_dependence(w_rise_list, selection='w_10', close_up=None, y_labe
     ax.set_title(r'w$_{10}$ = 5.4-7.9 m s$^{-1}$ - $\alpha$', fontsize=ax_label_size)
 
     # Saving the figure
-    plt.savefig(settings.figure_dir + '{}_alpha_check_w_rise={}'.format(diffusion_type, w_rise_list[0]) + '.png',
+    str_format = diffusion_type, w_rise_list[0], settings.MLD
+    plt.savefig(settings.figure_dir + '{}_alpha_check_w_rise={}_mld={}'.format(*str_format) + '.png',
                 bbox_inches='tight', dpi=600)
 
 

@@ -9,9 +9,9 @@ import settings
 import ubelix_submission
 
 w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
-w_rise = [-0.003]  # [-0.03, -0.003, -0.0003]
-alpha = [0, 0.1, 0.3, 0.5, 0.7, 0.95]
-diffusion = 'artificial'
+w_rise = [-0.0003]  # [-0.03, -0.003, -0.0003]
+alpha = [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
+diffusion = 'KPP'
 # boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
 boundary = 'Reflect_Markov'
 
@@ -20,9 +20,9 @@ def parcels_simulations(wind, rise, alpha):
     if settings.server is 'laptop':
         # Option to remove a previous file if it exists in case I want to rerun a simulation. Setting
         # conduct to False deactivates the remove file function
-        concentration_file = utils.get_concentration_output_name(w_10, w_rise, diffusion, boundary,
-                                                                 alpha=alpha)
-        utils.remove_file(conduct=True, file_name=concentration_file)
+        concentration_file = utils.get_concentration_output_name(wind, rise, diffusion, boundary,
+                                                                 alpha=alpha) + '.pkl'
+        utils.remove_file(conduct=False, file_name=concentration_file)
         if not utils.check_file_exist(concentration_file):
             parcels_simulation_functions.vertical_diffusion_run(wind, rise, diffusion_type=diffusion,
                                                                 boundary=boundary, alpha=alpha)
@@ -76,13 +76,13 @@ def plotting():
         #                                                selection='w_10', single_select=2, wind_sort=True,
         #                                                close_up=(0, -20), diffusion_type='all', boundary='Reflect')
 
-        visualization.basic_profile_figure(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha, selection='w_10',
-                                           close_up=(0, -30), single_select=0, diffusion_type=diffusion,
-                                           boundary=boundary, diffusion_curve=False)
-        visualization.basic_profile_figure(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
-                                           diffusion_type=diffusion,
-                                           boundary=boundary, selection='w_10', single_select=0, close_up=(0, -100),
-                                           diffusion_curve=False)
+        # visualization.basic_profile_figure(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha, selection='w_10',
+        #                                    close_up=(0, -30), single_select=0, diffusion_type=diffusion,
+        #                                    boundary=boundary, diffusion_curve=False)
+        # visualization.basic_profile_figure(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
+        #                                    diffusion_type=diffusion,
+        #                                    boundary=boundary, selection='w_10', single_select=0, close_up=(0, -100),
+        #                                    diffusion_curve=False)
 
         # Plotting for the depth profiles for multiple MLD levels
         # for beaufort in range(1, 6):
@@ -103,8 +103,8 @@ def plotting():
         # visualization.plot_field_data_overview(wind_sort=True, close_up=(0,-20))
 
         # Testing different values of alpha_list
-        # visualization.Markov_alpha_dependence(w_rise_list=w_rise, single_select=0, close_up=(0, -30),
-        #                                       diffusion_type=diffusion)
+        visualization.Markov_alpha_dependence(w_rise_list=w_rise, single_select=0, close_up=(0, -30),
+                                              diffusion_type=diffusion)
 
 
 if __name__ == '__main__':
