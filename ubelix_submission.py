@@ -65,4 +65,4 @@ if __name__ == '__main__':
     wind, rise, alpha = float(os.getenv('wind')), float(os.getenv('rise')), float(os.getenv('alpha_list'))
     parcels_simulation_functions.vertical_diffusion_run(wind, rise, alpha=alpha, diffusion_type=diffusion,
                                                         boundary=boundary)
-    analysis.depth_concentration(wind, rise, alpha, diffusion_type=diffusion, boundary=boundary)
+    analysis.depth_concentration(w_10=wind, w_rise=rise, alpha=alpha, diffusion_type=diffusion, boundary=boundary)
