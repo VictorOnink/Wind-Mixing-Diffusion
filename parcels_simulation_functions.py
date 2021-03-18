@@ -219,7 +219,7 @@ def markov_1_potential_position(particle, fieldset, time):
 
     # The change in particle velocity based on sig2
     d_random = math.sqrt(2 * (1 - alp) * sig2 / dt) * dWz
-    d_gradient = 0.5 * dsig2 * dt * (1 + w_P ** 2 / sig2)
+    d_gradient = 0.5 * dsig2 * dt * (1 + 0.0 * w_P ** 2 / sig2)
 
     # The particle perturbation velocity at time t + 1
     particle.w_p = alp * particle.w_p + d_random + d_gradient
