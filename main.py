@@ -11,7 +11,7 @@ import ubelix_submission
 w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
 w_rise = [-0.0003]  # [-0.03, -0.003, -0.0003]
 alpha = [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
-diffusion = 'artificial'
+diffusion = 'KPP'
 # boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
 boundary = 'Reflect_Markov'
 
@@ -22,7 +22,7 @@ def parcels_simulations(wind, rise, alpha):
         # conduct to False deactivates the remove file function
         concentration_file = utils.get_concentration_output_name(wind, rise, diffusion, boundary,
                                                                  alpha=alpha) + '.pkl'
-        utils.remove_file(conduct=True, file_name=concentration_file)
+        utils.remove_file(conduct=False, file_name=concentration_file)
         if not utils.check_file_exist(concentration_file):
             parcels_simulation_functions.vertical_diffusion_run(wind, rise, diffusion_type=diffusion,
                                                                 boundary=boundary, alpha=alpha)
