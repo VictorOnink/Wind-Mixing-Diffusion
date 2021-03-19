@@ -46,10 +46,9 @@ def create_pset(fieldset, boundary):
     xy = 0.5  # position in lon and lat, which is at the center of the domain
     if 'Markov' in boundary:
         pclass = Markov_1_Particle
-        initial_w_p = (np.random.rand(settings.p_number) - 0.5) * 2 * settings.w_prime
         # Creating the particle set
         pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[xy] * settings.p_number, lat=[xy] * settings.p_number,
-                           depth=[settings.p_start_depth] * settings.p_number, w_p=initial_w_p)
+                           depth=[settings.p_start_depth] * settings.p_number, w_p=[0.0] * settings.p_number)
     else:
         pclass = Markov_0_Particle
         # Creating the particle set
@@ -146,7 +145,8 @@ def markov_0_potential_position(particle, fieldset, time):
     # The wiener increment, and then the random component
     R = math.sqrt(math.fabs(particle.dt) * 3)
     dW = ParcelsRandom.uniform(-R, R)
-    Kz = fieldset.K_z[time, particle.depth + 0.5 * dK * particle.dt, particle.lat, particle.lon]
+    # Kz = fieldset.K_z[time, particle.depth + 0.5 * dK * particle.dt, particle.lat, particle.lon]
+    Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
     d_random = math.sqrt(2 * Kz) * dW
 
     # The rise velocity
@@ -154,45 +154,6 @@ def markov_0_potential_position(particle, fieldset, time):
 
     # The potential particle position
     particle.potential = particle.depth + (d_gradient + d_random + d_rise)
-
-
-# def markov_1_potential_position(particle, fieldset, time):
-#     """
-#     Here we only calculate the potential particle position following the Markov-1 approach as described by following
-#     eq. 4 of Brickman & Smith (2002), so before we look at any boundary condition!!!
-#
-#     We assume a constant w_rise and stationary turbulence, and we first calculate the potential position for time t+dt
-#     before calculating w' for time t+dt
-#     """
-#     # Getting the rise (w_r) and perturbation (w_p) velocities
-#     w_P, w_r = particle.w_p, fieldset.wrise
-#
-#     # The potential particle depth
-#     particle.potential = particle.depth + (w_P + w_r) * particle.dt
-#
-#     # First, the Wiener increment with zero mean and variance = dt
-#     dt = particle.dt
-#     R = math.sqrt(math.fabs(particle.dt)) * 3
-#     dWz = ParcelsRandom.uniform(-R, R)
-#
-#     # Next, the vertical diffusion term, and the gradient of the vertical diffusion at time t
-#     Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
-#     dKz = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
-#
-#     # Now, the variance of the turbulent displacements from K_z. For dt < T_l, Kz ~= sig^2 dt, else Kz ~= sig^2 T_l. We
-#     # add 1e-20 to sig2 to prevent numerical issues when Kz -> 0
-#     T_l = fieldset.alpha_list
-#     # T_l = fieldset.alpha_list[time, particle.depth, particle.lat, particle.lon]
-#     sig2 = max(Kz / dt, Kz / T_l) + 1e-20
-#     dsig2 = max(dKz / dt, dKz / T_l)
-#
-#     # The change in particle velocity based on sig2 and dsig2 from time t-1
-#     d_history = - (w_P / T_l) * dt
-#     d_gradient = 0.5 * dsig2 * dt * (1 + w_P ** 2 / sig2)
-#     d_random = math.sqrt(2 * sig2 / T_l) * dWz
-#
-#     # The particle perturbation velocity at time t, based on the change in w_p
-#     particle.w_p += (d_history + d_gradient + d_random)
 
 
 def markov_1_potential_position(particle, fieldset, time):
@@ -219,7 +180,7 @@ def markov_1_potential_position(particle, fieldset, time):
 
     # The change in particle velocity based on sig2
     d_random = math.sqrt(2 * (1 - alp) * sig2 / dt) * dWz
-    d_gradient = dsig2 * dt * (1 + 0.0 * w_P ** 2 / sig2)
+    d_gradient = dsig2 * dt
 
     # The particle perturbation velocity at time t + 1
     particle.w_p = alp * particle.w_p + d_random + d_gradient
