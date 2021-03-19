@@ -11,6 +11,7 @@ import math
 import numpy as np
 import settings
 import utils
+import sys
 
 
 def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha, boundary='Mixed'):
@@ -25,6 +26,8 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha, boundary='Mixed'
 
     # Set the random seed
     ParcelsRandom.seed(settings.seed)
+    print(ParcelsRandom.random())
+    sys.exit()
 
     # Determine the type of particle class (dependent on whether we have a Markov 0 or Markov 1 diffusion approach)
     pset = create_pset(fieldset=fieldset, boundary=boundary)
