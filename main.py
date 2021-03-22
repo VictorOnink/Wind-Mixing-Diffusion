@@ -10,7 +10,7 @@ import ubelix_submission
 
 
 w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
-w_rise = [-0.003]  # [-0.03, -0.003, -0.0003]
+w_rise = [-0.0003]  # [-0.03, -0.003, -0.0003]
 alpha = [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
 diffusion = 'Kukulka'
 # boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
@@ -107,7 +107,7 @@ def plotting():
         #                                       diffusion_type=diffusion)
 
         # Comparing Markov with different alpha values, but then showing more than one type of diffusion
-        # visualization.diffusion_markov_comparison(w_rise_list=w_rise, single_select=0, close_up=(0, -25))
+        visualization.diffusion_markov_comparison(w_rise_list=w_rise, single_select=0, close_up=(0, -25))
         pass
 
 
