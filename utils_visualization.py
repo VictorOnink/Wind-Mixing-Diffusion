@@ -47,7 +47,7 @@ def label_diffusivity_profile(w_10, diffusion_type):
         return r'KPP, w$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
 
 
-def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1), plot_num=1):
+def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1), plot_num=1, all_x_labels=False):
     xmax, xmin, ymax, ymin = ax_range
     fig = plt.figure(figsize=fig_size)
     if shape == (1, 1):
@@ -74,8 +74,13 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1
                     ax_sub.tick_params(labelleft=False)
                 # Only add x labels if we are in the bottom row:
                 ax_sub.set_xlim((xmin, xmax))
-                if row == (shape[0] - 1) and column % 2 is 1:
-                    ax_sub.set_xlabel(x_label, fontsize=ax_label_size)
+                if row == (shape[0] - 1):
+                    if not all_x_labels and column % 2 is 1:
+                        ax_sub.set_xlabel(x_label, fontsize=ax_label_size)
+                    elif all_x_labels:
+                        ax_sub.set_xlabel(x_label, fontsize=ax_label_size)
+                    else:
+                        ax_sub.tick_params(labelbottom=False)
                 else:
                     ax_sub.tick_params(labelbottom=False)
                 # Add the axis to the list

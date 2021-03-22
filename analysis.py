@@ -8,8 +8,9 @@ import main
 
 
 def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, print_removed=True):
-    dataset = Dataset(utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD,
-                                                    alpha=alpha))
+    parcels_file = utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD,
+                                                 alpha=alpha)
+    dataset = Dataset(parcels_file)
     time = dataset.variables['time'][0, :]
     # Bins, at 0.5 meter intervals
     depth_bins = np.arange(0, settings.max_depth, 0.2)
@@ -28,6 +29,7 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, print_rem
 
     utils.save_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=alpha),
                    item=output_dir)
+    utils.remove_file(conduct=True, file_name=parcels_file)
 
 
 def correlation_depth_concentration(exclude=None, get_r=[]):
