@@ -21,7 +21,7 @@ def parcels_simulations(wind, rise, alpha):
         # Option to remove a previous file if it exists in case I want to rerun a simulation. Setting
         # conduct to False deactivates the remove file function
         concentration_file = utils.get_concentration_output_name(wind, rise, diffusion, boundary, alpha=alpha) + '.pkl'
-        utils.remove_file(conduct=True, file_name=concentration_file)
+        utils.remove_file(conduct=False, file_name=concentration_file)
         if not utils.check_file_exist(concentration_file):
             parcels_simulation_functions.vertical_diffusion_run(wind, rise, diffusion_type=diffusion,
                                                                 boundary=boundary, alpha=alpha)
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     """
     Synchronize with the data stored on the ubelix server
     """
-    ubelix_submission.ubelix_synchronization(update=False)
+    ubelix_submission.ubelix_synchronization(update=True)
     """
     Parcels simulations
     """
