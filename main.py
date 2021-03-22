@@ -8,6 +8,7 @@ from progressbar import ProgressBar
 import settings
 import ubelix_submission
 
+
 w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
 w_rise = [-0.003]  # [-0.03, -0.003, -0.0003]
 alpha = [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
