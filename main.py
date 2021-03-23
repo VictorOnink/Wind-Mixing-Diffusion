@@ -10,11 +10,11 @@ import ubelix_submission
 
 
 w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
-w_rise = [-0.0003]  # [-0.03, -0.003, -0.0003]
-alpha = [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
+w_rise = [-0.03, -0.003]  # [-0.03, -0.003, -0.0003]
+alpha = [0.0]  # [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
 diffusion = 'KPP'
 # boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
-boundary = 'Reflect_Markov'
+boundary = 'Reflect'
 
 
 def parcels_simulations(wind, rise, alpha):

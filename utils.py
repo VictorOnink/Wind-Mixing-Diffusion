@@ -66,6 +66,7 @@ def beaufort_limits():
 
 
 def determine_Cd(w_10):
+    """ Following Large & Pond (1981) https://doi.org/10.1175/1520-0485(1981)011%3C0324:OOMFMI%3E2.0.CO;2 """
     return min(max(1.2E-3, 1.0E-3 * (0.49 + 0.065 * w_10)), 2.12E-3)
 
 
