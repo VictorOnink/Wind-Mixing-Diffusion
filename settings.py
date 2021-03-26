@@ -22,7 +22,7 @@ bin_dir = root_direc[server] + r'Codes/Wind-Mixing-Diffusion/bin/'
 
 # Timesteps for integration and for printing to the output file
 dt_out = timedelta(seconds=3600)  # timedelta(seconds=100)
-dt_int = timedelta(seconds=30)  # timedelta(seconds=1)
+dt_int = timedelta(seconds=1)  # timedelta(seconds=1)
 
 # Runtime for the entire simulation
 runtime = timedelta(seconds=6*3600)  # timedelta(seconds=3600)
