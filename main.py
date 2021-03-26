@@ -10,11 +10,11 @@ import ubelix_submission
 
 
 w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
-w_rise = [-0.0003]  # [-0.03, -0.003, -0.0003]
-alpha = [0.0]  # [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
+w_rise = [-0.03, -0.003, -0.0003]
+alpha = [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
 diffusion = 'KPP'
 # boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
-boundary = 'Reflect'
+boundary = 'Reflect_Markov'
 
 
 def parcels_simulations(wind, rise, alpha):
@@ -30,6 +30,7 @@ def parcels_simulations(wind, rise, alpha):
                                          alpha=alpha)
         else:
             print('This simulation has already been carried out')
+        analysis.determine_RMSE(wind, rise, diffusion, boundary, alpha)
     elif settings.server is 'ubelix':
         ubelix_submission.ubelix_submission(diffusion, boundary, wind, rise, alpha)
 
@@ -68,7 +69,7 @@ def plotting():
         # Plotting the multi-wind condition figures
         # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
         #                                                selection='w_10', single_select=2, wind_sort=True,
-        #                                                close_up=(0, -20), diffusion_type='KPP', boundary='all')
+        #                                                close_up=(0, -20), diffusion_type='KPP', boundary='Reflect')
         # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
         #                                                selection='w_10', single_select=2, wind_sort=True,
         #                                                close_up=(0, -20), diffusion_type='Kukulka', boundary='all')
@@ -92,7 +93,7 @@ def plotting():
         #                                       beaufort=beaufort, diffusion_type='Kukulka')
 
         # # Plotting the depth profile for multiple timesteps
-        # visualization.timestep_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha, close_up=(0, -30),
+        # visualization.timestep_comparison(w_10_list=[0.85], w_rise_list=[-0.0003], alpha_list=[0.0], close_up=(0, -30),
         #                                   mld=20.0, diffusion_type=diffusion, interval=1, boundary=boundary,
         #                                   diffusion_curve=False)
         # visualization.timestep_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha, close_up=(0, -100),
@@ -119,7 +120,7 @@ if __name__ == '__main__':
     """
     Synchronize with the data stored on the ubelix server
     """
-    ubelix_submission.ubelix_synchronization(update=True)
+    ubelix_submission.ubelix_synchronization(update=False)
     """
     Parcels simulations
     """

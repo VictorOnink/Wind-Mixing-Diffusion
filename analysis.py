@@ -85,3 +85,33 @@ def range_MLD_values(exclude=None):
     Max, Min, STD, Mean = np.max(MLD), np.min(MLD), np.std(MLD), np.mean(MLD)
     print('The average MLD over all field data is {:.2f} ± {:.2f}m, min = {:.2f}m, max = {:.2f}m'.format(Mean, STD, Min,
                                                                                                          Max))
+
+
+def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None):
+    # Loading the concentration profile and the depths
+    conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
+                                                                            alpha=alpha))
+    concentration = conc_dict[conc_dict['last_time_slice']]
+    concentration = concentration / concentration.max()
+    concentration_depth = conc_dict['bin_edges'][:-1]
+
+    # Loading the field measurements
+    sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
+    sources = utils.exclude_field_data(exclude, sources)
+    field_data, depth = np.array([]), np.array([])
+    for source in sources:
+        data_dict = utils.load_obj(utils.get_data_output_name(source))
+        field_data = np.append(field_data, data_dict['concentration'])
+        depth = np.append(depth, data_dict['depth'])
+
+    # For each field data point, calculate the index of concentration_depth that is closest
+    nearest_point = np.zeros(depth.shape, dtype=np.int32)
+    for ind, Z in enumerate(depth):
+        nearest_point[ind] = utils.find_nearest_index(concentration_depth, Z)
+
+    # Now, calculate the RMSE
+    RMSE = np.sqrt(np.sum(np.square(field_data - concentration[nearest_point])) / field_data.size)
+
+    # And then printing the output
+    str_format = diffusion_type, boundary, w_rise, w_10, alpha, RMSE
+    print('For the {} profile with {}, w_r = {}, w_10 = {}, alpha = {}, RMSE = {}'.format(*str_format))
