@@ -101,7 +101,7 @@ def plotting():
         #                                   diffusion_curve=False)
 
         # Just the field data
-        # visualization.plot_field_data_overview(wind_sort=True, close_up=(0,-20))
+        # visualization.plot_field_data_overview(wind_sort=True, close_up=(0, -80))
 
         # Testing different values of alpha_list
         # visualization.Markov_alpha_dependence(w_rise_list=w_rise, single_select=0, close_up=(0, -30),
@@ -109,6 +109,9 @@ def plotting():
 
         # Comparing Markov with different alpha values, but then showing more than one type of diffusion
         # visualization.diffusion_markov_comparison(w_rise_list=w_rise, single_select=0, close_up=(0, -25))
+
+        # Creating a figure to compare the RMSE values for the Markov-0 runs
+        # visualization.markov_0_RMSE_comparison()
         pass
 
 

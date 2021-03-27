@@ -81,13 +81,12 @@ def range_MLD_values(exclude=None):
         MLD += list(data_dict['MLD'])
     # Remove all nan values
     MLD = np.array(MLD)[~np.isnan(MLD)]
-
     Max, Min, STD, Mean = np.max(MLD), np.min(MLD), np.std(MLD), np.mean(MLD)
     print('The average MLD over all field data is {:.2f} ± {:.2f}m, min = {:.2f}m, max = {:.2f}m'.format(Mean, STD, Min,
                                                                                                          Max))
 
 
-def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None):
+def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, output=False):
     # Loading the concentration profile and the depths
     conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
                                                                             alpha=alpha))
@@ -98,11 +97,19 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None):
     # Loading the field measurements
     sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
     sources = utils.exclude_field_data(exclude, sources)
-    field_data, depth = np.array([]), np.array([])
+    field_data, depth, wind = np.array([]), np.array([]), np.array([])
     for source in sources:
         data_dict = utils.load_obj(utils.get_data_output_name(source))
         field_data = np.append(field_data, data_dict['concentration'])
+        wind = np.append(wind, data_dict['wind_speed'])
         depth = np.append(depth, data_dict['depth'])
+
+    # Select only the measurements measured under the selected wind conditions
+    w_10_select = {0.85: utils.beaufort_limits()[1], 2.4: utils.beaufort_limits()[2], 4.35: utils.beaufort_limits()[3],
+                   6.65: utils.beaufort_limits()[4], 9.3: utils.beaufort_limits()[5]}
+    w_min, w_max = w_10_select[w_10]
+    wind_select = (w_min < wind) & (wind <= w_max)
+    field_data, depth = field_data[wind_select], depth[wind_select]
 
     # For each field data point, calculate the index of concentration_depth that is closest
     nearest_point = np.zeros(depth.shape, dtype=np.int32)
@@ -112,6 +119,10 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None):
     # Now, calculate the RMSE
     RMSE = np.sqrt(np.sum(np.square(field_data - concentration[nearest_point])) / field_data.size)
 
-    # And then printing the output
-    str_format = diffusion_type, boundary, w_rise, w_10, alpha, RMSE
-    print('For the {} profile with {}, w_r = {}, w_10 = {}, alpha = {}, RMSE = {}'.format(*str_format))
+    # And then printing or returning the RMSE value the output
+    if not output:
+        str_format = diffusion_type, boundary, w_rise, w_10, alpha, RMSE, field_data.size
+        print('For the {} profile with {}, w_r = {}, w_10 = {}, alpha = {}, RMSE = {} over {} data points'.format(
+            *str_format))
+    elif output:
+        return RMSE

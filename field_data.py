@@ -223,10 +223,11 @@ def standardization_Zettler():
                     depths[station][rows] = depth[(rows - 1) + station * 5]
 
         # I don't have CTD data at the moment for these stations, so we'll just have an empty array for this for now
-        MLD = pd.DataFrame(columns=[0, 1, 2], index=[0, 1, 2, 3, 4, 5])
+        MLD = determine_MLD(prefix=prefix).values
+        MLD = np.array([MLD, ] * 6).reshape(6, 3)
 
         # Normalizing the concentrations and depths
-        depth_norm = np.divide(depths.values, MLD.values)
+        depth_norm = np.divide(depths.values, MLD)
         concentrations = concentrations.apply(lambda x: x / x.max(), axis=0).fillna(0.0)
 
         # Getting the wind data
@@ -235,13 +236,13 @@ def standardization_Zettler():
 
         # Keeping just the measurements taken above max-depth
         max_depth = 73
-        depth_selec = depths.values.flatten() > max_depth
+        depth_selec = depths.values.flatten() < max_depth
         # Saving everything into a dictionary
         output_dic = {'concentration': concentrations.values.flatten()[depth_selec],
                       'depth': depths.values.flatten()[depth_selec],
                       'depth_norm': depth_norm.flatten()[depth_selec],
                       'wind_speed': wind_data.flatten()[depth_selec],
-                      'MLD': MLD.values.flatten()[depth_selec]}
+                      'MLD': MLD.flatten()[depth_selec]}
 
         # Pickling the array
         utils.save_obj(filename=file_name, item=output_dic)
@@ -346,6 +347,22 @@ def determine_MLD(prefix: str, station_numbers=None):
                 MLD[station] = depth[np.where(np.abs(temp - temp_10) > dif_ref)[0][0]]
             else:
                 MLD[station] = np.nan
+    if prefix is 'Zettler':
+        MLD = pd.DataFrame(columns=range(1, 4), index=[0]).fillna(0.0)
+        for station in MLD.columns:
+            data_file = SET.data_dir + 'CTD_PE448/PE448_HC_avg_station_{}.cnv'.format(station)
+            if utils.check_file_exist(data_file):
+                # Load the depth and temperature data for the particular station
+                temperature = fCNV(data_file)['TEMP']
+                depth = fCNV(data_file)['DEPTH']
+
+                # Determine the index that corresponds to a depth of 10m
+                ind_10 = utils.find_nearest_index(depth=depth, z_ref=z_ref)
+                temp_10 = temperature[ind_10]
+
+                # Determine the depth at which the temperature difference is equal to dif_ref with respect to z_ref
+                depth, temp = depth[ind_10:], temperature[ind_10:]
+                MLD[station] = depth[np.where(np.abs(temp - temp_10) > dif_ref)[0][0]]
     if prefix is 'Egger':
         MLD = pd.DataFrame(columns=range(1, 6), index=[0]).fillna(0.0)
         for station in MLD.columns:
