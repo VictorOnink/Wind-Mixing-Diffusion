@@ -154,23 +154,6 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
     return profile
 
 
-def plot_diffusion_comp(depth, kz, dkz):
-    fig=plt.figure()
-    ax1=fig.add_subplot(121)
-    ax1.plot(kz, -depth)
-    ax2=fig.add_subplot(122)
-    ax2.plot(dkz, -depth)
-    plt.show()
-
-# import utils
-# import numpy as np
-# depth = np.linspace(0, 100, 1000)
-# w_10=10
-# diffusion_type='artificial'
-# dkz=utils.get_vertical_diffusion_gradient_profile(w_10, depth, diffusion_type)
-# kz=utils.get_vertical_diffusion_profile(w_10, depth, diffusion_type)
-# utils.plot_diffusion_comp(depth, kz, dkz)
-
 def get_T_L_profile(T_L_amp: float, depth: np.array, T_L_min: float = 2 * settings.dt_int.seconds):
     profile = T_L_min + T_L_amp * np.sin(np.pi * depth / settings.MLD)
     profile[depth > settings.MLD] = T_L_min
