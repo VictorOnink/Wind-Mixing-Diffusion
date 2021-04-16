@@ -14,6 +14,7 @@ else:
 root_direc = {'laptop': '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/',
               'ubelix': r'/home/ubelix/climate/vo18e689/Wind-Mixing/'}
 output_dir = root_direc[server] + 'parcels_output/'
+eulout_dir = root_direc[server] + 'eulerian_output/'
 conc_dir = root_direc[server] + 'concentration_output/'
 figure_dir = root_direc[server] + 'Figures/'
 data_dir = root_direc[server] + 'Data/'
@@ -32,7 +33,11 @@ p_number = 100000
 p_start_depth = 0.0                                         # starting depth of the particles
 seed = 1
 
+# The number of depth levels used in calculating the Kz profiles
+depth_levels = 1000
+
 # Some basic physical parameters
+# Density of plastic polymers from Brignac et al. (2019) at https://pubs.acs.org/doi/abs/10.1021/acs.est.9b03561
 rho_w = 1027                                                # density sea water (kg/m^3)
 rho_a = 1.22                                                # density air (kg/m^3)
 vk = 0.4                                                    # von Karman constant
@@ -42,7 +47,10 @@ MLD = 20.                                                   # Ocean mixing layer
 max_depth = 100.                                            # Maximum depth in our two layer model
 phi = 0.9                                                   # Stability function in Monin-Obukov boundary layer theory
 mu = 1e-3                                                   # dynamic viscosity
-rho_p = 920                                                 # density polypropylene (kg/m^3)
+nu = 1.1e-6                                                 # kinematic viscosity of sea water (Enders et al., 2015)
+rho_p_pp = 850                                              # density polypropylene (kg/m^3)
+rho_p_pe = 980                                              # density high density polyethylene (kg/m^3)
 latitude = 35 * np.pi / 180                                 # Latitude for the determination
 bulk_diff = 3e-5                                            # Dianeutral diffusion below MLD (m^2/s) (Waterhouse et al., 2014)
 w_prime = 0.001                                             # Magnitude of initial w_prime (m/s)
+

@@ -1,6 +1,5 @@
 import scipy.optimize
 
-import main
 import settings
 import pickle
 import math
@@ -15,6 +14,12 @@ def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=s
     if 'Markov' in boundary:
         name += 'alpha_list={}'.format(alpha)
     return name + '.nc'
+
+
+def get_eulerian_output_name(w_10, w_rise, diffusion_type, mld=settings.MLD):
+    str_format = diffusion_type, w_rise, w_10, mld
+    name = settings.eulout_dir + 'eulerian_{}_w_r={}_w_10={}_MLD={}'.format(*str_format)
+    return name
 
 
 def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=settings.MLD):
@@ -104,6 +109,7 @@ def determine_kukulka_e_length(w_10, w_rise):
 
 
 def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD, H_s_frac=1.):
+    depth = np.abs(depth)
     rho_w = settings.rho_w  # density sea water (kg/m^3)
     rho_a = settings.rho_a  # density air (kg/m^3)
     u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w)  # shear velocity
@@ -132,6 +138,7 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, m
 
 def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD,
                                             H_s_frac=1.):
+    depth = np.abs(depth)
     rho_w = settings.rho_w  # density sea water (kg/m^3)
     rho_a = settings.rho_a  # density air (kg/m^3)
     u_s = math.sqrt(determine_tau(w_10, rho_a) / rho_w)  # shear velocity
@@ -193,24 +200,89 @@ def exclude_field_data(exclude, sources):
     return sources
 
 
+# def determine_particle_size(w_rise):
+#     """
+#     Determining the size of an elliptical particle that corresponds to the rise velocity, following the approach
+#     of Poulain et al. (2019) https://pubs.acs.org/doi/abs/10.1021/acs.est.8b05458
+#     """
+#
+#     def Re(L):
+#         # Return the Reynolds number
+#         return L * np.abs(w_rise) / (settings.mu / settings.rho_w)
+#
+#     def to_optimize_disc(L):
+#         # Equation 5. from the supplementary material of Poulain et al. (2019) for a disc-like particle
+#         if material is 'PE':
+#             rho_p = settings.rho_p_pe
+#         elif material is 'PP':
+#             rho_p = settings.rho_p_pp
+#         Reynold = Re(L)
+#         left = 240. / (np.pi * Reynold) * (1 + 0.138 * Reynold ** 0.792) * w_rise ** 2
+#         right = 2. / 15 * L * (rho_p / settings.rho_w - 1) * settings.g
+#         return np.abs(left - right)
+#
+#     def to_optimize_sphere(L):
+#         # Equation 3. from the supplementary material of Poulain et al. (2019) for a spherical particle
+#         if material is 'PE':
+#             rho_p = settings.rho_p_pe
+#         elif material is 'PP':
+#             rho_p = settings.rho_p_pp
+#         Reynold = Re(L)
+#         left = (12. / Reynold + 6. / (1. + np.sqrt(2. * Reynold)) + 0.4) * w_rise ** 2
+#         right = 8. / 3. * L * (rho_p / settings.rho_w - 1) * settings.g
+#         return np.abs(left - right)
+#
+#     material = 'PP'
+#     sphere_PP = scipy.optimize.minimize_scalar(to_optimize_sphere, bounds=[0, 100], method='bounded').x
+#     disc_PP = scipy.optimize.minimize_scalar(to_optimize_disc, bounds=[0, 100], method='bounded').x
+#     material = 'PE'
+#     sphere_PE = scipy.optimize.minimize_scalar(to_optimize_sphere, bounds=[0, 100], method='bounded').x
+#     disc_PE = scipy.optimize.minimize_scalar(to_optimize_disc, bounds=[0, 100], method='bounded').x
+#     PE = disc_PE, sphere_PE
+#     print('For PE, the rise velocity is equivalent to a disk with r = {:.2E} m, or a sphere with r = {:.2E} m'.format(*PE))
+#     PP = disc_PP, sphere_PP
+#     print('For PP, the rise velocity is equivalent to a disk with r = {:.2E} m, or a sphere with r = {:.2E} m'.format(*PP))
+
+
 def determine_particle_size(w_rise):
     """
-    Determining the size of an elliptical particle that corresponds to the rise velocity, following the approach
-    of Poulain et al. (2019)
+    Determining the equivalent spherical particle size for a rise velocity based on Enders et al. (2015
+    https://doi.org/10.1016/j.marpolbul.2015.09.027
+    We do this by means of a pre-calculated lookup table for PE and PP particles with varying sizes of L, as for some
+    reason I don't get correct results when
     """
+    lookup_file = settings.data_dir + 'particle_size_rise_velocity_lookup'
+    if not check_file_exist(lookup_file):
+        # The optimization function
+        def to_optimize(w_rise):
+            if material is 'PE':
+                rho_p = settings.rho_p_pe
+            elif material is 'PP':
+                rho_p = settings.rho_p_pp
+            left = (1. - rho_p / settings.rho_w) * 8. / 3. * L * settings.g
+            Re = 2. * L * np.abs(w_rise) / settings.nu
+            right = np.square(w_rise) * (24. / Re + 5. / np.sqrt(Re) + 2. / 5.)
+            return np.abs(left - right)
+        # The range of particle sizes for which we will compute the rise velocities for
+        L_range = np.logspace(0, -5, 2000)
+        lookup_dict = {'L': L_range, 'w_rise_PP': np.zeros(L_range.shape, dtype=float),
+                       'w_rise_PE': np.zeros(L_range.shape, dtype=float)}
+        for ind, L in enumerate(L_range):
+            material = 'PP'
+            lookup_dict['w_rise_PP'][ind] = scipy.optimize.minimize_scalar(to_optimize, bounds=[-100, 0], method='bounded').x
+            material = 'PE'
+            lookup_dict['w_rise_PE'][ind] = scipy.optimize.minimize_scalar(to_optimize, bounds=[-100, 0], method='bounded').x
 
-    def Re(L):
-        # Return the Reynolds number
-        return L * np.abs(w_rise) / (settings.mu / settings.rho_w)
-
-    def to_optimize(L):
-        Reynold = Re(L)
-        left = 240. / (np.pi * Reynold) * (1 + 0.138 * Reynold ** 0.792) * w_rise ** 2
-        right = 2. / 15 * L * (settings.rho_p / settings.rho_w - 1) * settings.g
-        return np.abs(left - right)
-
-    particle_size = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x
-    print('The particle size according to Poulain et al. (2019) is {} m'.format(particle_size))
+        save_obj(lookup_file, lookup_dict)
+    # Loading the lookup table
+    lookup_dict = load_obj(lookup_file)
+    ind_PP = find_nearest_index(lookup_dict['w_rise_PP'], w_rise)
+    ind_PE = find_nearest_index(lookup_dict['w_rise_PE'], w_rise)
+    L_range = lookup_dict['L']
+    str_format = w_rise, 2 * L_range[ind_PP], 2 * L_range[ind_PE]
+    output = 'A rise velocity of {:.2E} is approximately a PP particle of diameter {:.2E} or a PE ' \
+             'particle of diameter {:.2E}'.format(*str_format)
+    print(output)
 
 
 def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):

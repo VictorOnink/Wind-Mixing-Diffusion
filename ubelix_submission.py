@@ -3,9 +3,10 @@ import os
 import parcels_simulation_functions
 import analysis
 import utils
+import eulerian_simulation_functions
 
 
-def ubelix_submission(diffusion, boundary, wind, rise, alpha):
+def ubelix_submission(diffusion, boundary, wind, rise, alpha, submission):
     """
     Creating a bash script that can be used to submit a simulation on the ubelix server
     """
@@ -19,12 +20,16 @@ def ubelix_submission(diffusion, boundary, wind, rise, alpha):
     file.write("#SBATCH --job-name={}\n".format(run_name(diffusion, boundary, wind, rise, alpha)))
     file.write("#SBATCH --output=bin/{}.o%j\n".format(run_name(diffusion, boundary, wind, rise, alpha)))
     file.write("#SBATCH --mem-per-cpu=6G\n")
-    file.write("#SBATCH --time=00:30:00\n")
+    if submission == 'parcels':
+        file.write("#SBATCH --time=00:30:00\n")
+    elif submission == 'eulerian':
+        file.write("#SBATCH --time=01:00:00\n")
     file.write('#SBATCH --partition=all\n')
     file.write('source /home/ubelix/climate/vo18e689/.bash_profile\n')
     file.write('source /home/ubelix/climate/vo18e689/anaconda3/bin/activate py3_parcels_v2_2\n')
     file.write('cd "{}"\n'.format(settings.code_dir))
-    var_dict = {'diffusion': diffusion, 'boundary': boundary, 'wind': wind, 'rise': rise, 'alpha_list': alpha}
+    var_dict = {'diffusion': diffusion, 'boundary': boundary, 'wind': wind, 'rise': rise, 'alpha_list': alpha,
+                'submission': submission}
     export_var(file, var_dict)
     file.write('python ubelix_submission.py -p 10 -v')
     file.close()
@@ -61,8 +66,12 @@ def ubelix_synchronization(update: bool = False):
 
 
 if __name__ == '__main__':
+    submission = os.getenv('submission')
     diffusion, boundary = os.getenv('diffusion'), os.getenv('boundary')
     wind, rise, alpha = float(os.getenv('wind')), float(os.getenv('rise')), float(os.getenv('alpha_list'))
-    parcels_simulation_functions.vertical_diffusion_run(wind, rise, alpha=alpha, diffusion_type=diffusion,
-                                                        boundary=boundary)
-    analysis.depth_concentration(w_10=wind, w_rise=rise, alpha=alpha, diffusion_type=diffusion, boundary=boundary)
+    if submission == 'parcels':
+        parcels_simulation_functions.vertical_diffusion_run(wind, rise, alpha=alpha, diffusion_type=diffusion,
+                                                            boundary=boundary)
+        analysis.depth_concentration(w_10=wind, w_rise=rise, alpha=alpha, diffusion_type=diffusion, boundary=boundary)
+    if submission == 'eulerian':
+        eulerian_simulation_functions.eulerian_vertical_run(w_10=wind, w_rise=rise, diffusion_type=diffusion)

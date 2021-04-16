@@ -91,7 +91,7 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha):
     lon = np.linspace(0, 1, num=2)
     lat = np.linspace(0, 1, num=2)
     max_depth = settings.max_depth
-    depth = np.linspace(0, max_depth, num=1000)
+    depth = np.linspace(0, max_depth, num=settings.depth_levels)
     time = np.array([0])
     Time, Depth, Lon, Lat = np.meshgrid(time, depth, lon, lat)
 

@@ -603,7 +603,7 @@ def markov_0_RMSE_comparison(y_label=r'$u_{10}$ (m s$^{-1}$)', x_label=r'RMSE', 
               label_marker]
 
     def label_color(rise):
-        return r'$w_r$ = {}'.format(rise) + ' m s$^{-1}$'
+        return r'$w_r$ = {}'.format(np.abs(rise)) + ' m s$^{-1}$'
 
     color = [plt.plot([], [], c=marker_color[rise], markersize=10, marker='o', label=label_color(rise), linestyle='')[0] for rise in
               w_r]
@@ -691,7 +691,8 @@ def markov_1_RMSE_comparison(y_label=r'$u_{10}$ (m s$^{-1}$)', x_label=r'RMSE', 
 
     # # Next, adding a legend to explain the color scheme and the marker type
     def label_marker(rise):
-        return r'$w_r$ = {}'.format(rise) + ' m s$^{-1}$'
+        return r'$w_r$ = {}'.format(np.abs(rise)) + ' m s$^{-1}$'
+
     marker = [plt.plot([], [], c='k', markersize=10, marker=marker_type[rise], label=label_marker(rise), linestyle='')[0] for rise in
               w_r]
     markov0 = [plt.plot([], [], c=utils.return_color(0), markersize=10, marker='o', label='M0', linestyle='')[0]]
