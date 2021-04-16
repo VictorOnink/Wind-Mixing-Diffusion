@@ -7,7 +7,6 @@ import field_data
 from progressbar import ProgressBar
 import settings
 import ubelix_submission
-import eulerian_simulation_functions
 
 w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
 w_rise = [-0.03, -0.003, -0.0003]
