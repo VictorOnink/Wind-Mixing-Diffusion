@@ -25,8 +25,9 @@ def ubelix_submission(diffusion, boundary, wind, rise, alpha, submission):
     elif submission == 'eulerian':
         file.write("#SBATCH --time=01:00:00\n")
     file.write('#SBATCH --partition=all\n')
-    file.write('source /home/ubelix/climate/vo18e689/.bash_profile\n')
-    file.write('source /home/ubelix/climate/vo18e689/anaconda3/bin/activate py3_parcels_v2_2\n')
+    file.write('source /storage/homefs/vo18e689/.bash_profile\n')
+    file.write('source /storage/homefs/vo18e689/anaconda3/bin/activate py3_parcels\n')
+    s
     file.write('cd "{}"\n'.format(settings.code_dir))
     var_dict = {'diffusion': diffusion, 'boundary': boundary, 'wind': wind, 'rise': rise, 'alpha_list': alpha,
                 'submission': submission}
@@ -55,14 +56,16 @@ def run_name(diffusion, boundary, wind, rise, alpha):
 
 def ubelix_synchronization(update: bool = False):
     """ Download any concentration files computed on the ubelix server to my laptop """
+    update_dict = {'parcels': [settings.root_direc['ubelix'] + 'concentration_output/', settings.conc_dir],
+                   'eulerian': [settings.root_direc['ubelix'] + 'eulerian_output/', settings.eulout_dir]}
     if settings.server is 'laptop':
         if update:
-            current_folder = os.getcwd()
-            ubelix_folder = settings.root_direc['ubelix'] + 'concentration_output/'
-            os.chdir(settings.conc_dir)
-            command = 'rsync -av ubelix:{}* .'.format(ubelix_folder)
-            os.system(command)
-            os.chdir(current_folder)
+            for ubelix_folder in update_dict:
+                current_folder = os.getcwd()
+                os.chdir(update_dict[ubelix_folder][1])
+                command = 'rsync -av ubelix:{}* .'.format(update_dict[ubelix_folder][0])
+                os.system(command)
+                os.chdir(current_folder)
 
 
 if __name__ == '__main__':

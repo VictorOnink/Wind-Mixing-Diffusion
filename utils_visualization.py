@@ -10,9 +10,9 @@ def label_boundary(w_10, diffusion_type, boundary):
                      'Mixed_Markov': 'M-1 Mixed', 'Reflect_Markov':'M-1 Reflect',
                      'Reduce_dt_Markov':'M-1 Reduce dt'}
     if diffusion_type == 'Kukulka':
-        return r'PZK, u$_{10}$ '+'= {}'.format(w_10) + ' m s$^{-1}$, ' + boundary_dict[boundary]
+        return r'SWB, u$_{10}$ '+'= {:.2f}'.format(w_10) + ' m s$^{-1}$, ' + boundary_dict[boundary]
     elif diffusion_type == 'KPP':
-        return r'KPP, u$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD) + ', ' \
+        return r'KPP, u$_{10}$ '+'= {:.2f}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD) + ', ' \
                + boundary_dict[boundary]
 
 
@@ -42,9 +42,9 @@ def label_time_step(steps, interval):
 
 def label_diffusivity_profile(w_10, diffusion_type):
     if diffusion_type == 'Kukulka':
-        return r'PZK, u$_{10}$' + ' = {}'.format(w_10) + ' m s$^{-1}$'
+        return r'SWB, u$_{10}$' + ' = {:.2f}'.format(w_10) + ' m s$^{-1}$'
     elif diffusion_type == 'KPP':
-        return r'KPP, u$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
+        return r'KPP, u$_{10}$ '+'= {:.2f}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
 
 
 def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1), plot_num=1, all_x_labels=False):
@@ -121,29 +121,29 @@ def label_kukulka(selection, parameters):
     w_10, w_rise = parameters
     w_rise = np.abs(w_rise)
     if selection is 'w_rise':
-        return r'PZK, w$_{rise}$ '+'= {} m s'.format(w_rise) + r'$^{-1}$'
+        return r'SWB, w$_{rise}$ '+'= {} m s'.format(w_rise) + r'$^{-1}$'
     elif selection is 'w_10':
-        return r'PZK, u$_{10}$ '+'= {} m s'.format(w_10) + r'$^{-1}$'
+        return r'SWB, u$_{10}$ '+'= {} m s'.format(w_10) + r'$^{-1}$'
 
 
 def label_KPP(selection, parameters, mld=settings.MLD):
     w_10, w_rise = parameters
     w_rise = np.abs(w_rise)
     if selection is 'w_rise':
-        return r'KPP, w$_{rise}$ '+'= {}'.format(w_rise) + 'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
+        return r'KPP, w$_{rise}$ '+'= {}'.format(w_rise) + 'm s$^{-1}$, MLD = ' + '{:.1f} m'.format(mld)
     elif selection is 'w_10':
-        return r'KPP, u$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
+        return r'KPP, u$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{:.1f} m'.format(mld)
 
 
 def label_MLD_Comparison(parameters, diffusion_type, mld=settings.MLD):
     w_10, w_rise = parameters
     w_rise = np.abs(w_rise)
     if diffusion_type == 'KPP':
-        return r'KPP, u$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$,' + 'w$_{rise}$ '+'= {}'.format(w_rise) + \
-               'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
+        return r'KPP, u$_{10}$ '+'= {:.2f}'.format(w_10) + 'm s$^{-1}$,' + 'w$_{rise}$ '+'= {}'.format(w_rise) + \
+               'm s$^{-1}$, MLD = ' + '{:.1f} m'.format(mld)
     elif diffusion_type == 'Kukulka':
-        return r'PZK, u$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$,' + 'w$_{rise}$ '+'= {}'.format(w_rise) + \
-               'm s$^{-1}$, MLD = ' + '{} m'.format(mld)
+        return r'SWB, u$_{10}$ '+'= {:.2f}'.format(w_10) + 'm s$^{-1}$,' + 'w$_{rise}$ '+'= {}'.format(w_rise) + \
+               'm s$^{-1}$, MLD = ' + '{:.1f} m'.format(mld)
 
 
 def label_alpha_comparison(boundary, alpha):
@@ -157,7 +157,7 @@ def label_model_field_comparison(w_rise, diffusion_type, boundary):
     boundary_dict = {'Reflect': 'Markov 0', 'Reflect_Markov': 'Markov 1'}
     w_rise = np.abs(w_rise)
     if diffusion_type is 'Kukulka':
-        diff = 'PZK'
+        diff = 'SWB'
     elif diffusion_type is 'KPP':
         diff = 'KPP'
     return diff + ', {}'.format(boundary_dict[boundary]) + ', w$_{rise}$ ' + '= {} m s'.format(w_rise) + r'$^{-1}$'

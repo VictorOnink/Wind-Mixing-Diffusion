@@ -514,7 +514,7 @@ def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_
 
     # Adding subplot titles
     ax[0].set_title(r'(a) KPP', fontsize=ax_label_size)
-    ax[1].set_title(r'(b) PZK', fontsize=ax_label_size)
+    ax[1].set_title(r'(b) SWB', fontsize=ax_label_size)
 
     # Saving the figure
     str_format = w_rise_list[0], settings.MLD
@@ -564,7 +564,7 @@ def markov_0_RMSE_comparison(y_label=r'$u_{10}$ (m s$^{-1}$)', x_label=r'RMSE', 
     diffusion = ['KPP', 'Kukulka']
     diffusion_offset = {'KPP': 0.1, 'Kukulka': -0.1}
     # Selecting the marker type according which form of diffusion it is:
-    marker_type = {'KPP': 'o', 'Kukulka': 'X', 'PZK': 'X'}
+    marker_type = {'KPP': 'o', 'Kukulka': 'X', 'SWB': 'X'}
     # Selecting the marker color according to which rise velocity
     marker_color = {-0.03: 'tab:blue', -0.003: 'tab:red', -0.0003: 'tab:green'}
 
@@ -598,7 +598,7 @@ def markov_0_RMSE_comparison(y_label=r'$u_{10}$ (m s$^{-1}$)', x_label=r'RMSE', 
     ax.set_yticklabels(['', 0.85, 2.40, 4.35, 6.65, 9.30, ''])
 
     # Next, adding a legend to explain the color scheme and the marker type
-    label_marker = ['KPP', 'PZK']
+    label_marker = ['KPP', 'SWB']
     marker = [plt.plot([], [], c='k', markersize=10, marker=marker_type[label], label=label, linestyle='')[0] for label in
               label_marker]
 
@@ -637,7 +637,7 @@ def markov_1_RMSE_comparison(y_label=r'$u_{10}$ (m s$^{-1}$)', x_label=r'RMSE', 
                 plot_tuple = RMSE, index_w10 + 1 + rise_offset[rise], marker_type[rise], utils.return_color(index_a + 1)
                 point_list_KPP.append(plot_tuple)
 
-    # Looping through the PZK simulations, and retrieving the RMSE values for them
+    # Looping through the SWB simulations, and retrieving the RMSE values for them
     point_list_Kukulka = []
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
@@ -662,7 +662,7 @@ def markov_1_RMSE_comparison(y_label=r'$u_{10}$ (m s$^{-1}$)', x_label=r'RMSE', 
     ax.tick_params(axis='both', labelsize=ax_label_size)
     ax.set_xlabel(x_label, fontsize=ax_label_size)
     ax.set_xlim((0, 1))
-    # Adding the axis for PZK
+    # Adding the axis for SWB
     ax2 = fig.add_subplot(122)
     # Y axis = Depth axis
     ax2.set_ylim((0, 6))
@@ -673,7 +673,7 @@ def markov_1_RMSE_comparison(y_label=r'$u_{10}$ (m s$^{-1}$)', x_label=r'RMSE', 
     ax2.set_xlim((0, 1))
 
     ax.set_title(r'(a) KPP', fontsize=ax_label_size)
-    ax2.set_title(r'(b) PZK', fontsize=ax_label_size)
+    ax2.set_title(r'(b) SWB', fontsize=ax_label_size)
 
 
     # Now, plotting the points
