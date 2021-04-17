@@ -27,7 +27,6 @@ def ubelix_submission(diffusion, boundary, wind, rise, alpha, submission):
     file.write('#SBATCH --partition=all\n')
     file.write('source /storage/homefs/vo18e689/.bash_profile\n')
     file.write('source /storage/homefs/vo18e689/anaconda3/bin/activate py3_parcels\n')
-    s
     file.write('cd "{}"\n'.format(settings.code_dir))
     var_dict = {'diffusion': diffusion, 'boundary': boundary, 'wind': wind, 'rise': rise, 'alpha_list': alpha,
                 'submission': submission}
