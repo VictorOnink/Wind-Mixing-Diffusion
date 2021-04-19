@@ -1,10 +1,9 @@
 from datetime import timedelta
 import numpy as np
 import socket
-import sys
 
 # Checking which computer this is all running on
-hostname = socket.gethostname()
+
 if socket.gethostname() == 'Victors-MBP.home':
     server = 'laptop'
 else:

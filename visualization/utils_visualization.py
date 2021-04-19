@@ -1,8 +1,8 @@
-import main
 import settings
 import numpy as np
 import matplotlib.pyplot as plt
 import utils
+from matplotlib.gridspec import GridSpec
 
 
 def label_boundary(w_10, diffusion_type, boundary):
@@ -35,11 +35,6 @@ def diffusion_curve_axis(ax, ax_label_size, w_10, profile_dict, diffusion_type, 
     return ax2
 
 
-def label_time_step(steps, interval):
-    t = steps * interval * settings.dt_out.seconds // 3600
-    return 't = {} hours'.format(t)
-
-
 def label_diffusivity_profile(w_10, diffusion_type):
     if diffusion_type == 'Kukulka':
         return r'SWB, u$_{10}$' + ' = {:.2f}'.format(w_10) + ' m s$^{-1}$'
@@ -47,24 +42,41 @@ def label_diffusivity_profile(w_10, diffusion_type):
         return r'KPP, u$_{10}$ '+'= {:.2f}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
 
 
-def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1), plot_num=1, all_x_labels=False):
+def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1), plot_num=1, all_x_labels=False,
+                legend_axis=False):
     xmax, xmin, ymax, ymin = ax_range
     fig = plt.figure(figsize=fig_size)
     if shape == (1, 1):
-        ax = fig.add_subplot(111)
+        if legend_axis:
+            grid = GridSpec(nrows=shape[0], ncols=shape[1] + 1, figure=fig)
+        else:
+            grid = GridSpec(nrows=shape[0], ncols=shape[1], figure=fig)
+        ax_sub = fig.add_subplot(grid[0, 0])
         # Y axis = Depth axis
-        ax.set_ylabel(y_label, fontsize=ax_label_size)
-        ax.set_ylim((ymin, ymax))
-        ax.tick_params(axis='both', labelsize=ax_label_size)
+        ax_sub.set_ylabel(y_label, fontsize=ax_label_size)
+        ax_sub.set_ylim((ymin, ymax))
+        ax_sub.tick_params(axis='both', labelsize=ax_label_size)
         # X axis = Concentration axis
-        ax.set_xlabel(x_label, fontsize=ax_label_size)
-        ax.set_xlim((xmin, xmax))
-        return ax
+        ax_sub.set_xlabel(x_label, fontsize=ax_label_size)
+        ax_sub.set_xlim((xmin, xmax))
+        if not legend_axis:
+            return ax_sub
+        else:
+            ax = [ax_sub]
+            ax_legend = fig.add_subplot(grid[0, -1])
+            ax_legend.set_axis_off()
+            ax.append(ax_legend)
+            return ax
     else:
+        if legend_axis:
+            grid = GridSpec(nrows=shape[0], ncols=shape[1] + 1, figure=fig)
+        else:
+            grid = GridSpec(nrows=shape[0], ncols=shape[1], figure=fig)
         ax, fig_index = [], 1
         for row in range(shape[0]):
             for column in range(shape[1]):
-                ax_sub = fig.add_subplot(shape[0], shape[1], fig_index)
+                # ax_sub = fig.add_subplot(shape[0], shape[1], fig_index)
+                ax_sub = fig.add_subplot(grid[row, column])
                 # Only add y labels if we are in the first column
                 ax_sub.set_ylim((ymin, ymax))
                 ax_sub.tick_params(axis='both', labelsize=ax_label_size)
@@ -89,32 +101,12 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1
                 fig_index += 1
                 if fig_index > plot_num:
                     break
+        if legend_axis:
+            for rows in range(shape[0]):
+                ax_legend = fig.add_subplot(grid[rows, -1])
+                ax_legend.set_axis_off()
+                ax.append(ax_legend)
         return tuple(ax)
-
-
-def saving_filename_basic_profile(save_location, selection, close_up, diffusion_type):
-    if close_up is None:
-        return save_location + diffusion_type + '_Depth_profile_full_variable={}.png'.format(selection)
-    else:
-        ymax, ymin = close_up
-        return save_location + diffusion_type + '_Depth_profile_max={}_min={}_variable={}.png'.format(ymax, ymin,
-                                                                                                      selection)
-
-
-def saving_filename_time_step(save_location, close_up, diffusion_type):
-    if close_up is None:
-        return save_location + diffusion_type + '_time_step_full.png'
-    else:
-        ymax, ymin = close_up
-        return save_location + diffusion_type + '_time_step_max={}_min={}.png'.format(ymax, ymin)
-
-
-def saving_filename_boundary(save_location, selection, close_up, diffusion_type):
-    if close_up is None:
-        return save_location + diffusion_type + '_boundary_full_variable={}.png'.format(selection)
-    else:
-        ymax, ymin = close_up
-        return save_location + diffusion_type + '_boundary_max={}_min={}_variable={}.png'.format(ymax, ymin, selection)
 
 
 def label_kukulka(selection, parameters):
@@ -135,32 +127,11 @@ def label_KPP(selection, parameters, mld=settings.MLD):
         return r'KPP, u$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{:.1f} m'.format(mld)
 
 
-def label_MLD_Comparison(parameters, diffusion_type, mld=settings.MLD):
-    w_10, w_rise = parameters
-    w_rise = np.abs(w_rise)
-    if diffusion_type == 'KPP':
-        return r'KPP, u$_{10}$ '+'= {:.2f}'.format(w_10) + 'm s$^{-1}$,' + 'w$_{rise}$ '+'= {}'.format(w_rise) + \
-               'm s$^{-1}$, MLD = ' + '{:.1f} m'.format(mld)
-    elif diffusion_type == 'Kukulka':
-        return r'SWB, u$_{10}$ '+'= {:.2f}'.format(w_10) + 'm s$^{-1}$,' + 'w$_{rise}$ '+'= {}'.format(w_rise) + \
-               'm s$^{-1}$, MLD = ' + '{:.1f} m'.format(mld)
-
-
 def label_alpha_comparison(boundary, alpha):
     if boundary is 'Reflect':
         return 'M-0'
     else:
         return r'M-1, $\alpha$ = ' + '{}'.format(alpha)
-
-
-def label_model_field_comparison(w_rise, diffusion_type, boundary):
-    boundary_dict = {'Reflect': 'Markov 0', 'Reflect_Markov': 'Markov 1'}
-    w_rise = np.abs(w_rise)
-    if diffusion_type is 'Kukulka':
-        diff = 'SWB'
-    elif diffusion_type is 'KPP':
-        diff = 'KPP'
-    return diff + ', {}'.format(boundary_dict[boundary]) + ', w$_{rise}$ ' + '= {} m s'.format(w_rise) + r'$^{-1}$'
 
 
 def get_axes_range(close_up, norm_depth, delta_x=0.01, delta_y=0.5):
@@ -226,8 +197,7 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
     for w_rise in w_rise_list:
         for w_10 in w_10_list:
             # Loading the dictionary containing the concentrations
-            input_dir = utils.load_obj(
-                utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=mld, alpha=alpha))
+            input_dir = utils.load_obj(utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=mld, alpha=alpha))
             # Selecting the timeslice of interest
             if output_step == -1:
                 concentration = [input_dir['last_time_slice']]
@@ -284,46 +254,20 @@ def add_observations(ax, sources=None, wind_range=None, norm_depth=False, alpha=
     return lines, labels
 
 
-def field_data_figure_names(close_up=None, wind_sort=False, norm_depth=False, output_type='.png'):
-    figure_name = settings.figure_dir + '/Field Data/field_data_'
-    if close_up is not None:
-        max, min = close_up
-        figure_name += 'max_{}_min_{}'.format(max, min)
-    if wind_sort:
-        figure_name += '_wind_sort'
-    if norm_depth:
-        figure_name += '_normalized_depth'
-    return figure_name + output_type
-
-
-def model_field_data_comparison_name(diffusion_type, boundary, alpha_list,close_up=None, wind_sort=False,
-                                     norm_depth=False, output_type='.png', beaufort=1):
-    diff_dict = {'Kukulka': 'Kukulka', 'KPP': 'KPP', 'all': 'Kukulka_KPP'}
-    figure_name = settings.figure_dir + 'model_field_data_{}_{}'.format(diff_dict[diffusion_type], boundary)
-    if 'Markov' in boundary:
-        figure_name += '_alpha_{}_'.format(alpha_list[0])
-    if close_up is not None:
-        max, min = close_up
-        figure_name += '_max_{}_min_{}'.format(max, min)
-    if wind_sort:
-        figure_name += '_wind_sort'
-    elif not wind_sort:
-        figure_name += '_Bft{}_'.format(beaufort)
-    if norm_depth:
-        figure_name += '_normalized_depth'
-    return figure_name + output_type
-
-
-def mld_comparison_name(diffusion_type, boundary, beaufort, close_up=None, output_type='.png'):
-    diff_dict = {'Kukulka': 'Kukulka', 'KPP': 'KPP', 'all': 'Kukulka_KPP'}
-    figure_name = settings.figure_dir + 'norm_comparison_{}_{}_Bft{}'.format(diff_dict[diffusion_type], boundary,
-                                                                             beaufort)
-    if close_up is not None:
-        max, min = close_up
-        figure_name += '_max_{}_min_{}'.format(max, min)
-    return figure_name + output_type
-
-
 def discrete_color_from_cmap(index, subdivisions, cmap='viridis_r'):
     cmap_steps = plt.cm.get_cmap(cmap, subdivisions)
     return cmap_steps(index)
+
+
+def rise_velocity_selector(size_class, w_rise):
+    if size_class is 'large':
+        if -0.0003 in w_rise:
+            w_rise.remove(-0.0003)
+    return w_rise
+
+
+def return_color(index):
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray',
+              'tab:olive', 'tab:cyan']
+    num = len(colors)
+    return colors[index % num]

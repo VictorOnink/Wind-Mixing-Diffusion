@@ -321,7 +321,7 @@ def determine_MLD(prefix: str, station_numbers=None):
                 temp = data_ctd['Temperature'][data_ctd.station == station].values[depth_sort]
 
                 # Determine the index that corresponds to a depth of 10m
-                ind_10 = utils.find_nearest_index(depth=depth, z_ref=z_ref)
+                ind_10 = utils.utils_files.find_nearest_index(depth=depth, z_ref=z_ref)
                 temp_10 = temp[ind_10]
 
                 # Determine the depth at which the temperature difference is equal to dif_ref with respect to z_ref
@@ -357,7 +357,7 @@ def determine_MLD(prefix: str, station_numbers=None):
                 depth = fCNV(data_file)['DEPTH']
 
                 # Determine the index that corresponds to a depth of 10m
-                ind_10 = utils.find_nearest_index(depth=depth, z_ref=z_ref)
+                ind_10 = utils.utils_files.find_nearest_index(depth=depth, z_ref=z_ref)
                 temp_10 = temperature[ind_10]
 
                 # Determine the depth at which the temperature difference is equal to dif_ref with respect to z_ref

@@ -4,7 +4,6 @@ import utils
 from netCDF4 import Dataset
 import numpy as np
 import scipy.stats as stats
-import main
 
 
 def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, print_removed=True):
@@ -77,7 +76,7 @@ def range_MLD_values(exclude=None):
     # Loading all the determined MLD depths, and then get the mean, std, max and min value over all data
     MLD = []
     for source in sources:
-        data_dict = utils.load_obj(utils.get_data_output_name(source))
+        data_dict = utils.load_obj(utils.utils_filenames.get_data_output_name(source))
         MLD += list(data_dict['MLD'])
     # Remove all nan values
     MLD = np.array(MLD)[~np.isnan(MLD)]
@@ -89,7 +88,7 @@ def range_MLD_values(exclude=None):
 def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, output=False):
     # Loading the concentration profile and the depths
     conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
-                                                                            alpha=alpha))
+                               alpha=alpha))
     concentration = conc_dict[conc_dict['last_time_slice']]
     concentration = concentration / concentration.max()
     concentration_depth = conc_dict['bin_edges'][:-1]
@@ -99,7 +98,7 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, 
     sources = utils.exclude_field_data(exclude, sources)
     field_data, depth, wind = np.array([]), np.array([]), np.array([])
     for source in sources:
-        data_dict = utils.load_obj(utils.get_data_output_name(source))
+        data_dict = utils.load_obj(utils.utils_filenames.get_data_output_name(source))
         field_data = np.append(field_data, data_dict['concentration'])
         wind = np.append(wind, data_dict['wind_speed'])
         depth = np.append(depth, data_dict['depth'])
@@ -114,7 +113,7 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, 
     # For each field data point, calculate the index of concentration_depth that is closest
     nearest_point = np.zeros(depth.shape, dtype=np.int32)
     for ind, Z in enumerate(depth):
-        nearest_point[ind] = utils.find_nearest_index(concentration_depth, Z)
+        nearest_point[ind] = utils.utils_files.find_nearest_index(concentration_depth, Z)
 
     # Now, calculate the RMSE
     RMSE = np.sqrt(np.sum(np.square(field_data - concentration[nearest_point])) / field_data.size)

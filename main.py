@@ -1,5 +1,6 @@
 import utils
-import utils_visualization as utils_v
+import visualization.plot_field_data_overview
+from visualization import utils_visualization as utils_v
 import parcels_simulation_functions
 import analysis
 import visualization
@@ -39,16 +40,16 @@ def field_data_processing():
     if settings.server is 'laptop':
         field_data.data_standardization()
         if not utils.check_file_exist(
-                utils_v.field_data_figure_names(close_up=(0, -10), wind_sort=True, norm_depth=False)):
+                visualization.field_data_figure_names(close_up=(0, -10), wind_sort=True, norm_depth=False)):
             visualization.plot_field_data_overview(wind_sort=True, close_up=(0, -10))
         if not utils.check_file_exist(
-                utils_v.field_data_figure_names(close_up=(0, -35), wind_sort=True, norm_depth=False)):
+                visualization.field_data_figure_names(close_up=(0, -35), wind_sort=True, norm_depth=False)):
             visualization.plot_field_data_overview(wind_sort=True, close_up=(0, -35))
         if not utils.check_file_exist(
-                utils_v.field_data_figure_names(wind_sort=True, norm_depth=True, close_up=(0, -1))):
+                visualization.field_data_figure_names(wind_sort=True, norm_depth=True, close_up=(0, -1))):
             visualization.plot_field_data_overview(wind_sort=True, norm_depth=True, close_up=(0, -1))
         if not utils.check_file_exist(
-                utils_v.field_data_figure_names(wind_sort=False, norm_depth=True, close_up=(0, -10))):
+                visualization.field_data_figure_names(wind_sort=False, norm_depth=True, close_up=(0, -10))):
             visualization.plot_field_data_overview(wind_sort=False, norm_depth=True, close_up=(0, -10))
         # Determining correlations for field-measured concentrations and depth
         analysis.correlation_depth_concentration()
@@ -124,6 +125,19 @@ def plotting():
 
         # Creating a similar figure to compare the RMSE values for the Markov-0 runs
         # visualization.markov_1_RMSE_comparison()
+
+        # Comparing Eulerian and Lagrangian approaches
+        # visualization.lagrangian_eulerian_comparison(w_rise_list=w_rise, alpha_list=alpha, boundary='Reflect',
+        #                                              close_up=(0, -20))
+        # for a in [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]:
+        #     visualization.lagrangian_eulerian_comparison(w_rise_list=w_rise, alpha_list=[a], boundary='Reflect_Markov',
+        #                                                  close_up=(0, -20))
+
+        # Comparing Eulerian profiles with field measurements
+        visualization.eulerian_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
+                                                     selection='w_10', single_select=2, wind_sort=True,
+                                                     close_up=(0, -20), diffusion_type='all', boundary='Reflect')
+
         pass
 
 
@@ -135,7 +149,7 @@ if __name__ == '__main__':
     """
     Synchronize with the data stored on the ubelix server
     """
-    ubelix_submission.ubelix_synchronization(update=True)
+    ubelix_submission.ubelix_synchronization(update=False)
     """
     Parcels simulations
     """
