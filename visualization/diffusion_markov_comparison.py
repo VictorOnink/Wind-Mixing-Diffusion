@@ -9,7 +9,7 @@ import numpy as np
 
 def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_label='Depth (m)', alpha=0.3,
                                 x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(10, 6),
-                                ax_label_size=16, legend_size=12, single_select=1,
+                                ax_label_size=16, legend_size=10, single_select=1,
                                 output_step=-1):
     ax_range = utils_v.get_axes_range(close_up=close_up, norm_depth=False)
 

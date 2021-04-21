@@ -125,3 +125,36 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, 
             *str_format))
     elif output:
         return RMSE
+
+
+def determine_RMSE_eulerian(w_10, w_rise, diffusion_type, exclude=None):
+    eul_dict = utils.load_obj(utils.get_eulerian_output_name(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type))
+    concentration = eul_dict['C']
+    concentration_depth = np.abs(eul_dict['Z'])
+
+    # Loading the field measurements
+    sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
+    sources = utils.exclude_field_data(exclude, sources)
+    field_data, depth, wind = np.array([]), np.array([]), np.array([])
+    for source in sources:
+        data_dict = utils.load_obj(utils.utils_filenames.get_data_output_name(source))
+        field_data = np.append(field_data, data_dict['concentration'])
+        wind = np.append(wind, data_dict['wind_speed'])
+        depth = np.append(depth, data_dict['depth'])
+
+    # Select only the measurements measured under the selected wind conditions
+    w_10_select = {0.85: utils.beaufort_limits()[1], 2.4: utils.beaufort_limits()[2], 4.35: utils.beaufort_limits()[3],
+                   6.65: utils.beaufort_limits()[4], 9.3: utils.beaufort_limits()[5]}
+    w_min, w_max = w_10_select[w_10]
+    wind_select = (w_min < wind) & (wind <= w_max)
+    field_data, depth = field_data[wind_select], depth[wind_select]
+
+    # For each field data point, calculate the index of concentration_depth that is closest
+    nearest_point = np.zeros(depth.shape, dtype=np.int32)
+    for ind, Z in enumerate(depth):
+        nearest_point[ind] = utils.utils_files.find_nearest_index(concentration_depth, Z)
+
+    # Now, calculate the RMSE
+    RMSE = np.sqrt(np.sum(np.square(field_data - concentration[nearest_point])) / field_data.size)
+
+    return RMSE

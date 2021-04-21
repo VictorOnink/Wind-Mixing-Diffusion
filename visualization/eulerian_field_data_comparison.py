@@ -10,7 +10,7 @@ import numpy as np
 def eulerian_field_data_comparison(w_10_list, w_rise_list, alpha_list, selection='w_10', output_step=-1,
                                    single_select=1,
                                    norm_depth=False, wind_sort=True, y_label='Depth (m)', close_up=None,
-                                   x_label=r'Normalised Plastic Concentrations ($C/C_0$)', fig_size=(16, 8),
+                                   x_label=r'Normalised Concentrations ($C/C_{max}$)', fig_size=(16, 8),
                                    ax_label_size=16,
                                    legend_size=10, diffusion_type='Kukulka', boundary='Reflect_Markov', alpha=0.3,
                                    beaufort=4):
@@ -101,14 +101,14 @@ def eulerian_field_data_comparison(w_10_list, w_rise_list, alpha_list, selection
                     utils.get_eulerian_output_name(w_10=w_10, w_rise=0.0003, diffusion_type='Kukulka'))
                 ax[scale].plot(eul_dict['C'], eul_dict['Z'] / correction, linestyle='-',
                                color=utils_v.discrete_color_from_cmap(counter, len(w_10_list)),
-                               label=line_labels(w_rise=w_r, boundary_type='eulerian', diffusion_type='Kukulka'))
+                               label=r'SWB, Eulerian, w$_{10}$ = ' + '{:.2f}'.format(w_10) + r' m s$^{-1}$')
         if kpp:
             for counter, w_10 in enumerate(np.abs(w_10_list)):
                 eul_dict = utils.load_obj(
                     utils.get_eulerian_output_name(w_10=w_10, w_rise=0.0003, diffusion_type='KPP'))
                 ax[scale].plot(eul_dict['C'], eul_dict['Z'] / correction, linestyle='--',
                                color=utils_v.discrete_color_from_cmap(counter, len(w_10_list)),
-                               label=line_labels(w_rise=w_r, boundary_type='eulerian', diffusion_type='KPP'))
+                               label=r'KPP, Eulerian, w$_{10}$ = ' + '{:.2f}'.format(w_10) + r' m s$^{-1}$')
         lines_w_10, labels_w_10 = ax[scale].get_legend_handles_labels()
         # Adding the legend for the split wind plots
         ax[-2].legend(lines, labels, fontsize=legend_size, loc='upper left')

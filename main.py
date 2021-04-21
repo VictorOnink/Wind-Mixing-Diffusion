@@ -1,6 +1,5 @@
 import utils
 import visualization.plot_field_data_overview
-from visualization import utils_visualization as utils_v
 import parcels_simulation_functions
 import analysis
 import visualization
@@ -13,7 +12,6 @@ w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
 w_rise = [-0.03, -0.003, -0.0003]
 alpha = [0.0]  # [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
 diffusion = 'Kukulka'
-# boundary_options = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
 boundary = 'Reflect'
 
 
@@ -78,6 +76,9 @@ def plotting():
         # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
         #                                                selection='w_10', single_select=2, wind_sort=True,
         #                                                close_up=(0, -20), diffusion_type='all', boundary='Reflect')
+        # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
+        #                                                selection='w_10', single_select=2, wind_sort=True,
+        #                                                close_up=(0, -5), diffusion_type='all', boundary='Reflect')
         # visualization.plot_model_field_data_comparison(w_10_list=[6.65], w_rise_list=[-0.03, -0.003], alpha_list=alpha,
         #                                                selection='w_rise', single_select=0, wind_sort=False,
         #                                                close_up=(0, -20), diffusion_type='all', boundary='Reflect',
@@ -114,11 +115,11 @@ def plotting():
         # visualization.plot_field_data_overview(wind_sort=True, close_up=(0, -25))
 
         # Testing different values of alpha_list
-        # visualization.Markov_alpha_dependence(w_rise_list=w_rise, single_select=0, close_up=(0, -30),
+        # visualization.markov_alpha_dependence(w_rise_list=w_rise, single_select=0, close_up=(0, -30),
         #                                       diffusion_type=diffusion)
 
         # Comparing Markov with different alpha values, but then showing more than one type of diffusion
-        # visualization.diffusion_markov_comparison(w_rise_list=[-0.03], single_select=0, close_up=(0, -25))
+        # visualization.diffusion_markov_comparison(w_rise_list=[-0.003], single_select=0, close_up=(0, -25))
 
         # Creating a figure to compare the RMSE values for the Markov-0 runs
         # visualization.markov_0_RMSE_comparison()
@@ -126,18 +127,23 @@ def plotting():
         # Creating a similar figure to compare the RMSE values for the Markov-0 runs
         # visualization.markov_1_RMSE_comparison()
 
+        # Creating a figure to compare the RMSE values for the Eulerian runs
+        # visualization.eulerian_RMSE_comparison()
+
         # Comparing Eulerian and Lagrangian approaches
-        # visualization.lagrangian_eulerian_comparison(w_rise_list=w_rise, alpha_list=alpha, boundary='Reflect',
-        #                                              close_up=(0, -20))
+        visualization.lagrangian_eulerian_comparison(w_rise_list=w_rise, alpha_list=alpha, boundary='Reflect',
+                                                     close_up=(0, -20))
         # for a in [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]:
         #     visualization.lagrangian_eulerian_comparison(w_rise_list=w_rise, alpha_list=[a], boundary='Reflect_Markov',
         #                                                  close_up=(0, -20))
-
-        # Comparing Eulerian profiles with field measurements
+        # #
+        # # # Comparing Eulerian profiles with field measurements
         visualization.eulerian_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
                                                      selection='w_10', single_select=2, wind_sort=True,
                                                      close_up=(0, -20), diffusion_type='all', boundary='Reflect')
-
+        # visualization.eulerian_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
+        #                                              selection='w_10', single_select=2, wind_sort=True,
+        #                                              close_up=(0, -5), diffusion_type='all', boundary='Reflect')
         pass
 
 
@@ -149,7 +155,7 @@ if __name__ == '__main__':
     """
     Synchronize with the data stored on the ubelix server
     """
-    ubelix_submission.ubelix_synchronization(update=False)
+    ubelix_submission.ubelix_synchronization(update=True)
     """
     Parcels simulations
     """

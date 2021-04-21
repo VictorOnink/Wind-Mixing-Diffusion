@@ -12,4 +12,5 @@ from visualization.sanity_check import *
 from visualization.timestep_comparison import *
 from visualization.lagrangian_eulerian_comparison import *
 from visualization.eulerian_field_data_comparison import *
+from visualization.eulerian_RMSE_comparison import *
 

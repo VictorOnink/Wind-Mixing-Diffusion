@@ -7,7 +7,7 @@ import numpy as np
 
 
 def lagrangian_eulerian_comparison(w_rise_list, alpha_list, output_step=-1, single_select=0, norm_depth=False,
-                                   y_label='Depth (m)', close_up=None, x_label=r'Normalised Plastic Counts ($C/C_0$)',
+                                   y_label='Depth (m)', close_up=None, x_label=r'Normalised Concentrations ($C/C_{max}$)',
                                    selection='w_rise', fig_size=(16, 20), ax_label_size=16, legend_size=10,
                                    boundary='Reflect'):
     if norm_depth:
@@ -82,8 +82,9 @@ def line_labels(w_rise, boundary_type):
 
 def save_figure_name(boundary, alpha):
     boundary_dict = {'Reflect': 'M0', 'Reflect_Markov': 'M1'}
+    dt = settings.dt_int.seconds
     if boundary_dict[boundary] is 'M0':
-        filename = settings.figure_dir + 'Eulerian_comparison/euler_comp_{}.png'.format(boundary)
+        filename = settings.figure_dir + 'Eulerian_comparison/euler_comp_{}_dt={}.png'.format(boundary_dict[boundary], dt)
     else:
-        filename = settings.figure_dir + 'Eulerian_comparison/euler_comp_{}_alpha={}.png'.format(boundary, alpha)
+        filename = settings.figure_dir + 'Eulerian_comparison/euler_comp_{}_alpha={}_dt={}.png'.format(boundary_dict[boundary], alpha, dt)
     return filename

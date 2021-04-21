@@ -1,11 +1,11 @@
 import numpy as np
 import settings
 import utils
-import math
 import progressbar
 
 
 def eulerian_vertical_run(w_10, w_rise, diffusion_type):
+    # This only works with buoyant particles
     w_rise = np.abs(w_rise)
     # Getting the relevant arrays for depth, Kz and concentration, where initially all concentration is at the surface
     model_arrays = get_grid_arrays(w_10, diffusion_type, w_rise)

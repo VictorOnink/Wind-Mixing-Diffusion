@@ -4,24 +4,24 @@ import numpy as np
 import analysis
 
 
-def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', fig_size=(8, 8),
+def eulerian_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', fig_size=(8, 8),
                              ax_label_size=16, legend_size=12):
     w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
-    w_r = [-0.03, -0.003]
+    w_r = [0.03, 0.003]
     boundary = 'Reflect'
     diffusion = ['KPP', 'Kukulka']
     diffusion_offset = {'KPP': 0.1, 'Kukulka': -0.1}
     # Selecting the marker type according which form of diffusion it is:
     marker_type = {'KPP': 'o', 'Kukulka': 'X', 'SWB': 'X'}
     # Selecting the marker color according to which rise velocity
-    marker_color = {-0.03: 'tab:blue', -0.003: 'tab:red', -0.0003: 'tab:green'}
+    marker_color = {0.03: 'tab:blue', 0.003: 'tab:red', 0.0003: 'tab:green'}
 
     # Looping through the simulations, and retrieving the RMSE values for them
     point_list = []
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             for diffusion_type in diffusion:
-                RMSE = analysis.determine_RMSE(wind, rise, diffusion_type, boundary, alpha=0.0, output=True)
+                RMSE = analysis.determine_RMSE_eulerian(wind, rise, diffusion_type)
                 plot_tuple = RMSE, index_w10 + 1 + diffusion_offset[diffusion_type], marker_type[diffusion_type], marker_color[rise]
                 # plot_tuple = RMSE, wind + diffusion_offset[diffusion_type], marker_type[diffusion_type], \
                 #              marker_color[rise]
@@ -60,4 +60,4 @@ def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
 
     ax.legend(handles=marker + color, fontsize=legend_size, loc='lower right')
 
-    plt.savefig(settings.figure_dir + 'model_evaluation_markov_0.png', bbox_inches='tight', dpi=600)
+    plt.savefig(settings.figure_dir + 'model_evaluation_eulerian.png', bbox_inches='tight', dpi=600)
