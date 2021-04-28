@@ -1,11 +1,13 @@
 import settings
 
 
-def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=settings.MLD):
+def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=settings.MLD, dt=settings.dt_int.seconds):
     name = settings.output_dir + diffusion_type + '_' + boundary + '_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
                                                                                                         mld)
     if 'Markov' in boundary:
         name += 'alpha_list={}'.format(alpha)
+    if dt != 1:
+        name += 'dt={}'.format(dt)
     return name + '.nc'
 
 
@@ -15,11 +17,14 @@ def get_eulerian_output_name(w_10, w_rise, diffusion_type, mld=settings.MLD):
     return name
 
 
-def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=settings.MLD):
+def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=None, mld=settings.MLD,
+                                  dt=settings.dt_int.seconds):
     name = settings.conc_dir + diffusion_type + '_' + boundary + '_conc_w10_{}_w_rise_{}_MLD_{}'.format(w_10, w_rise,
                                                                                                         mld)
     if 'Markov' in boundary:
         name += 'alpha_list={}'.format(alpha)
+    if dt != 1:
+        name += 'dt={}'.format(dt)
     return name
 
 

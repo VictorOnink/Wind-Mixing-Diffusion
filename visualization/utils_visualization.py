@@ -59,6 +59,7 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1
         # X axis = Concentration axis
         ax_sub.set_xlabel(x_label, fontsize=ax_label_size)
         ax_sub.set_xlim((xmin, xmax))
+        ax_sub.set_xscale('log')
         if not legend_axis:
             return ax_sub
         else:
@@ -86,6 +87,7 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1
                     ax_sub.tick_params(labelleft=False)
                 # Only add x labels if we are in the bottom row:
                 ax_sub.set_xlim((xmin, xmax))
+                ax_sub.set_xscale('log')
                 if row == (shape[0] - 1):
                     if not all_x_labels and column % 2 is 1:
                         ax_sub.set_xlabel(x_label, fontsize=ax_label_size)
@@ -181,7 +183,7 @@ def boolean_diff_type(diffusion_type):
 
 
 def get_concentration_list(w_10_list, w_rise_list, selection, single_select, diffusion_type, alpha_list, output_step=-1,
-                           all_timesteps=False, boundary='Mixed', mld=settings.MLD):
+                           all_timesteps=False, boundary='Mixed', mld=settings.MLD, dt=settings.dt_int.seconds):
     output_dic = {'concentration_list': [], 'parameter_concentrations': [],
                   'parameter_kukulka': []}
     if selection == 'w_10':
@@ -197,7 +199,8 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
     for w_rise in w_rise_list:
         for w_10 in w_10_list:
             # Loading the dictionary containing the concentrations
-            input_dir = utils.load_obj(utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, mld=mld, alpha=alpha))
+            input_dir = utils.load_obj(utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
+                                                                           mld=mld, alpha=alpha, dt=dt))
             # Selecting the timeslice of interest
             if output_step == -1:
                 concentration = [input_dir['last_time_slice']]
@@ -206,7 +209,7 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
             if all_timesteps:
                 concentration = range(input_dir['last_time_slice'] + 1)
             for c in concentration:
-                output_dic['concentration_list'].append(input_dir[c] / input_dir[c].max())
+                output_dic['concentration_list'].append(input_dir[c] / input_dir[c].sum())
             # Get the depth bins of the concentrations
             output_dic['depth_bins'] = input_dir['bin_edges'][:-1] * -1
             # Saving the physical parameters of the concentration distribution we have just loaded

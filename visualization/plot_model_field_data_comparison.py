@@ -10,7 +10,7 @@ import numpy as np
 def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selection='w_10', output_step=-1,
                                      single_select=1,
                                      norm_depth=False, wind_sort=True, y_label='Depth (m)', close_up=None,
-                                     x_label=r'Normalised Concentrations ($C/C_{max}$)', fig_size=(16, 8), ax_label_size=16,
+                                     x_label=r'Normalised Concentrations', fig_size=(16, 8), ax_label_size=16,
                                      legend_size=10, diffusion_type='Kukulka', boundary='Reflect_Markov', alpha=0.3,
                                      beaufort=4):
     if norm_depth:

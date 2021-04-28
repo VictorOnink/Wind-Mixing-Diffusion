@@ -40,7 +40,7 @@ def standardization_kukulka():
         # concentration recorded at that station
         station_numbers = np.unique(data[:, 0])
         for station in station_numbers:
-            data[data[:, 0] == station, 5] /= np.max(data[data[:, 0] == station, 5])
+            data[data[:, 0] == station, 5] /= np.sum(data[data[:, 0] == station, 5])
 
         # Get a normalised depth array, where the depth is a fraction of the mixing layer depth
         depth_norm = data[:, 1] / data[:, -1]
@@ -96,7 +96,7 @@ def standardization_kooi():
                                                                                 (data_plastic['Net'] == depth)].sum()
 
         # Normalizing everything by the max concentration
-        concentration = concentration.apply(lambda x: x / x.max(), axis=0).values
+        concentration = concentration.apply(lambda x: x / x.sum(), axis=0).values
 
         # Getting the wind_data and depth_levels into the same shape as the concentration array
         wind_data = pd.concat([wind_data] * depth_levels.shape[0], axis=1).transpose().values
@@ -174,7 +174,7 @@ def standardization_Pieper():
         max_depth = 73
         depth = depth_dataframe.values.flatten()
         concentration = concentration.values.flatten()[depth < max_depth]
-        concentration /= concentration.max()
+        concentration /= concentration.sum()
         depth_norm = depth_norm.flatten()[depth < max_depth]
         wind_data = wind_data.flatten()[depth < max_depth]
         MLD = MLD.flatten()[depth < max_depth]
@@ -228,7 +228,7 @@ def standardization_Zettler():
 
         # Normalizing the concentrations and depths
         depth_norm = np.divide(depths.values, MLD)
-        concentrations = concentrations.apply(lambda x: x / x.max(), axis=0).fillna(0.0)
+        concentrations = concentrations.apply(lambda x: x / x.sum(), axis=0).fillna(0.0)
 
         # Getting the wind data
         wind_data = pd.DataFrame(casino_wind(device='MultiNet', cruise='PE448'))
@@ -271,7 +271,7 @@ def standardization_Egger():
             MLD.loc[:, station] = MLD_station[station].values[0]
 
         # Normalizing the concentrations
-        concentrations = concentrations.apply(lambda x: x / x.max(), axis=0)
+        concentrations = concentrations.apply(lambda x: x / x.sum(), axis=0)
 
         # Normalizing depths
         depth_norm = depths.div(MLD)

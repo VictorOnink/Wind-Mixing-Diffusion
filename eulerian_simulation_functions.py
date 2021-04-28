@@ -71,6 +71,6 @@ def integration_step(model_arrays, dZ, dt, w_rise):
 
 def get_output_arrays(model_arrays):
     output_arrays = {'Z': model_arrays['Z'][1:-1], 'C': model_arrays['C'][1:-1]}
-    # Normalizing the concentrations
-    output_arrays['C'] = output_arrays['C'] / np.max(output_arrays['C'])
+    # # Normalizing the concentrations
+    # output_arrays['C'] = output_arrays['C'] / np.max(output_arrays['C'])
     return output_arrays
