@@ -15,3 +15,5 @@ from visualization.eulerian_field_data_comparison import *
 from visualization.eulerian_RMSE_comparison import *
 from visualization.integration_timestep_control import *
 from visualization.timestep_RMSE_convergence import *
+from visualization.multiple_integration_timestep_control import *
+from visualization.multiple_boundary_condition_comparison import *

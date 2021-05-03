@@ -19,14 +19,14 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     point_list_KPP = []
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
-            RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Reflect', alpha=0.0, output=True)
+            RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Ceiling', alpha=0.0, output=True)
             plot_tuple = RMSE, index_w10 + 1, marker_type[rise], visualization.utils_visualization.return_color(0)
             point_list_KPP.append(plot_tuple)
 
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             for index_a, a in enumerate(alpha):
-                RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Reflect_Markov', alpha=a, output=True)
+                RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Ceiling_Markov', alpha=a, output=True)
                 plot_tuple = RMSE, index_w10 + 1 + rise_offset[rise], marker_type[rise], visualization.utils_visualization.return_color(index_a + 1)
                 point_list_KPP.append(plot_tuple)
 
@@ -34,14 +34,14 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     point_list_Kukulka = []
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
-            RMSE = analysis.determine_RMSE(wind, rise, 'Kukulka', 'Reflect', alpha=0.0, output=True)
+            RMSE = analysis.determine_RMSE(wind, rise, 'Kukulka', 'Ceiling', alpha=0.0, output=True)
             plot_tuple = RMSE, index_w10 + 1, marker_type[rise], visualization.utils_visualization.return_color(0)
             point_list_Kukulka.append(plot_tuple)
 
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             for index_a, a in enumerate(alpha):
-                RMSE = analysis.determine_RMSE(wind, rise, 'Kukulka', 'Reflect_Markov', alpha=a, output=True)
+                RMSE = analysis.determine_RMSE(wind, rise, 'Kukulka', 'Ceiling_Markov', alpha=a, output=True)
                 plot_tuple = RMSE, index_w10 + 1 + rise_offset[rise], marker_type[rise], visualization.utils_visualization.return_color(index_a + 1)
                 point_list_Kukulka.append(plot_tuple)
 
@@ -54,7 +54,7 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     ax.set_xlim((0, 6))
     ax.tick_params(axis='both', labelsize=ax_label_size)
     ax.set_ylabel(y_label, fontsize=ax_label_size)
-    ax.set_ylim((0, 0.7))
+    ax.set_ylim((0, 0.6))
     # Adding the axis for SWB
     ax2 = fig.add_subplot(122)
     # Y axis = Depth axis
@@ -64,7 +64,7 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     ax2.tick_params(labelleft=False)
     # X axis = Concentration axis
     # ax2.set_ylabel(y_label, fontsize=ax_label_size)
-    ax2.set_ylim((0, 0.7))
+    ax2.set_ylim((0, 0.6))
 
     ax.set_title(r'(a) KPP', fontsize=ax_label_size)
     ax2.set_title(r'(b) SWB', fontsize=ax_label_size)
@@ -96,6 +96,6 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     markov1 = [plt.plot([], [], c=visualization.utils_visualization.return_color(ind + 1), markersize=10, marker='o', label=r'M1 - $\alpha = $' + '{}'.format(a), linestyle='')[0] for ind, a in
                enumerate(alpha)]
 
-    ax2.legend(handles=marker + markov0 + markov1, fontsize=legend_size, loc='lower right')
+    ax2.legend(handles=marker + markov0 + markov1, fontsize=legend_size, loc='upper right')
 
     plt.savefig(settings.figure_dir + 'model_evaluation_markov_1.png', bbox_inches='tight', dpi=600)

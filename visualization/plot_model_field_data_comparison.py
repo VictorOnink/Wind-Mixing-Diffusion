@@ -11,7 +11,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
                                      single_select=1,
                                      norm_depth=False, wind_sort=True, y_label='Depth (m)', close_up=None,
                                      x_label=r'Normalised Concentrations', fig_size=(16, 8), ax_label_size=16,
-                                     legend_size=10, diffusion_type='Kukulka', boundary='Reflect_Markov', alpha=0.3,
+                                     legend_size=10, diffusion_type='Kukulka', boundary='Ceiling', alpha=0.3,
                                      beaufort=4):
     if norm_depth:
         y_label = 'Depth/MLD'
@@ -23,10 +23,10 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
     # Selecting which model data we want to plot based on the diffusion type
     kukulka, kpp, artificial = utils_v.boolean_diff_type(diffusion_type)
     # Selecting which model data we want to plot based on the diffusion scheme
-    if boundary is 'Reflect' or 'Reflect_Markov':
+    if boundary is 'Ceiling' or 'Ceiling_Markov':
         boundary_list = [boundary]
     if boundary is 'all':
-        boundary_list = ['Reflect', 'Reflect_Markov']
+        boundary_list = ['Ceiling', 'Ceiling_Markov']
 
     # Plotting data points for just one set of wind conditions
     if not wind_sort:
@@ -153,14 +153,14 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
 
 
 def label_model_field_comparison(w_rise=None, w_10=None, diffusion_type=None, boundary=None):
-    boundary_dict = {'Reflect': 'M-0', 'Reflect_Markov': 'M-1'}
+    boundary_dict = {'Ceiling': 'M-0', 'Ceiling_Markov': 'M-1'}
     if diffusion_type is 'Kukulka':
         diff = 'SWB'
     elif diffusion_type is 'KPP':
         diff = 'KPP'
     if w_10 is None:
         w_rise = np.abs(w_rise)
-        return diff + ', {}'.format(boundary_dict[boundary]) + ', w$_{rise}$ ' + '= {} m s'.format(w_rise) + r'$^{-1}$'
+        return diff + ', {}'.format(boundary_dict[boundary]) + ', w$_{r}$ ' + '= {} m s'.format(w_rise) + r'$^{-1}$'
     else:
         return diff + ', {}'.format(boundary_dict[boundary]) + ', u$_{10}$ ' + '= {:.2f} m s'.format(w_10) + r'$^{-1}$'
 

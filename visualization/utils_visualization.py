@@ -5,17 +5,6 @@ import utils
 from matplotlib.gridspec import GridSpec
 
 
-def label_boundary(w_10, diffusion_type, boundary):
-    boundary_dict = {'Mixed': 'M-0 Mixed', 'Reflect': 'M-0 Reflect', 'Reduce_dt': 'M-0 Reduce dt',
-                     'Mixed_Markov': 'M-1 Mixed', 'Reflect_Markov':'M-1 Reflect',
-                     'Reduce_dt_Markov':'M-1 Reduce dt'}
-    if diffusion_type == 'Kukulka':
-        return r'SWB, u$_{10}$ '+'= {:.2f}'.format(w_10) + ' m s$^{-1}$, ' + boundary_dict[boundary]
-    elif diffusion_type == 'KPP':
-        return r'KPP, u$_{10}$ '+'= {:.2f}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD) + ', ' \
-               + boundary_dict[boundary]
-
-
 def diffusion_curve_axis(ax, ax_label_size, w_10, profile_dict, diffusion_type, color, linestyle='dotted',
                          gradient=False):
     ax2 = ax.twiny()
@@ -58,8 +47,8 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1
         ax_sub.tick_params(axis='both', labelsize=ax_label_size)
         # X axis = Concentration axis
         ax_sub.set_xlabel(x_label, fontsize=ax_label_size)
-        ax_sub.set_xlim((xmin, xmax))
         ax_sub.set_xscale('log')
+        ax_sub.set_xlim((xmin, xmax))
         if not legend_axis:
             return ax_sub
         else:
@@ -86,8 +75,8 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1
                 else:
                     ax_sub.tick_params(labelleft=False)
                 # Only add x labels if we are in the bottom row:
-                ax_sub.set_xlim((xmin, xmax))
                 ax_sub.set_xscale('log')
+                ax_sub.set_xlim((xmin, xmax))
                 if row == (shape[0] - 1):
                     if not all_x_labels and column % 2 is 1:
                         ax_sub.set_xlabel(x_label, fontsize=ax_label_size)
@@ -136,9 +125,9 @@ def label_alpha_comparison(boundary, alpha):
         return r'M-1, $\alpha$ = ' + '{}'.format(alpha)
 
 
-def get_axes_range(close_up, norm_depth, delta_x=0.01, delta_y=0.5):
+def get_axes_range(close_up, norm_depth, delta_y=0.5):
     # The x-axis shows the relative concentration
-    xmax, xmin = 1 + delta_x, 0 - delta_x
+    xmax, xmin = 1e0, 1e-4
     if norm_depth:
         delta_y = 0.1
     # If we have a close_up plot
@@ -183,7 +172,7 @@ def boolean_diff_type(diffusion_type):
 
 
 def get_concentration_list(w_10_list, w_rise_list, selection, single_select, diffusion_type, alpha_list, output_step=-1,
-                           all_timesteps=False, boundary='Mixed', mld=settings.MLD, dt=settings.dt_int.seconds):
+                           all_timesteps=False, boundary='Ceiling', mld=settings.MLD, dt=settings.dt_int.seconds):
     output_dic = {'concentration_list': [], 'parameter_concentrations': [],
                   'parameter_kukulka': []}
     if selection == 'w_10':

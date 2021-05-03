@@ -7,22 +7,23 @@ from visualization import utils_visualization as utils_v
 import numpy as np
 
 
-def boundary_condition_comparison(w_rise_list, alpha_list, selection='w_10', close_up=None, output_step=-1,
+def boundary_condition_comparison(w_rise_list, alpha_list, selection='w_rise', close_up=None, output_step=-1,
                                   y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
-                                  ax_label_size=16, legend_size=12, single_select=0,
+                                  ax_label_size=16, legend_size=12, single_select=0, beaufort=4,
                                   diffusion_type='KPP', interval=1, alpha=0.3):
     ax_range = utils_v.get_axes_range(close_up=close_up, norm_depth=False)
 
     # Selecting which model data we want to plot based on the diffusion type
-    kukulka, kpp, artificial = utils_v.boolean_diff_type(diffusion_type)
+    kukulka, kpp, _ = utils_v.boolean_diff_type(diffusion_type)
     # Selecting which model data we want to plot based on the diffusion scheme
-    boundary_list = ['Mixed', 'Reflect', 'Reduce_dt', 'Mixed_Markov', 'Reflect_Markov', 'Reduce_dt_Markov']
+    boundary_list = ['Reflect', 'Ceiling', 'Mixed']
+    linestyle = ['-', '--', ':']
 
+    # Creating the axis
     ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
-    line_style = ['-', '-', '-', '--', '--', '--']
 
-    mean_wind = np.mean(utils.utils_physics.beaufort_limits()[4])
-    _, _ = utils_v.add_observations(ax, norm_depth=False, alpha=alpha, wind_range=utils.utils_physics.beaufort_limits()[4])
+    mean_wind = np.mean(utils.utils_physics.beaufort_limits()[beaufort])
+    # _, _ = utils_v.add_observations(ax, norm_depth=False, alpha=alpha, wind_range=utils.utils_physics.beaufort_limits()[4])
 
     for count, boundary in enumerate(boundary_list):
         # Plotting the distribution according to the Kukulka parametrization
@@ -31,9 +32,10 @@ def boundary_condition_comparison(w_rise_list, alpha_list, selection='w_10', clo
                                                           output_step=output_step, diffusion_type='Kukulka',
                                                           boundary=boundary, alpha_list=alpha_list)
             for counter in range(len(profile_dict['concentration_list'])):
+                w_rise = w_rise_list[counter]
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                        label=utils_v.label_boundary(w_10=mean_wind, diffusion_type='Kukulka', boundary=boundary),
-                        linestyle=line_style[count], color=visualization.utils_visualization.return_color(count % 3))
+                        label=label_boundary(w_10=mean_wind, w_rise=w_rise, diffusion_type='Kukulka', boundary=boundary),
+                        linestyle=linestyle[count], color=utils_v.return_color(counter))
 
         # Plotting the distribution according to the KPP parametrization
         if kpp:
@@ -41,9 +43,10 @@ def boundary_condition_comparison(w_rise_list, alpha_list, selection='w_10', clo
                                                           output_step=output_step, diffusion_type='KPP',
                                                           boundary=boundary, alpha_list=alpha_list)
             for counter in range(len(profile_dict['concentration_list'])):
+                w_rise = w_rise_list[counter]
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                        label=utils_v.label_boundary(w_10=mean_wind, diffusion_type='KPP', boundary=boundary),
-                        linestyle=line_style[count], color=visualization.utils_visualization.return_color(count % 3))
+                        label=label_boundary(w_10=mean_wind, w_rise=w_rise, diffusion_type='KPP', boundary=boundary),
+                        linestyle=linestyle[count], color=utils_v.return_color(counter))
 
     lines, labels = ax.get_legend_handles_labels()
     # Adding the legend
@@ -61,3 +64,14 @@ def saving_filename_boundary(save_location, selection, close_up, diffusion_type)
     else:
         ymax, ymin = close_up
         return save_location + diffusion_type + '_boundary_max={}_min={}_variable={}.png'.format(ymax, ymin, selection)
+
+
+def label_boundary(w_10, w_rise, diffusion_type, boundary):
+    w_rise=np.abs(w_rise)
+    boundary_dict = {'Mixed': 'M-0 Mixed', 'Reflect': 'M-0 Reflect', 'Reduce_dt': 'M-0 Reduce dt',
+                     'Mixed_Markov': 'M-1 Mixed', 'Reflect_Markov':'M-1 Reflect',
+                     'Reduce_dt_Markov':'M-1 Reduce dt', 'Ceiling': 'M-0 Ceiling'}
+    if diffusion_type == 'Kukulka':
+        return r'SWB, w$_{rise}$ '+'= {}'.format(w_rise) + ' m s$^{-1}$, ' + boundary_dict[boundary]
+    elif diffusion_type == 'KPP':
+        return r'KPP, w$_{rise}$ '+'= {}'.format(w_rise) + 'm s$^{-1}$, ' + boundary_dict[boundary]

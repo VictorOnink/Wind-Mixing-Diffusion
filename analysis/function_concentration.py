@@ -5,7 +5,7 @@ import numpy as np
 import scipy.stats as stats
 
 
-def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, print_removed=False):
+def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha):
     parcels_file = utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD,
                                                  alpha=alpha)
     dataset = Dataset(parcels_file)
@@ -19,9 +19,9 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, print_rem
         # The concentration
         concentrations, bin_edges = np.histogram(depth, bins=depth_bins)
         output_dir[t] = concentrations
-        if print_removed:
-            removed_frac = np.sum(depth.mask) / depth.shape[0] * 100.
-            print(removed_frac)
+        removed_frac = np.sum(depth.mask) / depth.shape[0] * 100.
+        str_format = diffusion_type, boundary, w_10, w_rise, alpha
+        assert removed_frac == 0.0, "Particle number was not conserved for {} with {}, (w_10={}, w_rise={}, a={})".format(*str_format)
     output_dir['bin_edges'] = bin_edges
     output_dir['last_time_slice'] = t
 

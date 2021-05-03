@@ -184,8 +184,8 @@ def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):
     def to_optimize(z_t):
         dK = get_vertical_diffusion_gradient_profile(w_10, np.array([z_t]), diffusion_type)
         dt = settings.dt_int.seconds
-        K = get_vertical_diffusion_profile(w_10, np.array([z_t + 0.5 * dK * dt]), diffusion_type)
-        RHS = dK * dt + np.sqrt(6 * K * dt) + w_rise * dt
+        K = get_vertical_diffusion_profile(w_10, np.array([z_t]), diffusion_type)
+        RHS = dK[0] * dt + np.sqrt(6 * K[0] * dt) - w_rise * dt
         return np.abs(z_t - RHS)
 
     mixing_depth = scipy.optimize.minimize_scalar(to_optimize, bounds=[0, 100], method='bounded').x

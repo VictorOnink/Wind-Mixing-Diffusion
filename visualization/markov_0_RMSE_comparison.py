@@ -8,7 +8,7 @@ def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
                              ax_label_size=16, legend_size=12):
     w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
     w_r = [-0.03, -0.003]
-    boundary = 'Reflect'
+    boundary = 'Ceiling'
     diffusion = ['KPP', 'Kukulka']
     diffusion_offset = {'KPP': 0.1, 'Kukulka': -0.1}
     # Selecting the marker type according which form of diffusion it is:

@@ -8,7 +8,7 @@ import numpy as np
 
 
 def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_label='Depth (m)', alpha=0.3,
-                                x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(10, 6),
+                                x_label=r'Normalised Concentrations', fig_size=(10, 6),
                                 ax_label_size=16, legend_size=10, single_select=1,
                                 output_step=-1):
     ax_range = utils_v.get_axes_range(close_up=close_up, norm_depth=False)
@@ -16,8 +16,8 @@ def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_
     # Selecting which model data we want to plot based on the diffusion type
     kukulka, kpp, artificial = utils_v.boolean_diff_type('all')
     # Selecting which model data we want to plot based on the diffusion scheme
-    boundary_list = ['Reflect', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov', 'Reflect_Markov',
-                     'Reflect_Markov', 'Reflect_Markov']
+    boundary_list = ['Ceiling', 'Ceiling_Markov', 'Ceiling_Markov', 'Ceiling_Markov', 'Ceiling_Markov',
+                     'Ceiling_Markov', 'Ceiling_Markov']
     alpha_list = [0, 0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
     line_style = ['-', '--', '--', '--', '--', '--', '--']
 
@@ -59,6 +59,6 @@ def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_
     ax[1].set_title(r'(b) SWB', fontsize=ax_label_size)
 
     # Saving the figure
-    str_format = w_rise_list[0], settings.MLD
-    plt.savefig(settings.figure_dir + 'markov_diffusion_check_w_rise={}_mld={}'.format(*str_format) + '.png',
+    str_format = w_rise_list[0], settings.MLD, settings.dt_int.seconds
+    plt.savefig(settings.figure_dir + 'markov_diffusion_check_w_rise={}_mld={}_dt={}'.format(*str_format) + '.png',
                 bbox_inches='tight', dpi=600)

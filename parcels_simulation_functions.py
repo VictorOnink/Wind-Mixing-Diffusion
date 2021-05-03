@@ -63,7 +63,7 @@ def create_kernel(pset, boundary):
     # condition
     markov = {False: markov_0_potential_position, True: markov_1_potential_position}
     boundary_condition = {'Mixed': mixed_layer_boundary_condition, 'Reflect': reflect_boundary_condition,
-                          'Reduce_dt': reduce_dt_boundary_condition}
+                          'Reduce_dt': reduce_dt_boundary_condition, 'Ceiling': ceiling_boundary_condition}
     return pset.Kernel(markov['Markov' in boundary]) + pset.Kernel(boundary_condition[boundary.replace('_Markov', '')])
 
 
@@ -195,6 +195,20 @@ Applying the various boundary conditions
 """
 
 
+def ceiling_boundary_condition(particle, fieldset, time):
+    """
+    Reflecting boundary conditions at both the ocean surface and at the bottom of the model domain (z = fieldset.max_depth)
+    """
+    if particle.potential > 0:
+        if particle.potential > fieldset.max_depth:
+            overshoot = particle.potential - fieldset.max_depth
+            particle.depth = fieldset.max_depth - overshoot
+        else:
+            particle.depth = particle.potential
+    else:
+        particle.depth = 0
+
+
 def reflect_boundary_condition(particle, fieldset, time):
     """
     Reflecting boundary conditions at both the ocean surface and at the bottom of the model domain (z = fieldset.max_depth)
@@ -207,7 +221,6 @@ def reflect_boundary_condition(particle, fieldset, time):
             particle.depth = particle.potential
     else:
         particle.depth = math.fabs(particle.potential)
-    a = particle.depth
 
 
 def reduce_dt_boundary_condition(particle, fieldset, time):
@@ -245,7 +258,7 @@ def mixed_layer_boundary_condition(particle, fieldset, time):
     """
     if particle.potential < fieldset.mix_depth:
         particle.depth = ParcelsRandom.uniform(0, 1.) * fieldset.mix_depth
-    if particle.potential > fieldset.max_depth:
+    elif particle.potential > fieldset.max_depth:
         overshoot = particle.potential - fieldset.max_depth
         particle.depth = fieldset.max_depth - overshoot
     else:
