@@ -14,7 +14,9 @@ def data_standardization():
     some reason
     Note: some of the datasets have data at depths much greater than the MLD. While concentrations at depth are
     interesting and worth further study, this part of the vertical concentration profile is likely not due to wind-driven
-    mixing. Therefore, we only keep the concentrations that were measured in the first 100m
+    mixing. Therefore, we only keep the concentrations that were measured in the first 100m. Furthermore, most of these
+    datasets were shared by the corresponding authors of the study. For those seeking to replicate this study, please
+    contact these authors.
     """
     standardization_kukulka()
     standardization_kooi()
@@ -31,12 +33,14 @@ def standardization_kukulka():
     """
     prefix = 'Kukulka'
     file_name = utils.get_data_output_name(prefix)
+    # Check if the file exists
     if not utils.check_file_exist(file_name + '.pkl'):
+        # Loading the data
         data = np.genfromtxt(SET.data_dir + 'atlantic_prf.dat')
         # Convert wind data from knots to m/s
         data[:, -2] *= 0.514
 
-        # Normalise all the data, such that for each station I have the concentration as a fraction of the max
+        # Normalise all the data, such that for each station I have the concentration as a fraction of the total
         # concentration recorded at that station
         station_numbers = np.unique(data[:, 0])
         for station in station_numbers:
@@ -60,13 +64,14 @@ def standardization_kooi():
     meteographic/oceanographic conditions, and the type of debris inside the net. There are also estimates of rise
     velocities of some of the fragments/line items.
 
-    I don't have estimates of the mixing layer depth, but I do have CTD data for each station, and I could see about
-    what exact approach Kukulka used to have the same measure the mixing layer depth (depends on the station how far
-    down the CTD data was collected
+    I don't have estimates of the mixing layer depth, but I do have CTD data for each station, and from this I used the
+    de Boyer Montegut et al. (2004) approach to determine the Mixed layet depth using a temperature threshold
     """
     prefix = 'Kooi'
     file_name = utils.get_data_output_name(prefix)
     if not utils.check_file_exist(file_name + '.pkl'):
+        # Loading the data, first the general trawl conditions and then the specific counts for each size class in each
+        # trawl
         data_trawl = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='trawls')
         data_plastic = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='nets')
 
@@ -95,7 +100,7 @@ def standardization_kooi():
                 concentration[station][depth] = data_plastic['NumberParticles'][(data_plastic['Station'] == station) &
                                                                                 (data_plastic['Net'] == depth)].sum()
 
-        # Normalizing everything by the max concentration
+        # Normalizing everything by the total sampled concentration in each profile
         concentration = concentration.apply(lambda x: x / x.sum(), axis=0).values
 
         # Getting the wind_data and depth_levels into the same shape as the concentration array
@@ -124,7 +129,7 @@ def standardization_Pieper():
     and as such they are good examples of particles with very low rising velocities.
 
     Sample concentrations and depths are from the data shared by Catharina, while the wind speed comes from the Casino
-    data file from the R.V. Pelagia. CTD data is currently unavailable
+    data file from the R.V. Pelagia. CTD profiles were collected by sensors on the CTD carriage at each measuring point.
     """
     prefix = 'Pieper'
     file_name = utils.get_data_output_name(prefix)
@@ -190,13 +195,15 @@ def standardization_Pieper():
 def standardization_Zettler():
     """
     Data collected during the PE448 South Atlantic cruise in January 2019. The data has been shared by Erik Zettler and
-    is currently not published yet. Samples reflect sampled microplastic concentrations using a multinet, and samples
-    using manta trawl data at the ocean surface.
+    Linda is currently not published yet. Sub-surface microplastic concentrations were collected with a multinet, and
+    surface samples were collected with manta trawls
     """
     prefix = 'Zettler'
     file_name = utils.get_data_output_name(prefix)
     if not utils.check_file_exist(file_name + '.pkl'):
+        # Loading the multinet data
         data_multi = pd.read_excel(SET.data_dir + 'PE448_multinet_data.xlsx')
+        # Loading the surface trawl data
         data_surf = pd.read_excel(SET.data_dir + 'Sample Log-PE448b-20190121.xlsx', sheet_name='MT')
 
         # Get the sample depths, counts, and volumes for the multi-net, and then the concentration (counts/volume)
@@ -222,7 +229,7 @@ def standardization_Zettler():
                     concentrations[station][rows] = concentration_multi[0][(rows - 1) + station * 5]
                     depths[station][rows] = depth[(rows - 1) + station * 5]
 
-        # I don't have CTD data at the moment for these stations, so we'll just have an empty array for this for now
+        # Determining the MLD from the CTD data
         MLD = determine_MLD(prefix=prefix).values
         MLD = np.array([MLD, ] * 6).reshape(6, 3)
 
@@ -237,6 +244,7 @@ def standardization_Zettler():
         # Keeping just the measurements taken above max-depth
         max_depth = 73
         depth_selec = depths.values.flatten() < max_depth
+
         # Saving everything into a dictionary
         output_dic = {'concentration': concentrations.values.flatten()[depth_selec],
                       'depth': depths.values.flatten()[depth_selec],
@@ -249,9 +257,15 @@ def standardization_Zettler():
 
 
 def standardization_Egger():
+    """
+    Data provided by Matthias Egger, which was published in Egger et al. (2020) https://doi.org/10.1038/s41598-020-64465-8
+    The measurements were collected with a multinet
+    The original published data had a depth correction included, the data here is without that depth correction included
+    """
     prefix = 'Egger'
     file_name = utils.get_data_output_name(prefix)
     if not utils.check_file_exist(file_name + '.pkl'):
+        # Loading the data
         data_multi = pd.read_excel(SET.data_dir + 'Egger2020_processed.xlsx')
 
         # Create an empty dataframe to divide up the dataset according to the station
@@ -260,8 +274,10 @@ def standardization_Egger():
         MLD = pd.DataFrame(columns=range(1, 6), index=range(16)).fillna(1.0)
         wind = pd.DataFrame(columns=range(1, 6), index=range(16)).fillna(0.0)
 
+        # Determining the MLD at the station with the provided CTD data
         MLD_station = determine_MLD(prefix=prefix)
 
+        # looping through the stations to get the concentrations, depths, wind speeds and MlD
         for station in concentrations.columns:
             station_data = data_multi.loc[data_multi.Station == station].copy(deep=True).reset_index()
             concentrations.loc[:station_data.shape[0], station] = station_data['concentration'].copy(deep=True)
@@ -294,16 +310,20 @@ def standardization_Egger():
 
 def determine_MLD(prefix: str, station_numbers=None):
     """
-    Determine the mixing layer depth according to de Boyer Montegut et al. (2004), which is the MLD calculation approach
-    used by Kukulka et al. (2004).
+    Determine the mixing layer depth according to de Boyer Montegut et al. (2004), which calculates the MLD from CTD
+    data using a temperature threshold https://doi.org/10.1029/2004JC002378
 
     MLD = depth at which there is a 0.2 degree temperature difference relative to the temperature at 10m depth
+
+    The different field datasets have different ways of loading the data since all data formats were slightly different
     """
     z_ref = 10  # reference depth in meters
     dif_ref = 0.2  # temperature difference relative to reference depth (degrees celcius)
 
     if prefix is 'Kooi':
+        # Loading the CTD data
         data_ctd = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='CTD')
+        # Changing the station numbering so the first station has index 0 instead of 1
         data_ctd.station -= 1
         station_numbers = np.sort(np.append(data_ctd.station.unique(), 24))
         # Array in which to store the determined MLD values
@@ -347,6 +367,7 @@ def determine_MLD(prefix: str, station_numbers=None):
                 MLD[station] = depth[np.where(np.abs(temp - temp_10) > dif_ref)[0][0]]
             else:
                 MLD[station] = np.nan
+
     if prefix is 'Zettler':
         MLD = pd.DataFrame(columns=range(1, 4), index=[0]).fillna(0.0)
         for station in MLD.columns:
@@ -363,6 +384,7 @@ def determine_MLD(prefix: str, station_numbers=None):
                 # Determine the depth at which the temperature difference is equal to dif_ref with respect to z_ref
                 depth, temp = depth[ind_10:], temperature[ind_10:]
                 MLD[station] = depth[np.where(np.abs(temp - temp_10) > dif_ref)[0][0]]
+
     if prefix is 'Egger':
         MLD = pd.DataFrame(columns=range(1, 6), index=[0]).fillna(0.0)
         for station in MLD.columns:
@@ -386,6 +408,12 @@ def determine_MLD(prefix: str, station_numbers=None):
 
 
 def casino_wind(device: str, cruise: str):
+    """
+    Determining the wind speed at the surface from the data file from the RV Pelagia Casino logging system.
+    :param device: indicating which device to look for in the log to get the point when the measurement started
+    :param cruise: which cruise that data was collected on. PE442 = Azores to Sicily, PE448 = South Atlantic
+    :return:
+    """
     if cruise is 'PE442':
         data = pd.read_csv(SET.data_dir + 'casino_{}.csv'.format(cruise), delimiter='\t')
     elif cruise is 'PE448':

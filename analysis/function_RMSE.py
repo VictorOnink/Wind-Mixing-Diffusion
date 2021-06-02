@@ -8,7 +8,19 @@ from copy import deepcopy
 
 
 def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, output=False):
-    # Loading the concentration profile and the depths
+    """
+    Getting the root mean square error between the normalized model concentrations and the field data
+    :param w_10: 10m wind speed
+    :param w_rise: rise velocity
+    :param diffusion_type: SWB or KpP
+    :param boundary: boundary condition, and whether it is M-0 or M-1
+    :param alpha: memory term for M-1
+    :param exclude: specifying if there is any field data we don't want to include in the analysis
+    :param output: if False, we have just a print statement giving the RMSE value, if True we return the RMSE value
+    :return:
+    """
+    # Loading the concentration profile and the depths, and normalizing by the total number of particles in the
+    # simulation
     conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
                                alpha=alpha))
     concentration = conc_dict[conc_dict['last_time_slice']]
@@ -50,6 +62,15 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, 
 
 
 def determine_RMSE_eulerian(w_10, w_rise, diffusion_type, exclude=None):
+    """
+    Calculating the RMSE between the Eulerian model concentrations and the field data
+    :param w_10: 10m wind speed
+    :param w_rise: rise velocity
+    :param diffusion_type: KPP or SWB
+    :param exclude: specifying if there is field data we don't want to consider in the analysis
+    :return:
+    """
+    # Loading the Eulerian data, where the concentrations there are already normalized by the total amount of tracer
     eul_dict = utils.load_obj(utils.get_eulerian_output_name(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type))
     concentration = eul_dict['C']
     concentration_depth = np.abs(eul_dict['Z'])
@@ -83,6 +104,13 @@ def determine_RMSE_eulerian(w_10, w_rise, diffusion_type, exclude=None):
 
 
 def timestep_dependent_RMSE(conduct: bool, diffusion_type: str):
+    """
+    To see if the profiles converged for increasingly small time steps, we calculate the RMSE relative to the
+    concentration profile when dt = 1 for longer timesteps and save this into an Excel file
+    :param conduct:
+    :param diffusion_type:
+    :return:
+    """
     diffusion_dict = {'KPP': 'KPP', "Kukulka": 'SWB'}
     output_name = settings.data_dir + '{}_M0_RMSE_timestep.xlsx'.format(diffusion_dict[diffusion_type])
     if conduct is True and not utils.check_file_exist(output_name):
@@ -106,6 +134,16 @@ def timestep_dependent_RMSE(conduct: bool, diffusion_type: str):
 
 
 def reference_RMSE_difference(w_rise, w_10, dt, diffusion_type, boundary='Reflect'):
+    """
+    This returns the RMSE difference between a reference concentration profile (for dt=1) and a candidate concentration
+    profile
+    :param w_rise:
+    :param w_10:
+    :param dt:
+    :param diffusion_type:
+    :param boundary:
+    :return:
+    """
     # Getting the reference concentration
     ref_file = utils.get_concentration_output_name(w_rise=w_rise, w_10=w_10, boundary=boundary, dt=1,
                                                    diffusion_type=diffusion_type)
@@ -133,6 +171,6 @@ def reference_RMSE_difference(w_rise, w_10, dt, diffusion_type, boundary='Reflec
 def RMSE_calculation(reference_array, candidate_array):
     """
     This works assuming the reference and candidate array are both of the same size and are aligned with regards
-    to the depth levels.
+    to the depth levels, and returns the RMSE value
     """
     return np.sqrt(np.sum(np.square(reference_array - candidate_array)) / reference_array.size)

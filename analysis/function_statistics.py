@@ -7,6 +7,12 @@ import analysis
 
 
 def correlation_depth_concentration(exclude=None, get_r=[]):
+    """
+    Calculating the correlation between the particle concentration and the particle depth
+    :param exclude: Specifying any field data we don't want to include in the analysis
+    :param get_r: list containing field data sources where we want the correlation for just that specific data source
+    :return:
+    """
     sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
     sources = utils.exclude_field_data(exclude, sources)
 
@@ -17,11 +23,12 @@ def correlation_depth_concentration(exclude=None, get_r=[]):
         concentration += list(data_dict['concentration'])
         norm_depth += list(data_dict['depth_norm'])
         depth += list(data_dict['depth'])
+        # If source is in the list of get_r, determine the correlation for just that specific data source
         if source in get_r:
             determine_correlation(data_dict['concentration'], data_dict['depth'], data_dict['depth_norm'],
                                   subset=source)
 
-    # Determine the data using all
+    # Determine the data using all field data
     analysis.determine_correlation(np.array(concentration), np.array(depth), np.array(norm_depth))
 
 
@@ -45,6 +52,11 @@ def determine_correlation(concentration, depth, norm_depth, subset='all data', z
 
 
 def range_MLD_values(exclude=None):
+    """
+    Determining some basic statistics on the MLD
+    :param exclude: specifying any field data that we don't want to include in the analysis
+    :return:
+    """
     sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
     sources = utils.exclude_field_data(exclude, sources)
 

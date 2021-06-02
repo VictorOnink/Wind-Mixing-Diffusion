@@ -9,12 +9,29 @@ import numpy as np
 
 def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_label='Depth (m)', alpha=0.3,
                                 x_label=r'Normalised Concentrations', fig_size=(10, 6),
-                                ax_label_size=16, legend_size=10, single_select=1,
+                                ax_label_size=16, legend_size=10, single_select=0,
                                 output_step=-1):
+    """
+    This creates a figure comparing the M-0 simulations with M-1 simulations with various values of alpha
+    The first subfigure shows the results for KPP diffusion, while the second shows the results for SWB diffusion
+    :param w_rise_list: list of rise velocities
+    :param selection: we are plotting for a fixed rise velocity
+    :param close_up: defining the range of the x axis with (max, min)
+    :param y_label: the label of y axis
+    :param alpha: setting the opacity of the field observation markers
+    :param x_label: the label of the x axis
+    :param fig_size: the size of the figure
+    :param ax_label_size: the fontsize of hte axis labels
+    :param legend_size: the fontsize of hte lengend
+    :param single_select: the index of the rise velocity list we pick for the plot
+    :param output_step: selecting which time index we are plotting hte concentration for (default is the last)
+    :return:
+    """
+    # Getting the axis ranges
     ax_range = utils_v.get_axes_range(close_up=close_up, norm_depth=False)
 
     # Selecting which model data we want to plot based on the diffusion type
-    kukulka, kpp, artificial = utils_v.boolean_diff_type('all')
+    swb, kpp, _ = utils_v.boolean_diff_type('all')
     # Selecting which model data we want to plot based on the diffusion scheme
     boundary_list = ['Ceiling', 'Ceiling_Markov', 'Ceiling_Markov', 'Ceiling_Markov', 'Ceiling_Markov',
                      'Ceiling_Markov', 'Ceiling_Markov']
@@ -25,6 +42,7 @@ def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_
     ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 2), plot_num=2,
                              all_x_labels=True)
 
+    # Setting the wind speed, and adding the field observations to the axis
     mean_wind = np.mean(utils.utils_physics.beaufort_limits()[4])
     for axis in ax:
         data_line, data_label = utils_v.add_observations(axis, norm_depth=False, alpha=alpha,
@@ -40,9 +58,9 @@ def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_
                 ax[0].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                            label=utils_v.label_alpha_comparison(boundary=boundary, alpha=alpha_list[count]),
                            linestyle=line_style[count], color=visualization.utils_visualization.return_color(count))
-        if kukulka:
+        if swb:
             profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
-                                                          output_step=output_step, diffusion_type='Kukulka',
+                                                          output_step=output_step, diffusion_type='SWB',
                                                           boundary=boundary, alpha_list=alpha_list[count])
             for counter in range(len(profile_dict['concentration_list'])):
                 ax[1].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],

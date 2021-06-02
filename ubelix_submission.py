@@ -40,12 +40,18 @@ def ubelix_submission(diffusion, boundary, wind, rise, alpha, submission):
 
 
 def export_var(file, var_dict):
+    """
+    A short function that will set and export statements in the ubelix_submission.sh file
+    """
     for var in var_dict:
         file.write("{}={}\n".format(var, var_dict[var]))
         file.write("export {}\n".format(var))
 
 
 def run_name(diffusion, boundary, wind, rise, alpha):
+    """
+    Setting the name of the run
+    """
     if 'Markov' in boundary:
         name = '{}_{}_wind={}_rise={}_alpha={}'.format(diffusion, boundary, wind, rise, alpha)
     else:
@@ -68,12 +74,15 @@ def ubelix_synchronization(update: bool = False):
 
 
 if __name__ == '__main__':
+    # First loading the relevant parameters set in the ubelix_submission.sh bash file
     submission = os.getenv('submission')
     diffusion, boundary = os.getenv('diffusion'), os.getenv('boundary')
     wind, rise, alpha = float(os.getenv('wind')), float(os.getenv('rise')), float(os.getenv('alpha_list'))
+    # If the simulation is a parcels (Lagrangian simulation), run this function
     if submission == 'parcels':
         parcels_simulation_functions.vertical_diffusion_run(wind, rise, alpha=alpha, diffusion_type=diffusion,
                                                             boundary=boundary)
         analysis.depth_concentration(w_10=wind, w_rise=rise, alpha=alpha, diffusion_type=diffusion, boundary=boundary)
+    # Else, if the simulation is an Eulerian simulation, run this function
     if submission == 'eulerian':
         eulerian_simulation_functions.eulerian_vertical_run(w_10=wind, w_rise=rise, diffusion_type=diffusion)

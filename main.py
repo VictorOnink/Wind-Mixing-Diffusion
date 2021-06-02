@@ -11,7 +11,7 @@ import ubelix_submission
 w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
 w_rise = [-0.03, -0.003, -0.0003]
 alpha = [0.0]  # [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
-diffusion = 'Kukulka'
+diffusion = 'SWB'
 boundary = 'Ceiling'
 
 
@@ -58,19 +58,19 @@ def plotting():
     if settings.server is 'laptop':
         # visualization.sanity_check(wind, rise, diffusion_type=diffusion, boundary=boundary, alpha_list=alpha)
         # Just plotting the diffusion profiles over various wind conditions
-        # visualization.just_diffusion_profile(w_10_list=[0.85, 2.4, 4.35, 6.65, 9.3])
+        visualization.just_diffusion_profile(w_10_list=[0.85, 2.4, 4.35, 6.65, 9.3])
 
         # Plotting the profiles with different boundary conditions
         # visualization.boundary_condition_comparison(w_rise_list=[-0.003], alpha_list=alpha, close_up=(0, -10),
         #                                             diffusion_type='KPP')
         # visualization.boundary_condition_comparison(w_rise_list=[-0.003], alpha_list=alpha, close_up=(0, -10),
-        #                                             diffusion_type='Kukulka')
+        #                                             diffusion_type='SWB')
         # visualization.boundary_condition_comparison(w_rise_list=[-0.03, -0.003, -0.0003], alpha_list=alpha,
         #                                             close_up=(0, -20), diffusion_type='KPP')
         # visualization.boundary_condition_comparison(w_rise_list=[-0.03, -0.003, -0.0003], alpha_list=alpha,
-        #                                             close_up=(0, -20), diffusion_type='Kukulka')
-        for Bft in [1, 2, 3, 4, 5]:
-            visualization.multiple_boundary_condition_comparison(close_up=(0, -20), beaufort=Bft)
+        #                                             close_up=(0, -20), diffusion_type='SWB')
+        # for Bft in [1, 2, 3, 4, 5]:
+        #     visualization.multiple_boundary_condition_comparison(close_up=(0, -20), beaufort=Bft)
 
         # Plotting the multi-wind condition figures
         # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
@@ -78,16 +78,16 @@ def plotting():
         #                                                close_up=(0, -20), diffusion_type='KPP', boundary='Reflect')
         # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
         #                                                selection='w_10', single_select=2, wind_sort=True,
-        #                                                close_up=(0, -20), diffusion_type='Kukulka', boundary='all')
-        visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
-                                                       selection='w_10', single_select=2, wind_sort=True,
-                                                       close_up=(0, -20), diffusion_type='all', boundary='Ceiling')
+        #                                                close_up=(0, -20), diffusion_type='SWB', boundary='all')
+        # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
+        #                                                selection='w_10', single_select=2, wind_sort=True,
+        #                                                close_up=(0, -20), diffusion_type='all', boundary='Ceiling')
         # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
         #                                                selection='w_10', single_select=2, wind_sort=True,
         #                                                close_up=(0, -5), diffusion_type='all', boundary='Ceiling')
         # visualization.plot_model_field_data_comparison(w_10_list=[6.65], w_rise_list=[-0.003], alpha_list=alpha,
         #                                                selection='w_rise', single_select=0, wind_sort=False,
-        #                                                close_up=(0, -20), diffusion_type='Kukulka', boundary='Reflect',
+        #                                                close_up=(0, -20), diffusion_type='SWB', boundary='Reflect',
         #                                                fig_size=(8, 8))
         # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=[0.95],
         #                                                selection='w_10', single_select=2, wind_sort=True,
@@ -107,7 +107,7 @@ def plotting():
         #     visualization.mld_depth_influence(w_rise_list=w_rise, MLD_list=[15.0, 20.0, 30.0], alpha_list=alpha,
         #                                       beaufort=beaufort)
         #     visualization.mld_depth_influence(w_rise_list=w_rise, MLD_list=[15.0, 20.0, 30.0], alpha_list=alpha,
-        #                                       beaufort=beaufort, diffusion_type='Kukulka')
+        #                                       beaufort=beaufort, diffusion_type='SWB')
 
         # # Plotting the depth profile for multiple timesteps
         # visualization.timestep_comparison(w_10_list=[0.85], w_rise_list=[-0.0003], alpha_list=[0.0], close_up=(0, -30),
@@ -156,12 +156,10 @@ def plotting():
         # visualization.integration_timestep_control(w_rise_select=-0.003, close_up=(0, -10))
         # visualization.integration_timestep_control(w_rise_select=-0.03, close_up=(0, -2.5))
         # visualization.integration_timestep_control(w_rise_select=-0.003, close_up=(0, -10), boundary='Reflect_Markov')
-        visualization.multiple_integration_timestep_control(beaufort=4, close_up=(0, -20), boundary='Reflect')
-        visualization.multiple_integration_timestep_control(beaufort=4, close_up=(0, -20), boundary='Ceiling')
-        # visualization.multiple_integration_timestep_control(beaufort=4, close_up=(0, -20), boundary='Reflect_Markov',
-        #                                                     alpha=0.1)
-        # visualization.multiple_integration_timestep_control(beaufort=4, close_up=(0, -20), boundary='Reflect_Markov',
-        #                                                     alpha=0.7)
+        # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Reflect')
+        # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Ceiling')
+        # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Reflect_Markov', alpha=0.1)
+        # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Reflect_Markov', alpha=0.7)
 
         # The convergence of RMSE values with reference to the dt=1 case
         # visualization.timestep_RMSE_convergence()
@@ -185,7 +183,7 @@ if __name__ == '__main__':
         for rise in w_rise:
             for alpha_val in alpha:
                 parcels_simulations(wind=wind, rise=rise, alpha=alpha_val)
-    analysis.timestep_dependent_RMSE(conduct=True, diffusion_type='Kukulka')
+    analysis.timestep_dependent_RMSE(conduct=True, diffusion_type='SWB')
     analysis.timestep_dependent_RMSE(conduct=True, diffusion_type='KPP')
     """
     Visualization of simulations

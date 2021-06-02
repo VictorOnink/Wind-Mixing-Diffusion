@@ -71,7 +71,7 @@ def eulerian_field_data_comparison(w_10_list, w_rise_list, alpha_list, selection
 
         beaufort = utils.utils_physics.beaufort_limits()
         # The figures for the different wind conditions, where we only want to have this for the higher rise velocities
-        w_rise_list = utils_v.rise_velocity_selector(size_class='large', w_rise=w_rise_list)
+        w_rise_list = utils_v.rise_velocity_selector(size_class='large', w_rise_list=w_rise_list)
         for scale in range(plot_num - 1):
             _, _ = utils_v.add_observations(ax[scale], norm_depth=norm_depth, wind_range=beaufort[scale + 1],
                                             alpha=alpha)

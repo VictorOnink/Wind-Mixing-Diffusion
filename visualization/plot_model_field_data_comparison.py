@@ -47,8 +47,8 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
                                                               boundary=boundary, alpha_list=alpha_list)
                 for counter in range(len(profile_dict['concentration_list'])):
                     ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
-                            label=utils_v.label_kukulka(selection=selection,
-                                                        parameters=profile_dict['parameter_kukulka'][counter]),
+                            label=utils_v.label_SWB(selection=selection,
+                                                    parameters=profile_dict['parameter_kukulka'][counter]),
                             linestyle='-', color=visualization.utils_visualization.return_color(counter))
 
             # Plotting the distribution according to the KPP parametrization

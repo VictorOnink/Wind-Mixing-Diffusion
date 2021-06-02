@@ -9,6 +9,19 @@ from visualization import utils_visualization as utils_v
 def plot_field_data_overview(norm_depth=False, wind_sort=False, y_label='Depth (m)', close_up=None,
                              x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(16, 8), ax_label_size=16,
                              legend_size=12, alpha=0.3):
+    """
+    A figure just showing the field data
+    :param norm_depth: if True, normalize all field data by the MLD
+    :param wind_sort: if True, sort field data into wind conditions and plot each wind condition in a separate subfigure
+    :param y_label: label of the y axis
+    :param close_up: setting the limits of the y axis as (max, min)
+    :param x_label: label of the x axis
+    :param fig_size: size of the figure
+    :param ax_label_size: fontsize of the axis labels
+    :param legend_size: fontsize of the legend
+    :param alpha: the transparency of the field data markers
+    :return:
+    """
     if norm_depth:
         y_label = 'Depth/MLD'
     ax_range = utils_v.get_axes_range(close_up=close_up, norm_depth=norm_depth)
