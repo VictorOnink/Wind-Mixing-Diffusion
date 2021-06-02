@@ -1,8 +1,8 @@
 # *Wind Mixing Diffusion* Repository
 Contents:
 - [Overview](#overview)
-- [Model description](#model#description)
-- [Code setup](#code#setup)
+- [Model description](#model-description)
+- [Code setup](#code-setup)
 ---
 ## Overview
 
