@@ -2,7 +2,17 @@
 Contents:
 - [Overview](#overview)
 - [Model description](#model-description)
+  - [Stochastic transport modelling](#stochastic-transport-modelling)
+  - [Vertical diffusion profile](#vertical-diffusion-profile)
+  - [Boundary conditions](#boundary-conditions)
+  - [Particle rise velocities](#particle-rise-velocities)
+  - [Field measurements](#field-measurements)
 - [Code setup](#code-setup)
+  - [Running the model](#running-the-model)
+    - [Setting up the run parameters](#setting-up-the-run-parameters)
+    - [Carrying out the simulations](#carrying-out-the-simulations)
+  - [Overview of files within the respository](#overview-of-files-within-the-respository)
+  - [Installation requirements](#installation-requirements)
 ---
 ## Overview
 
@@ -13,10 +23,12 @@ stress, the particle rise velocities, and the parametrization of vertical turbul
 
 ---
 ## Model description
-### Particle rise velocities
+### Stochastic transport modelling
 
-The particle rise velocities are assigned by the user in the main.py file. The corresponding spherical particle size
-for a given rise velocity can be computed based on [Enders et al. (2015)](https://doi.org/10.1016/j.marpolbul.2015.09.027)
+To model stochastic particle transport, we consider two stochastic transport formulations:
+- Markov - 0 (M-0): In this formulation, diffusion is implemented as a random particle displacement, and total stochastic transport is determined by this random walk together with the particle rise velocity. We use the M-0 formulation described by [Grawe et al. (2012)](https://doi.org/10.1007/s10236-012-0523-y).
+- Markov - 1 (M-1): In this formulation, a degree of autocorrelation set by parameter $\alpha$ is assumed in the particle velocity perturbations, and the total stochastic transport is determined by the turbulent velocity perturbation and the particle rise velocity. We follow the M-1 formulation described by [Mofakham & Ahmadi (2020)](https://doi.org/10.1016/j.ijmultiphaseflow.2019.103157)
+In both cases, the stochastic transport is discretized using an Euler-Maruyama formulation [(Maruyama, 1955)](https://doi.org/10.1007/BF02846028)
 
 ### Vertical diffusion profile
 
@@ -30,25 +42,23 @@ referred as *SWB* and *KPP* diffusion
   1D case, we consider a simpler approach that neglects convective fluxes presented
   by [Boufadel et al. (2020)](https://doi.org/10.1029/2019JC015727).
 
-### Stochastic transport modelling
-
-To model stochastic particle transport, we consider two stochastic transport formulations:
-- Markov - 0 (M-0): In this formulation, diffusion is implemented as a random particle displacement, and total stochastic transport is determined by this random walk together with the particle rise velocity. We use the M-0 formulation described by [Grawe et al. (2012)](https://doi.org/10.1007/s10236-012-0523-y).
-- Markov - 1 (M-1): In this formulation, a degree of autocorrelation set by parameter $\alpha$ is assumed in the particle velocity perturbations, and the total stochastic transport is determined by the turbulent velocity perturbation and the particle rise velocity. We follow the M-1 formulation described by [Mofakham & Ahmadi (2020)](https://doi.org/10.1016/j.ijmultiphaseflow.2019.103157)
-In both cases, the stochastic transport is discretized using an Euler-Maruyama formulation [(Maruyama, 1955)](https://doi.org/10.1007/BF02846028)
-
 ### Boundary conditions
-The model domain is $z \in [0, 100]$ m, where the vertical axis $z$ is negative upwards with z=0 indicating the ocean surface (although in the figures and the paper we follow the convention that $z$ is positive upward with z=0 at the ocean surface). We have tested a number of boundary conditions (BCs) for the ocean surface:
+The model domain is [0, 100] m, where the vertical axis z is negative upwards with z=0 indicating the ocean surface (although in the figures and the paper we follow the convention that z is positive upward with z=0 at the ocean surface). We have tested a number of boundary conditions (BCs) for the ocean surface:
 - Ceiling BC: If a particle crosses the ocean surface (z=0), the particle depth is set to depth = 0.
-- Reflect BC: A particle is reflected off of the ocean surface, where for a given overshoot *\partial z* of
-  the ocean surface, the final particle position is given as |*\partial z*|.
+- Reflect BC: A particle is reflected off of the ocean surface, where for a given overshoot *dz* of
+  the ocean surface, the final particle position is given as |*dz*|.
 - Mixed layer boundary condition: If the particle is within a distance *L* of the ocean surface, the particle particle
-  depth is set at *R L*, where *R* is a random number between 0 and 1. The mixing depth $L$ is set based on the maximum
+  depth is set at *R L*, where *R* is a random number between 0 and 1. The mixing depth *L* is set based on the maximum
   depth at which a particle displacement for a timestep would still be able to cross the ocean surface.
 - Reduce dt: If a particle is to cross the ocean surface, then the time step halved if the timestep is greater than a
   minimum timestep. If so, the particle position is recalculated using the reduced timestep. If the halved timestep is
   less than the minimum timestep, a reflecting boundary condition is applied.
 If a particle were to cross the lower domain boundary, then we apply a reflecting boundary condition. However, since the maximum depth z=100 m is significantly deeper than the Mixed Layer Depth (MLD), particles in practice never reached the bottom of the model domain.
+
+### Particle rise velocities
+
+The particle rise velocities are assigned by the user in the ```main.py``` file. The corresponding spherical particle size
+for a given rise velocity can be computed based on [Enders et al. (2015)](https://doi.org/10.1016/j.marpolbul.2015.09.027)
 
 ### Field measurements
 
