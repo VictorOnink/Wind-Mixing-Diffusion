@@ -17,7 +17,7 @@ Contents:
 ## Overview
 
 This repository contains all the code for the vertical wind mixing experiments described in Onink et al. (in prep). Using
-the [parcels](http://oceanparcels.org/) v2.2.1 (**P**robably **A** **R**eally **C**omputationally **E**fficient **L**agrangian **S**imulator) package, a 1D
+the [parcels](http://oceanparcels.org/) (**P**robably **A** **R**eally **C**omputationally **E**fficient **L**agrangian **S**imulator) package, a 1D
 model has been developed to model the vertical concentration profile of buoyant particles in the ocean surface mixed layer depending on the surface wind
 stress, the particle rise velocities, and the parametrization of vertical turbulent mixing.
 
