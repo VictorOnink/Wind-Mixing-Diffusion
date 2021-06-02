@@ -2,10 +2,9 @@ import settings
 import utils
 from netCDF4 import Dataset
 import numpy as np
-import scipy.stats as stats
 
 
-def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, bin_size=0.2):
+def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, bin_size=0.2, remove_file=True):
     """
     Binning the parcels output for a given run into vertical bins of size bin_size.
     note: the concentrations are not normalized, that is done later when the concentrations are loaded
@@ -14,6 +13,7 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, bin_size=
     :param diffusion_type: diffusion type, either SWB or KPP
     :param boundary: boundary condition, and whether M-0 or M-1
     :param alpha: memory term for M-1
+    :param remove_file: if True, remove the original parcels output file
     :return:
     """
     # Loading the relevant parcels file
@@ -43,4 +43,5 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, bin_size=
     utils.save_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=alpha),
                    item=output_dir)
     # We don't need the parcels file for any subsequent analysis, so I'm removing it to save storage on my computer
-    utils.remove_file(conduct=True, file_name=parcels_file)
+    if remove_file:
+        utils.remove_file(conduct=True, file_name=parcels_file)

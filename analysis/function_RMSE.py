@@ -1,13 +1,11 @@
 import settings
 import utils
-from netCDF4 import Dataset
 import numpy as np
-import scipy.stats as stats
 import pandas as pd
 from copy import deepcopy
 
 
-def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, output=False):
+def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, output=False, conduct=True):
     """
     Getting the root mean square error between the normalized model concentrations and the field data
     :param w_10: 10m wind speed
@@ -17,48 +15,51 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, 
     :param alpha: memory term for M-1
     :param exclude: specifying if there is any field data we don't want to include in the analysis
     :param output: if False, we have just a print statement giving the RMSE value, if True we return the RMSE value
+    :param conduct: if True, carry out the entire RMSE calculations
     :return:
     """
-    # Loading the concentration profile and the depths, and normalizing by the total number of particles in the
-    # simulation
-    conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
-                               alpha=alpha))
-    concentration = conc_dict[conc_dict['last_time_slice']]
-    concentration = concentration / concentration.sum()
-    concentration_depth = conc_dict['bin_edges'][:-1]
+    if conduct:
+        # Loading the concentration profi   le and the depths, and normalizing by the total number of particles in the
+        # simulation
+        conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
+                                   alpha=alpha))
+        concentration = conc_dict[conc_dict['last_time_slice']]
+        concentration = concentration / concentration.sum()
+        concentration_depth = conc_dict['bin_edges'][:-1]
 
-    # Loading the field measurements
-    sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
-    sources = utils.exclude_field_data(exclude, sources)
-    field_data, depth, wind = np.array([]), np.array([]), np.array([])
-    for source in sources:
-        data_dict = utils.load_obj(utils.utils_filenames.get_data_output_name(source))
-        field_data = np.append(field_data, data_dict['concentration'])
-        wind = np.append(wind, data_dict['wind_speed'])
-        depth = np.append(depth, data_dict['depth'])
+        # Loading the field measurements
+        sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
+        sources = utils.exclude_field_data(exclude, sources)
+        field_data, depth, wind = np.array([]), np.array([]), np.array([])
+        for source in sources:
+            data_dict = utils.load_obj(utils.utils_filenames.get_data_output_name(source))
+            field_data = np.append(field_data, data_dict['concentration'])
+            wind = np.append(wind, data_dict['wind_speed'])
+            depth = np.append(depth, data_dict['depth'])
 
-    # Select only the measurements measured under the selected wind conditions
-    w_10_select = {0.85: utils.beaufort_limits()[1], 2.4: utils.beaufort_limits()[2], 4.35: utils.beaufort_limits()[3],
-                   6.65: utils.beaufort_limits()[4], 9.3: utils.beaufort_limits()[5]}
-    w_min, w_max = w_10_select[w_10]
-    wind_select = (w_min < wind) & (wind <= w_max)
-    field_data, depth = field_data[wind_select], depth[wind_select]
+        # Select only the measurements measured under the selected wind conditions
+        w_10_select = {0.85: utils.beaufort_limits()[1], 2.4: utils.beaufort_limits()[2],
+                       4.35: utils.beaufort_limits()[3], 6.65: utils.beaufort_limits()[4],
+                       9.3: utils.beaufort_limits()[5]}
+        w_min, w_max = w_10_select[w_10]
+        wind_select = (w_min < wind) & (wind <= w_max)
+        field_data, depth = field_data[wind_select], depth[wind_select]
 
-    # For each field data point, calculate the index of concentration_depth that is closest
-    nearest_point = np.zeros(depth.shape, dtype=np.int32)
-    for ind, Z in enumerate(depth):
-        nearest_point[ind] = utils.utils_files.find_nearest_index(concentration_depth, Z)
+        # For each field data point, calculate the index of concentration_depth that is closest
+        nearest_point = np.zeros(depth.shape, dtype=np.int32)
+        for ind, Z in enumerate(depth):
+            nearest_point[ind] = utils.utils_files.find_nearest_index(concentration_depth, Z)
 
-    # Now, calculate the RMSE
-    RMSE = np.sqrt(np.sum(np.square(field_data - concentration[nearest_point])) / field_data.size)
+        # Now, calculate the RMSE
+        RMSE = np.sqrt(np.sum(np.square(field_data - concentration[nearest_point])) / field_data.size)
 
-    # And then printing or returning the RMSE value the output
-    if not output:
-        str_format = diffusion_type, boundary, w_rise, w_10, alpha, RMSE, field_data.size
-        print('For the {} profile with {}, w_r = {}, w_10 = {}, alpha = {}, RMSE = {} over {} data points'.format(
-            *str_format))
-    elif output:
-        return RMSE
+        # And then printing or returning the RMSE value the output
+        if not output:
+            str_format = diffusion_type, boundary, w_rise, w_10, alpha, RMSE, field_data.size
+            print('For the {} profile with {}, w_r = {}, w_10 = {}, alpha = {}, RMSE = {} over {} data points'.format(
+                *str_format))
+        elif output:
+            return RMSE
 
 
 def determine_RMSE_eulerian(w_10, w_rise, diffusion_type, exclude=None):

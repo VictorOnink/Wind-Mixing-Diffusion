@@ -18,20 +18,20 @@ boundary = 'Ceiling'
 def parcels_simulations(wind, rise, alpha):
     if settings.server is 'laptop':
         # Option to remove a previous file if it exists in case I want to rerun a simulation. Setting
-        # conduct to False deactivates the r emove file function
+        # conduct to False deactivates the remove file function
         concentration_file = utils.get_concentration_output_name(wind, rise, diffusion, boundary, alpha=alpha) + '.pkl'
         utils.remove_file(conduct=False, file_name=concentration_file)
         if not utils.check_file_exist(concentration_file):
             parcels_simulation_functions.vertical_diffusion_run(wind, rise, diffusion_type=diffusion,
                                                                 boundary=boundary, alpha=alpha)
             analysis.depth_concentration(wind, rise, diffusion_type=diffusion, boundary=boundary,
-                                         alpha=alpha)
+                                         alpha=alpha, remove_file=True)
         else:
             print('This simulation has already been carried out')
-        analysis.determine_RMSE(wind, rise, diffusion, boundary, alpha)
+        # Print the RMSE error between the calculated concentration profile and the field measurements
+        analysis.determine_RMSE(wind, rise, diffusion, boundary, alpha, conduct=False)
     elif settings.server is 'ubelix':
-        # ubelix_submission.ubelix_submission(diffusion, boundary, wind, rise, alpha, submission='parcels')
-        ubelix_submission.ubelix_submission(diffusion, boundary, wind, rise, alpha, submission='eulerian')
+        ubelix_submission.ubelix_submission(diffusion, boundary, wind, rise, alpha, submission='parcels')
 
 
 def field_data_processing():
@@ -135,21 +135,6 @@ def plotting():
 
         # Creating a figure to compare the RMSE values for the Eulerian runs
         # visualization.eulerian_RMSE_comparison()
-
-        # Comparing Eulerian and Lagrangian approaches
-        # visualization.lagrangian_eulerian_comparison(w_rise_list=w_rise, alpha_list=[0.0], boundary='Reflect',
-        #                                              close_up=(0, -20))
-        # for a in [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]:
-        #     visualization.lagrangian_eulerian_comparison(w_rise_list=w_rise, alpha_list=[a], boundary='Reflect_Markov',
-        #                                                  close_up=(0, -20))
-        # #
-        # # # Comparing Eulerian profiles with field measurements
-        # visualization.eulerian_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
-        #                                              selection='w_10', single_select=2, wind_sort=True,
-        #                                              close_up=(0, -20), diffusion_type='all', boundary='Reflect')
-        # visualization.eulerian_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
-        #                                              selection='w_10', single_select=2, wind_sort=True,
-        #                                              close_up=(0, -5), diffusion_type='all', boundary='Reflect')
 
         # The influence of the integration timestep for Markov 0
         # visualization.integration_timestep_control(w_rise_select=-0.0003, close_up=(0, -20))

@@ -11,7 +11,6 @@ import math
 import numpy as np
 import settings
 import utils
-import sys
 
 
 def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixed'):
