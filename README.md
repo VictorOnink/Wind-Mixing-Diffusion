@@ -35,7 +35,7 @@ In both cases, the stochastic transport is discretized using an Euler-Maruyama f
 ### Vertical diffusion profile
 
 Two approaches have been taken for the vertical diffusion profile, and in the code the diffusion parametrizations are
-referred as *SWB* and *KPP* diffusion
+referred as **SWB** and **KPP** diffusion
 
 - **SWB**: The **S**urface **W**ave **B**reaking parametrization is a combination of the wind-driven surface turbulent mixing parametrization
   from [Kukulka et al. (2012)](https://doi.org/10.1029/2012GL051116) and the work of [Poulain (2020)](https://catalogue-archipel.univ-toulouse.fr/primo-explore/fulldisplay?docid=33TOUL_ALMA51536870940004116&context=L&vid=33UT1_VU1&lang=fr_FR&search_scope=default_scope&adaptor=Local%20Search%20Engine&tab=default_tab&query=any,contains,marie%20poulain%20zarcos&offset=0) regarding the depth dependence of the eddy viscosity.
