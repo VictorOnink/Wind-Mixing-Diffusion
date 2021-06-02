@@ -75,36 +75,24 @@ All the commands for running the model go via the ```main.py``` file. At the beg
 
 The variable ```diffusion``` sets the diffusion profile that will be used in the simulation, and must be set either as ```'KPP'``` or ```'SWB'```. The boundary condition is set by ```boundary```, where the options are either ```'Ceiling'```, ```'Reflect'```, ```'Mixed'``` or ```'Reduce_dt'``` (the BC condition used for the results in the paper is typically ```'Ceiling'``` unless otherwise stated). If you want to run a M-1 simulation, then you add ```'_Markov'``` to the ```diffusion``` string (e.g. ```boundary='Ceiling_Markov'``` would run a M-1 simulation with the Ceiling BC). Otherwise, the default is to run a M-0 simulation.
 
-A number of run parameters (e.g. integration and model output timesteps, physical constants, particle densities, the MLD) are defined in the ```settings.py``` file. These parameters can not be changed from the ```main.py``` file.
+A number of run parameters (e.g. integration and model output timesteps, physical constants, particle densities, the MLD) are defined in the ```settings.py``` file. These parameters can not be changed from the ```main.py``` file. However, prior to carrying out any simulation on your local computer, please update ```hostname``` to the hostname of your local computer.
 
 #### Carrying out the simulations
 Running the ```main.py``` file will run the simulations. First, the code will run ```field_data_processing()```, which will check if the standardized field data files exist and print some basic statistical properties of the field data. If these files are not present, it will create these standardized files. Unless you are in possession of the original field data files, please comment out ```field_data_processing()``` prior to running any simulations.
 
-Next, the function ```ubelix_submission.ubelix_synchronization(update=False)```
+Next, the function ```ubelix_submission.ubelix_synchronization(update=False)``` uses ```rsync``` to update the files on the laptop of the user with any potential output files on the [Ubelix HPC cluster](https://hpc-unibe-ch.github.io/) from the Universit\"{a}t Bern. Unless one has their own Ubelix account, please keep ```update=False``` so that the function doesn't run. Otherwise, adapt ```ubelix_submission.py``` to work on your own computer.
 
-### Overview of files within the 
-The following files are contained within the repository:
+Next, for all the wind, rise velocity and alpha values in ```w_10```, ```w_rise``` and ```alpha```, the function ```parcels_simulations(wind=wind, rise=rise, alpha=alpha_val)``` is called. Within ```parcels_simulations()```, if one wishes to overwrite any prior model output that exists for the same set of run parameters, set ```conduct = True``` in ```utils.remove_file(conduct=True, file_name=concentration_file)```. Next, if an output file doesn't already exist the parcels simulation for the given parameters will be carried out, and the parcels output will be converted to a non-normalized concentration profile by ```analysis.depth_concentration()```. Once the concentration profile is calculated, we delete the original parcels output to save storage, but if you wish to keep the original parcels file for further analysis set ```remove=False```. Note: this procedure assumes that the simulations are carried out on a local computer, and not the Ubelix cluster. On the Ubelix cluster, the overall steps are the same, but the simulations are submitted as individual jobs using SLURM with the function ```ubelix_submission.ubelix_submission(diffusion, boundary, wind, rise, alpha, submission='parcels')```.
 
-- main.py: This is the main file, and running this will first load all the field data and output standardized formats,
-  followed by running parcels simulations for the given parameters. This is then followed by creating figures. For the
-  data standardization and the parcels simulations, the code will check if the output files already exist, and will only
-  run the full code for these stages if the output files are not available.
-- settings.py: This file contains all the main model parameters, ranging from setting output/data/figure directories to
-  parcels integration settings (dt, particle number) to basic oceanographic parameters. All other files call to the
-  settings file to load these values.
-- field_data.py: This contains the data standardization functions for all the field data. The output of these
-  standardization function is a dictionary containing the measurement depth, wind data, normalized concentration (with
-  reference max concentration along a given station depth profile) and the depth normalized by the MLD (if this data is
-  available).
-- parcels_simulation_functions.py: This contains all the functions for running the 1D particle model. To run a
-  simulation, the main.py file calls the vertical_diffusion_run function, which requires the surface wind speed, the
-  particle rise velocity, the diffusion type and the boundary condition (which is also what sets if a simulation is
-  Markov 0 or Markov 1).
-- analysis.py: This contains any functions necessary for processing the parcels output.
-- visualization.py: This contains all the functions for creating the various figures that main.py calls.
-- utils_visualization.py: This contains a number of utility functions used for creating the various figures, such as
-  labels for the figure legends, file names for the final figures and options to add diffusion profiles or field
-  measurements to a given plot axis.
-- utils.py: This contains further utility functions, excluding any that are used exclusively for creating figures.
-  Examples include functions to check if a file exists, determining the significant wave height or wind stress for given
-  wind conditions and computing the vertical diffusion/diffusion gradient profiles.
+Finally, the function ```plotting()``` calls all plotting functions that are set within ```plotting()```. The visualization functions are all contained within the ```visualization``` directory, and a brief explanation of each plotting function is given either within the ```plotting()``` function or otherwise in the function documentation of the respective visualization functions.
+
+
+### Overview of files within the respository
+- ```main.py```: This is the main file used to define and run the simulations
+- ```settings.py```: This is a file used to set a number of constants, dictionaries and directory paths that are used throughout the functions in the directory.
+- ```parcels_simulation_functions.py```: This file contains all the functions to run the parcels simulations.
+- ```eulerian_simulation_functions.py```: This file contains functions to run Eulerian model simulations. These were ultimately not used in the paper.
+- ```field_data.py```: This contains all the functions to convert the original field data files into one standardized format.
+- ```ubelix_submission.py```: This contains functions used to run the parcels simulations on the Ubelix server.
+- ```analysis```: This directory contains all the analysis functions, split into three files:
+  - ```function_concentration.py```
