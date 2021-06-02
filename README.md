@@ -3,23 +3,22 @@
 ## Overview
 
 This repository contains all the code for the vertical wind mixing experiments described in Onink et al. (in prep). Using
-the [parcels](http://oceanparcels.org/) (**P**robably **A** **R**eally **C**omputationally **E**fficient **L**agrangian **S**imulator) package, a 1D
+the [parcels](http://oceanparcels.org/) v2.2.1 (**P**robably **A** **R**eally **C**omputationally **E**fficient **L**agrangian **S**imulator) package, a 1D
 model has been developed to model the vertical concentration profile of buoyant particles in the ocean surface mixed layer depending on the surface wind
 stress, the particle rise velocities, and the parametrization of vertical turbulent mixing.
 
 ### Particle rise velocities
 
-The particle rise velocities are assigned by the user in the main.py file. The corresponding elliptical particle size
-for a given rise velocity can be computed based on [Poulain et al. (2019)](https://doi.org/10.1021/acs.est.8b05458)
+The particle rise velocities are assigned by the user in the main.py file. The corresponding spherical particle size
+for a given rise velocity can be computed based on [Enders et al. (2015)](https://doi.org/10.1016/j.marpolbul.2015.09.027)
 
 ### Vertical diffusion profile
 
 Two approaches have been taken for the vertical diffusion profile, and in the code the diffusion parametrizations are
-referred as *Kukulka* and *KPP* diffusion
+referred as *SWB* and *KPP* diffusion
 
-- **Kukulka**: This is a combination of the wind-driven surface turbulent mixing parametrization
-  from [Kukulka et al. (2012)](https://doi.org/10.1029/2012GL051116) and the work presented by Marie Poulain-Zarcos at
-  MICRO2020 regarding the depth dependence of the eddy viscosity.
+- **SWB**: The **S**urface **W**ave **B**reaking parametrization is a combination of the wind-driven surface turbulent mixing parametrization
+  from [Kukulka et al. (2012)](https://doi.org/10.1029/2012GL051116) and the work of [Poulain (2020)](https://catalogue-archipel.univ-toulouse.fr/primo-explore/fulldisplay?docid=33TOUL_ALMA51536870940004116&context=L&vid=33UT1_VU1&lang=fr_FR&search_scope=default_scope&adaptor=Local%20Search%20Engine&tab=default_tab&query=any,contains,marie%20poulain%20zarcos&offset=0) regarding the depth dependence of the eddy viscosity.
 - **KPP**: The K-Profile Parametrization (KPP) approach was first published
   by [Large et al. (1994)](https://doi.org/10.1029/94RG01872) and is commonly used in large-scale ocean models. For the
   1D case, we consider a simpler approach that neglects convective fluxes presented
