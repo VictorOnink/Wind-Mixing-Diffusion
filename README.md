@@ -53,6 +53,7 @@ The model domain is [0, 100] m, where the vertical axis z is negative upwards wi
 - Reduce dt: If a particle is to cross the ocean surface, then the time step halved if the timestep is greater than a
   minimum timestep. If so, the particle position is recalculated using the reduced timestep. If the halved timestep is
   less than the minimum timestep, a reflecting boundary condition is applied.
+
 If a particle were to cross the lower domain boundary, then we apply a reflecting boundary condition. However, since the maximum depth z=100 m is significantly deeper than the Mixed Layer Depth (MLD), particles in practice never reached the bottom of the model domain.
 
 ### Particle rise velocities
@@ -81,6 +82,7 @@ from a number of sources:
   using a multi-stage net for sub-surface measurements and a manta trawl for the surface measurements. Wind speed data
   is available, as well as CTD data for determining the MLD.
 - [Egger et al. (2020)](https://doi.org/10.1038/s41598-020-64465-8): This is data collected at various depths with a multi-stage neuston net in the North Pacific. Unlike the data in the paper, this data was provided by Matthias Egger without the depth correction that had been applied in their analysis.
+
 With the exception of the [Kooi et al. (2016)](https://doi.org/10.1038/srep33882) data, these data sets are not currently publically available and we recommend contacting the corresponding authors of the studies if one is interested in acquiring this data.
 
 ---
