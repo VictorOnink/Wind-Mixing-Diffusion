@@ -95,4 +95,22 @@ Finally, the function ```plotting()``` calls all plotting functions that are set
 - ```field_data.py```: This contains all the functions to convert the original field data files into one standardized format.
 - ```ubelix_submission.py```: This contains functions used to run the parcels simulations on the Ubelix server.
 - ```analysis```: This directory contains all the analysis functions, split into three files:
-  - ```function_concentration.py```
+  - ```function_concentration.py```: function for converting the parcels model output to concentration profiles.
+  - ```function_RMSE.py```: all analysis functions related to calculating RMSE values between field data and concentration profiles
+  - ```function_statistics.py```: analysis functions related to calculating statistics of the field data
+- ```utils```: This directory contains a number of utility functions, defined as useful functions that are used at multiple points through the model code. The functions are split into three files:
+  - ```utils_filenames.py```: These functions are used to name the parcels output, the concentration profile output and the standardized field data
+  - ```utils_files.py```: These functions are used for a number of tasks involving files, such as checking if a file exists and saving/loading data using the ```pickle``` module.
+  - ```utils_physics.py```: These functions are used to determine physical quantities, such as diffusion profiles, drag coefficients, surface wind stress, etc.
+- ```visualization```: This directory contains all the files to visualize the data and create figures. Each file contains the necessary code to create one specific figure described in each function documentation, so please refer there for descriptions of what figure each function creates. The file ```utils_visualization.py``` contains a number of utility functions for creating the figures, such as functions for creating standardized ```matplotlib.pyplot``` axes, determining linestyles and loading concentration profile data such that it can be plotted.
+
+### Installation requirements
+In order to run the model, a number of packages need to be installed. I've listed the versions that I used to run all my simulations, and in most cases its probably fine to run with newer package versions. However, this is not guaranteed to always be the case.
+- parcels: v2.2.1 or higher. For the installation requirements, please consult the section _Installing Parcels_ at [oceanparcels.org](https://oceanparcels.org/#installing). I did all my simulations with v2.2.1, and generally then the code should also work for more recent versions.
+- matplotlib: v3.3.4
+- progressbar: v3.37.1
+- numpy: v1.19.1
+- seabird: v0.11.5: This was only used to analysis CTD data to standardize the field data, so if you are not running this part of the code you don't require this package
+- scipy: v1.5.2
+- pandas: v1.1.3
+- netCDF4: 1.5.4
