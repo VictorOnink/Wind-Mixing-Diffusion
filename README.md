@@ -68,9 +68,19 @@ from a number of sources:
 - [Egger et al. (2020)](https://doi.org/10.1038/s41598-020-64465-8): This is data collected at various depths with a multi-stage neuston net in the North Pacific. Unlike the data in the paper, this data was provided by Matthias Egger without the depth correction that had been applied in their analysis.
 With the exception of the [Kooi et al. (2016)](https://doi.org/10.1038/srep33882) data, these data sets are not currently publically available and we recommend contacting the corresponding authors of the studies if one is interested in acquiring this data.
 
-## Code setup
-All the commands for running the model go via the ```main.py``` 
-### Basic procedure
+## Code setup 
+### Running the model
+#### Setting up the run parameters
+All the commands for running the model go via the ```main.py``` file. At the beginning of the file, you can set the wind speeds ```w_10```, the rise velocities ```w_rise``` and M-1 memory terms ```alpha``` for which you want to run the simulation (```alpha``` values are not required to run a M-0 simulation, but ```alpha``` must still be defined). All these run parameters are written as lists, since the code will run through all elements of the list to carry out the requested simulations.
+
+The variable ```diffusion``` sets the diffusion profile that will be used in the simulation, and must be set either as ```'KPP'``` or ```'SWB'```. The boundary condition is set by ```boundary```, where the options are either ```'Ceiling'```, ```'Reflect'```, ```'Mixed'``` or ```'Reduce_dt'``` (the BC condition used for the results in the paper is typically ```'Ceiling'``` unless otherwise stated). If you want to run a M-1 simulation, then you add ```'_Markov'``` to the ```diffusion``` string (e.g. ```boundary='Ceiling_Markov'``` would run a M-1 simulation with the Ceiling BC). Otherwise, the default is to run a M-0 simulation.
+
+A number of run parameters (e.g. integration and model output timesteps, physical constants, particle densities, the MLD) are defined in the ```settings.py``` file. These parameters can not be changed from the ```main.py``` file.
+
+#### Carrying out the simulations
+Running the ```main.py``` file will run the simulations. First, the code will run ```field_data_processing()```, which will check if the standardized field data files exist and print some basic statistical properties of the field data. If these files are not present, it will create these standardized files. Unless you are in possession of the original field data files, please comment out ```field_data_processing()``` prior to running any simulations.
+
+Next, the function ```ubelix_submission.ubelix_synchronization(update=False)```
 
 ### Overview of files within the 
 The following files are contained within the repository:
