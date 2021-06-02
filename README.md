@@ -1,4 +1,8 @@
 # *Wind Mixing Diffusion* Repository
+Contents:
+- [Overview](overview)
+- [Model description](model-description)
+- [Code setup](code-setup)
 ---
 ## Overview
 
@@ -8,7 +12,7 @@ model has been developed to model the vertical concentration profile of buoyant 
 stress, the particle rise velocities, and the parametrization of vertical turbulent mixing.
 
 ---
-## Model Components
+## Model description
 ### Particle rise velocities
 
 The particle rise velocities are assigned by the user in the main.py file. The corresponding spherical particle size
