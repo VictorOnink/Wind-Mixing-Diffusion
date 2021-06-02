@@ -7,6 +7,7 @@ the [parcels](http://oceanparcels.org/) v2.2.1 (**P**robably **A** **R**eally **
 model has been developed to model the vertical concentration profile of buoyant particles in the ocean surface mixed layer depending on the surface wind
 stress, the particle rise velocities, and the parametrization of vertical turbulent mixing.
 
+## Model Components
 ### Particle rise velocities
 
 The particle rise velocities are assigned by the user in the main.py file. The corresponding spherical particle size
@@ -26,32 +27,23 @@ referred as *SWB* and *KPP* diffusion
 
 ### Stochastic transport modelling
 
-To model stochastic particle transport, we have considered both Markov 0 and Markov 1 approaches, where the main
-difference between the two is that the Markov 0 approach implements diffusion a random particle displacement on top of
-the displacement due to the particle rise velocity, while the Markov 1 approach implements a diffusion as a random
-velocity perturbation (with a memory of preceeding random perturbations). The Markov 1 approach requires using a
-Lagrangian integral timescale, where that is computed based
-on [Denman & Gargett (1983)](https://doi.org/10.4319/lo.1983.28.5.0801), while the equation is based
-on [Brickman & Smith (2002)](https://doi.org/10.1175/1520-0426(2002)019%3C0083:LSMICO%3E2.0.CO;2). The stochastic
-vertical transport equation for the Markov 0 approach is
-from [Ross & Sharples, 2004](https://doi.org/10.4319/lom.2004.2.289).
+To model stochastic particle transport, we consider two stochastic transport formulations:
+- Markov - 0 (M-0): In this formulation, diffusion is implemented as a random particle displacement, and total stochastic transport is determined by this random walk together with the particle rise velocity. We use the M-0 formulation described by [Grawe et al. (2012)](https://doi.org/10.1007/s10236-012-0523-y).
+- Markov - 1 (M-1): In this formulation, a degree of autocorrelation set by parameter $\alpha$ is assumed in the particle velocity perturbations, and the total stochastic transport is determined by the turbulent velocity perturbation and the particle rise velocity. We follow the M-1 formulation described by [Mofakham & Ahmadi (2020)](https://doi.org/10.1016/j.ijmultiphaseflow.2019.103157)
+In both cases, the stochastic transport is discretized using an Euler-Maruyama formulation [(Maruyama, 1955)](https://doi.org/10.1007/BF02846028)
 
 ### Boundary conditions
-
-A number of different boundary conditions have been tried for dealing with particles at the ocean/atmosphere interface.
-These include:
-
-- Zero ceiling boundary condition: If a particle tries to cross the ocean surface, the particle depth is set to 0 (This
-  approach was tested but has been removed from the code due to poor performance. However, the code is still present in
-  the repository history).
-- Reflecting boundary condition: A particle is reflected off of the ocean surface, where for a given overshoot *x* of
-  the ocean surface, the final particle position is given as |*x*|.
+The model domain is $z \in [0, 100]$ m, where the vertical axis $z$ is negative upwards with z=0 indicating the ocean surface (although in the figures and the paper we follow the convention that $z$ is positive upward with z=0 at the ocean surface). We have tested a number of boundary conditions (BCs) for the ocean surface:
+- Ceiling BC: If a particle crosses the ocean surface (z=0), the particle depth is set to depth = 0.
+- Reflect BC: A particle is reflected off of the ocean surface, where for a given overshoot *\partial z* of
+  the ocean surface, the final particle position is given as |*\partial z*|.
 - Mixed layer boundary condition: If the particle is within a distance *L* of the ocean surface, the particle particle
   depth is set at *R L*, where *R* is a random number between 0 and 1. The mixing depth $L$ is set based on the maximum
   depth at which a particle displacement for a timestep would still be able to cross the ocean surface.
 - Reduce dt: If a particle is to cross the ocean surface, then the time step halved if the timestep is greater than a
   minimum timestep. If so, the particle position is recalculated using the reduced timestep. If the halved timestep is
   less than the minimum timestep, a reflecting boundary condition is applied.
+If a particle were to cross the lower domain boundary, then we apply a reflecting boundary condition. However, since the maximum depth z=100 m is significantly deeper than the Mixed Layer Depth (MLD), particles in practice never reached the bottom of the model domain.
 
 ### Field measurements
 
@@ -69,13 +61,18 @@ from a number of sources:
   and CTD profiles for almost all statons.
 - [Kooi et al., 2016](https://doi.org/10.1038/srep33882): This is depth profiles measured for the first 5m of the water
   column, where the measurements were taken with a multi-depth manta trawl. Data is available for a range of wind
-  conditions, and for each station CTD data is available for the computation of the MLD.
-- PE448 data: This is data collected during the PE448 cruise on the RV Pelagia in the South Atlantic (January 2019)
+  conditions, and for each station CTD data is available for the computation of the MLD. The data is publically available [here](https://figshare.com/articles/dataset/Data_from_The_effect_of_particle_properties_on_the_depth_profile_of_buoyant_plastics_in_the_ocean_/3427862)
+- Amaral-Zettler (unpublished data): This is data collected during the PE448 cruise on the RV Pelagia in the South Atlantic (January 2019)
   using a multi-stage net for sub-surface measurements and a manta trawl for the surface measurements. Wind speed data
-  is available, but currently not CTD data for determining the MLD.
+  is available, as well as CTD data for determining the MLD.
+- [Egger et al. (2020)](https://doi.org/10.1038/s41598-020-64465-8): This is data collected at various depths with a multi-stage neuston net in the North Pacific. Unlike the data in the paper, this data was provided by Matthias Egger without the depth correction that had been applied in their analysis.
+With the exception of the [Kooi et al. (2016)](https://doi.org/10.1038/srep33882) data, these data sets are not currently publically available and we recommend contacting the corresponding authors of the studies if one is interested in acquiring this data.
 
 ## Code setup
+All the commands for running the model go via the ```main.py``` 
+### Basic procedure
 
+### Overview of files within the 
 The following files are contained within the repository:
 
 - main.py: This is the main file, and running this will first load all the field data and output standardized formats,
