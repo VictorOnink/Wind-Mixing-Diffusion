@@ -21,6 +21,8 @@ the [parcels](http://oceanparcels.org/) (**P**robably **A** **R**eally **C**ompu
 model has been developed to model the vertical concentration profile of buoyant particles in the ocean surface mixed layer depending on the surface wind
 stress, the particle rise velocities, and the parametrization of vertical turbulent mixing.
 
+This code was written by Victor Onink, with Charlotte Laufkoetter helping to improve the code performance.
+
 ---
 ## Model description
 ### Stochastic transport modelling
@@ -98,7 +100,7 @@ A number of run parameters (e.g. integration and model output timesteps, physica
 #### Carrying out the simulations
 Running the ```main.py``` file will run the simulations. First, the code will run ```field_data_processing()```, which will check if the standardized field data files exist and print some basic statistical properties of the field data. If these files are not present, it will create these standardized files. Unless you are in possession of the original field data files, please comment out ```field_data_processing()``` prior to running any simulations.
 
-Next, the function ```ubelix_submission.ubelix_synchronization(update=False)``` uses ```rsync``` to update the files on the laptop of the user with any potential output files on the [Ubelix HPC cluster](https://hpc-unibe-ch.github.io/) from the Universit\"{a}t Bern. Unless one has their own Ubelix account, please keep ```update=False``` so that the function doesn't run. Otherwise, adapt ```ubelix_submission.py``` to work on your own computer.
+Next, the function ```ubelix_submission.ubelix_synchronization(update=False)``` uses ```rsync``` to update the files on the laptop of the user with any potential output files on the [Ubelix HPC cluster](https://hpc-unibe-ch.github.io/) from the Universitaet Bern. Unless one has their own Ubelix account, please keep ```update=False``` so that the function doesn't run. Otherwise, adapt ```ubelix_submission.py``` to work on your own computer.
 
 Next, for all the wind, rise velocity and alpha values in ```w_10```, ```w_rise``` and ```alpha```, the function ```parcels_simulations(wind=wind, rise=rise, alpha=alpha_val)``` is called. Within ```parcels_simulations()```, if one wishes to overwrite any prior model output that exists for the same set of run parameters, set ```conduct = True``` in ```utils.remove_file(conduct=True, file_name=concentration_file)```. Next, if an output file doesn't already exist the parcels simulation for the given parameters will be carried out, and the parcels output will be converted to a non-normalized concentration profile by ```analysis.depth_concentration()```. Once the concentration profile is calculated, we delete the original parcels output to save storage, but if you wish to keep the original parcels file for further analysis set ```remove=False```. 
 
