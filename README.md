@@ -48,7 +48,7 @@ The model domain is [0, 100] m, where the vertical axis z is negative upwards wi
 - Reflect BC: A particle is reflected off of the ocean surface, where for a given overshoot *dz* of
   the ocean surface, the final particle position is given as |*dz*|.
 - Mixed layer boundary condition: If the particle is within a distance *L* of the ocean surface, the particle particle
-  depth is set at *R L*, where *R* is a random number between 0 and 1. The mixing depth *L* is set based on the maximum
+  depth is set at *R x L*, where *R* is a random number between 0 and 1. The mixing depth *L* is set based on the maximum
   depth at which a particle displacement for a timestep would still be able to cross the ocean surface.
 - Reduce dt: If a particle is to cross the ocean surface, then the time step halved if the timestep is greater than a
   minimum timestep. If so, the particle position is recalculated using the reduced timestep. If the halved timestep is
