@@ -1,5 +1,5 @@
 # *Wind Mixing Diffusion* Repository
-
+---
 ## Overview
 
 This repository contains all the code for the vertical wind mixing experiments described in Onink et al. (in prep). Using
@@ -7,6 +7,7 @@ the [parcels](http://oceanparcels.org/) v2.2.1 (**P**robably **A** **R**eally **
 model has been developed to model the vertical concentration profile of buoyant particles in the ocean surface mixed layer depending on the surface wind
 stress, the particle rise velocities, and the parametrization of vertical turbulent mixing.
 
+---
 ## Model Components
 ### Particle rise velocities
 
@@ -68,6 +69,7 @@ from a number of sources:
 - [Egger et al. (2020)](https://doi.org/10.1038/s41598-020-64465-8): This is data collected at various depths with a multi-stage neuston net in the North Pacific. Unlike the data in the paper, this data was provided by Matthias Egger without the depth correction that had been applied in their analysis.
 With the exception of the [Kooi et al. (2016)](https://doi.org/10.1038/srep33882) data, these data sets are not currently publically available and we recommend contacting the corresponding authors of the studies if one is interested in acquiring this data.
 
+---
 ## Code setup 
 ### Running the model
 #### Setting up the run parameters
@@ -87,7 +89,7 @@ Next, for all the wind, rise velocity and alpha values in ```w_10```, ```w_rise`
 Finally, the function ```plotting()``` calls all plotting functions that are set within ```plotting()```. The visualization functions are all contained within the ```visualization``` directory, and a brief explanation of each plotting function is given either within the ```plotting()``` function or otherwise in the function documentation of the respective visualization functions.
 
 
-### Overview of files within the respository
+## Overview of files within the respository
 - ```main.py```: This is the main file used to define and run the simulations
 - ```settings.py```: This is a file used to set a number of constants, dictionaries and directory paths that are used throughout the functions in the directory.
 - ```parcels_simulation_functions.py```: This file contains all the functions to run the parcels simulations.
@@ -104,7 +106,7 @@ Finally, the function ```plotting()``` calls all plotting functions that are set
   - ```utils_physics.py```: These functions are used to determine physical quantities, such as diffusion profiles, drag coefficients, surface wind stress, etc.
 - ```visualization```: This directory contains all the files to visualize the data and create figures. Each file contains the necessary code to create one specific figure described in each function documentation, so please refer there for descriptions of what figure each function creates. The file ```utils_visualization.py``` contains a number of utility functions for creating the figures, such as functions for creating standardized ```matplotlib.pyplot``` axes, determining linestyles and loading concentration profile data such that it can be plotted.
 
-### Installation requirements
+## Installation requirements
 In order to run the model, a number of packages need to be installed. I've listed the versions that I used to run all my simulations, and in most cases its probably fine to run with newer package versions. However, this is not guaranteed to always be the case.
 - parcels: v2.2.1 or higher. For the installation requirements, please consult the section _Installing Parcels_ at [oceanparcels.org](https://oceanparcels.org/#installing). I did all my simulations with v2.2.1, and generally then the code should also work for more recent versions.
 - matplotlib: v3.3.4
