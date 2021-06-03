@@ -21,7 +21,7 @@ the [parcels](http://oceanparcels.org/) (**P**robably **A** **R**eally **C**ompu
 model has been developed to model the vertical concentration profile of buoyant particles in the ocean surface mixed layer depending on the surface wind
 stress, the particle rise velocities, and the parametrization of vertical turbulent mixing.
 
-This code was written by Victor Onink, with Charlotte Laufkoetter helping to improve the code performance.
+This code was written by Victor Onink, with [Charlotte Laufkoetter](https://github.com/blauhai) helping to improve the code performance.
 
 ---
 ## Model description
