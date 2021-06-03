@@ -95,7 +95,9 @@ All the commands for running the model go via the ```main.py``` file. At the beg
 
 The variable ```diffusion``` sets the diffusion profile that will be used in the simulation, and must be set either as ```'KPP'``` or ```'SWB'```. The boundary condition is set by ```boundary```, where the options are either ```'Ceiling'```, ```'Reflect'```, ```'Mixed'``` or ```'Reduce_dt'``` (the BC condition used for the results in the paper is typically ```'Ceiling'``` unless otherwise stated). If you want to run a M-1 simulation, then you add ```'_Markov'``` to the ```diffusion``` string (e.g. ```boundary='Ceiling_Markov'``` would run a M-1 simulation with the Ceiling BC). Otherwise, the default is to run a M-0 simulation.
 
-A number of run parameters (e.g. integration and model output timesteps, physical constants, particle densities, the MLD) are defined in the ```settings.py``` file. These parameters can not be changed from the ```main.py``` file. However, prior to carrying out any simulation on your local computer, please update ```hostname``` to the hostname of your local computer.
+A number of run parameters (e.g. integration and model output timesteps, physical constants, particle densities, the MLD) are defined in the ```settings.py``` file. These parameters can not be changed from the ```main.py``` file. 
+
+**Important**: Prior to carrying out any simulation on your local computer, please update ```hostname``` in ```settings.py``` to the hostname of your local computer.
 
 #### Carrying out the simulations
 Running the ```main.py``` file will run the simulations. First, the code will run ```field_data_processing()```, which will check if the standardized field data files exist and print some basic statistical properties of the field data. If these files are not present, it will create these standardized files. Unless you are in possession of the original field data files, please comment out ```field_data_processing()``` prior to running any simulations.
