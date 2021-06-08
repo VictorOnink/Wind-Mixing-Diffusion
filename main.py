@@ -50,15 +50,15 @@ def field_data_processing():
                 visualization.field_data_figure_names(wind_sort=False, norm_depth=True, close_up=(0, -10))):
             visualization.plot_field_data_overview(wind_sort=False, norm_depth=True, close_up=(0, -10))
         # Determining correlations for field-measured concentrations and depth
-        analysis.correlation_depth_concentration()
-        analysis.range_MLD_values()
+        analysis.correlation_depth_concentration(conduct=False)
+        analysis.range_MLD_values(conduct=False)
 
 
 def plotting():
     if settings.server is 'laptop':
         # visualization.sanity_check(wind, rise, diffusion_type=diffusion, boundary=boundary, alpha_list=alpha)
         # Just plotting the diffusion profiles over various wind conditions
-        visualization.just_diffusion_profile(w_10_list=[0.85, 2.4, 4.35, 6.65, 9.3])
+        # visualization.just_diffusion_profile(w_10_list=[0.85, 2.4, 4.35, 6.65, 9.3])
 
         # Plotting the profiles with different boundary conditions
         # visualization.boundary_condition_comparison(w_rise_list=[-0.003], alpha_list=alpha, close_up=(0, -10),
@@ -79,9 +79,9 @@ def plotting():
         # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
         #                                                selection='w_10', single_select=2, wind_sort=True,
         #                                                close_up=(0, -20), diffusion_type='SWB', boundary='all')
-        # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
-        #                                                selection='w_10', single_select=2, wind_sort=True,
-        #                                                close_up=(0, -20), diffusion_type='all', boundary='Ceiling')
+        visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
+                                                       selection='w_10', single_select=2, wind_sort=True,
+                                                       close_up=(0, -20), diffusion_type='all', boundary='Ceiling')
         # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
         #                                                selection='w_10', single_select=2, wind_sort=True,
         #                                                close_up=(0, -5), diffusion_type='all', boundary='Ceiling')
@@ -128,10 +128,10 @@ def plotting():
         # visualization.diffusion_markov_comparison(w_rise_list=[-0.003], single_select=0, close_up=(0, -25))
 
         # Creating a figure to compare the RMSE values for the Markov-0 runs
-        # visualization.markov_0_RMSE_comparison()
+        visualization.markov_0_RMSE_comparison()
 
         # Creating a similar figure to compare the RMSE values for the Markov-0 runs
-        # visualization.markov_1_RMSE_comparison()
+        visualization.markov_1_RMSE_comparison()
 
         # Creating a figure to compare the RMSE values for the Eulerian runs
         # visualization.eulerian_RMSE_comparison()
@@ -168,8 +168,8 @@ if __name__ == '__main__':
         for rise in w_rise:
             for alpha_val in alpha:
                 parcels_simulations(wind=wind, rise=rise, alpha=alpha_val)
-    analysis.timestep_dependent_RMSE(conduct=True, diffusion_type='SWB')
-    analysis.timestep_dependent_RMSE(conduct=True, diffusion_type='KPP')
+    analysis.timestep_dependent_RMSE(conduct=False, diffusion_type='SWB')
+    analysis.timestep_dependent_RMSE(conduct=False, diffusion_type='KPP')
     """
     Visualization of simulations
     """
