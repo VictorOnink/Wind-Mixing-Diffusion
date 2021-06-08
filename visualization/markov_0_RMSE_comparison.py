@@ -71,4 +71,4 @@ def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
 
 
 def label_color(rise):
-    return r'$w_r$ = {}'.format(np.abs(rise)) + ' m s$^{-1}$'
+    return r'$w_{rise}$' + ' = {}'.format(np.abs(rise)) + ' m s$^{-1}$'
