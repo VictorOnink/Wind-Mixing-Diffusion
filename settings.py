@@ -3,6 +3,7 @@ import os
 
 server = 'local_machine'
 machine_home_directory = os.path.expanduser('~')
+
 # directory for the output files of the parcels simulations
 root_direc = {'local_machine': machine_home_directory + '/Desktop/Bern Projects/Wind Mixing/'}
 output_dir = root_direc[server] + 'parcels_output/'
