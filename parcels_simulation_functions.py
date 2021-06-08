@@ -11,17 +11,24 @@ import math
 import numpy as np
 import settings
 import utils
-import sys
 
 
-def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha, boundary='Mixed'):
+def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixed'):
     """
     General function that runs a parcels simulation for the given parameters
+    :param w_10: wind speed
+    :param w_rise: particle rise velocity
+    :param diffusion_type: the type of diffusion profile, either KPP or SWB
+    :param alpha: the alpha memory term, which only plays a role if we are running a M-1 simulation. Otherwise it does
+                  get used
+    :param boundary: Setting the boundary condition. If the boundary string contains "Markov", then we are running a
+                     M-1 process
+    :return:
     """
     # Create the fieldset
     fieldset = create_fieldset(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary, alpha=alpha)
 
-    # The particle size that corresponds to the rise velocity
+    # The particle size that corresponds to the rise velocity, according to Enders et al. (2015)
     utils.determine_particle_size(w_rise)
 
     # Set the random seed
@@ -44,12 +51,21 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha, boundary='Mixed'
 
 
 def create_pset(fieldset, boundary):
-    xy = 0.5  # position in lon and lat, which is at the center of the domain
+    """
+    creating the particle set, depending on whether it is a M-0 or M-1 simulation.
+    :param fieldset: the fieldset object
+    :param boundary: the string setting the boundary condition
+    :return: the ParticleSet object
+    """
+    # position in lon and lat, which is at the center of the domain and which doesn't play a role in the simulation
+    xy = 0.5
+    # The particleset for a M-1 simulation
     if 'Markov' in boundary:
         pclass = Markov_1_Particle
         # Creating the particle set
         pset = ParticleSet(fieldset=fieldset, pclass=pclass, lon=[xy] * settings.p_number, lat=[xy] * settings.p_number,
                            depth=[settings.p_start_depth] * settings.p_number, w_p=[0.0] * settings.p_number)
+    # The particle set for a M-0 simulation
     else:
         pclass = Markov_0_Particle
         # Creating the particle set
@@ -69,14 +85,15 @@ def create_kernel(pset, boundary):
 
 class Markov_0_Particle(JITParticle):
     """
-    Compute the potential new particle depth, to which the boundary conditions are applied in order to
+    For a M-0 simulation, we only need to add the potential depth of the particle as variable, which is the depth of the
+    particle before we apply the boundary condition
     """
     potential = Variable('potential', initial=0, dtype=np.float32, to_write=False)
 
 
 class Markov_1_Particle(JITParticle):
     """
-    If using Markov-1 diffusion, we need to keep track of the w_total (w' + w_rise) term (Koszalka et al., 2013)
+    With a M-1 simulation, we also need to keep track of the perturbation velocity in addition to the potential depth.
     """
     to_write = False
     w_p = Variable('w_p', initial=attrgetter('w_p'), dtype=np.float32, to_write=to_write)
@@ -90,12 +107,15 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha):
     # Creating the lon and lat grids
     lon = np.linspace(0, 1, num=2)
     lat = np.linspace(0, 1, num=2)
+    # Setting the depth domain
     max_depth = settings.max_depth
     depth = np.linspace(0, max_depth, num=settings.depth_levels)
+    # The initial time is just 0
     time = np.array([0])
     Time, Depth, Lon, Lat = np.meshgrid(time, depth, lon, lat)
 
-    # Creating the velocity fields and adding those to the field sets
+    # Creating the UV velocity fields and adding those to the field sets. These are all set at 0 since they don't play
+    # a role in the simulation and are only included to prevent error messages from parcels
     UV = np.zeros(Lon.shape, dtype=np.float32).reshape(len(time), len(depth), len(lat), len(lon))
     Depth = Depth.reshape(len(time), len(depth), len(lat), len(lon))
     U = Field('U', data=UV, depth=depth, lon=lon, lat=lat)
@@ -113,14 +133,16 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha):
 
     # Add a constant for the vertical rise velocity
     fieldset.add_constant(name='wrise', value=w_rise)
-    # Add a constant for the maximum depth,
+    # Add a constant for the maximum depth of the vertical domain
     fieldset.add_constant(name='max_depth', value=max_depth)
     # Define the random mixing depth for the mixing boundary condition
     if 'Mixed' in boundary:
         fieldset.add_constant(name='mix_depth', value=utils.determine_mixed_layer(w_10, w_rise, diffusion_type))
+    # Define the max and min integration timestep values for the reduce_dt boundary condition
     if 'Reduce_dt' in boundary:
         fieldset.add_constant(name='dt_max', value=settings.dt_int.seconds)
         fieldset.add_constant(name='dt_min', value=settings.dt_int.seconds / 2 ** 2)
+    # If the simulation is a M-1 simulation, defining the alpha value
     if 'Markov' in boundary:
         fieldset.add_constant(name='alpha', value=alpha)
 
@@ -137,7 +159,7 @@ Calculating the vertical transport due to stochastic transport
 def markov_0_potential_position(particle, fieldset, time):
     """
     Here we only calculate the potential particle position following the Markov-0 approach as described by Ross &
-    Sharples (2004), so before we look at any boundary condition!!!
+    Sharples (2004), so before we look at any boundary condition
     """
     # Deterministic transport due to gradient in Kz
     dK = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
@@ -146,7 +168,6 @@ def markov_0_potential_position(particle, fieldset, time):
     # The wiener increment, and then the random component
     R = math.sqrt(math.fabs(particle.dt) * 3)
     dW = ParcelsRandom.uniform(-R, R)
-    # Kz = fieldset.K_z[time, particle.depth + 0.5 * dK * particle.dt, particle.lat, particle.lon]
     Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
     d_random = math.sqrt(2 * Kz) * dW
 
@@ -158,6 +179,10 @@ def markov_0_potential_position(particle, fieldset, time):
 
 
 def markov_1_potential_position(particle, fieldset, time):
+    """
+    This calculates the potential particle position following the M-1 approach outlined by equation 3 from Mofakham &
+    Ahmadi (2020)
+    """
     # Getting the rise (w_r) and perturbation (w_p) velocities
     w_P, w_r = particle.w_p, fieldset.wrise
 
@@ -173,18 +198,16 @@ def markov_1_potential_position(particle, fieldset, time):
     Kz = fieldset.K_z[time, particle.depth, particle.lat, particle.lon]
     dKz = fieldset.dK_z[time, particle.depth, particle.lat, particle.lon]
 
-    # Now, the variance of the turbulent displacements from K_z. For dt < T_l, Kz ~= sig^2 dt, else Kz ~= sig^2 T_l. We
-    # add 1e-20 to sig2 to prevent numerical issues when Kz -> 0
-    alp = fieldset.alpha
+    # Now, the variance of the turbulent displacements from K_z. For dt < T_l, Kz ~= sig^2 dt, else Kz ~= sig^2 T_l.
     sig2 = Kz / dt
     dsig2 = dKz / dt
 
     # The change in particle velocity based on sig2
-    d_random = math.sqrt(2 * (1 - alp) * sig2 / dt) * dWz
+    d_random = math.sqrt(2 * (1 - fieldset.alpha) * sig2 / dt) * dWz
     d_gradient = dsig2 * dt
 
     # The particle perturbation velocity at time t + 1
-    particle.w_p = alp * particle.w_p + d_random + d_gradient
+    particle.w_p = fieldset.alpha * particle.w_p + d_random + d_gradient
 
 
 
@@ -197,7 +220,8 @@ Applying the various boundary conditions
 
 def ceiling_boundary_condition(particle, fieldset, time):
     """
-    Reflecting boundary conditions at both the ocean surface and at the bottom of the model domain (z = fieldset.max_depth)
+    Reflecting boundary conditions at the bottom of the model domain (z = fieldset.max_depth), while if a particle
+    crosses the surface boundary layer, the particle depth is set at z=0.
     """
     if particle.potential > 0:
         if particle.potential > fieldset.max_depth:
@@ -254,7 +278,7 @@ def mixed_layer_boundary_condition(particle, fieldset, time):
     """
     Following the approach of Ross & Sharples, there is a mixed layer at the surface boundary where it is assumed all
     particles are distributed homogenously, where the depth of this layer is dependent on the maximum possible
-    displacement. For the bottom boundary, we apply a reflecting boundary condition
+    displacement. For the bottom boundary, we apply a reflecting boundary condition.
     """
     if particle.potential < fieldset.mix_depth:
         particle.depth = ParcelsRandom.uniform(0, 1.) * fieldset.mix_depth
