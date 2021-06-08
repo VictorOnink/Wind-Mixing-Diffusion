@@ -29,7 +29,7 @@ This code was written by Victor Onink, with [Charlotte Laufkoetter](https://gith
 
 To model stochastic particle transport, we consider two stochastic transport formulations:
 - Markov - 0 (M-0): In this formulation, diffusion is implemented as a random particle displacement, and total stochastic transport is determined by this random walk together with the particle rise velocity. We use the M-0 formulation described by [Grawe et al. (2012)](https://doi.org/10.1007/s10236-012-0523-y).
-- Markov - 1 (M-1): In this formulation, a degree of autocorrelation set by parameter $\alpha$ is assumed in the particle velocity perturbations, and the total stochastic transport is determined by the turbulent velocity perturbation and the particle rise velocity. We follow the M-1 formulation described by [Mofakham & Ahmadi (2020)](https://doi.org/10.1016/j.ijmultiphaseflow.2019.103157)
+- Markov - 1 (M-1): In this formulation, a degree of autocorrelation set by parameter alpha is assumed in the particle velocity perturbations, and the total stochastic transport is determined by the turbulent velocity perturbation and the particle rise velocity. We follow the M-1 formulation described by [Mofakham & Ahmadi (2020)](https://doi.org/10.1016/j.ijmultiphaseflow.2019.103157)
 In both cases, the stochastic transport is discretized using an Euler-Maruyama formulation [(Maruyama, 1955)](https://doi.org/10.1007/BF02846028)
 
 ### Vertical diffusion profile
