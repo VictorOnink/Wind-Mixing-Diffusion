@@ -112,26 +112,27 @@ def timestep_dependent_RMSE(conduct: bool, diffusion_type: str):
     :param diffusion_type:
     :return:
     """
-    diffusion_dict = {'KPP': 'KPP', "Kukulka": 'SWB'}
-    output_name = settings.data_dir + '{}_M0_RMSE_timestep.xlsx'.format(diffusion_dict[diffusion_type])
-    if conduct is True and not utils.check_file_exist(output_name):
-        w_10_list = [0.85, 2.4, 4.35, 6.65, 9.3]
-        w_rise_list = [-0.03, -0.003, -0.0003]
-        dt_list = [30, 15, 1]
+    if conduct:
+        diffusion_dict = {'KPP': 'KPP', "SWB": 'SWB'}
+        output_name = settings.data_dir + '{}_M0_RMSE_timestep.xlsx'.format(diffusion_dict[diffusion_type])
+        if not utils.check_file_exist(output_name):
+            w_10_list = [0.85, 2.4, 4.35, 6.65, 9.3]
+            w_rise_list = [-0.03, -0.003, -0.0003]
+            dt_list = [30, 15, 1]
 
-        # Creating a pandas dataframe
-        core_dataframe = pd.DataFrame(index=w_10_list, columns=w_rise_list)
-        RMSE_dict = {1: deepcopy(core_dataframe), 15: deepcopy(core_dataframe), 30: deepcopy(core_dataframe)}
-        for dt in dt_list:
-            for w_10 in w_10_list:
-                for w_rise in w_rise_list:
-                    RMSE_dict[dt][w_rise][w_10] = reference_RMSE_difference(w_rise, w_10, dt, diffusion_type)
+            # Creating a pandas dataframe
+            core_dataframe = pd.DataFrame(index=w_10_list, columns=w_rise_list)
+            RMSE_dict = {1: deepcopy(core_dataframe), 15: deepcopy(core_dataframe), 30: deepcopy(core_dataframe)}
+            for dt in dt_list:
+                for w_10 in w_10_list:
+                    for w_rise in w_rise_list:
+                        RMSE_dict[dt][w_rise][w_10] = reference_RMSE_difference(w_rise, w_10, dt, diffusion_type)
 
-        # Saving everything to the output excel file
-        writer = pd.ExcelWriter(output_name)
-        for sheet in RMSE_dict.keys():
-            RMSE_dict[sheet].to_excel(writer, sheet_name='dt={}'.format(sheet))
-        writer.save()
+            # Saving everything to the output excel file
+            writer = pd.ExcelWriter(output_name)
+            for sheet in RMSE_dict.keys():
+                RMSE_dict[sheet].to_excel(writer, sheet_name='dt={}'.format(sheet))
+            writer.save()
 
 
 def reference_RMSE_difference(w_rise, w_10, dt, diffusion_type, boundary='Reflect'):
