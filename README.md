@@ -97,16 +97,12 @@ The variable ```diffusion``` sets the diffusion profile that will be used in the
 
 A number of run parameters (e.g. integration and model output timesteps, physical constants, particle densities, the MLD) are defined in the ```settings.py``` file. These parameters can not be changed from the ```main.py``` file. 
 
-**Important**: Prior to carrying out any simulation on your local computer, please update ```hostname``` in ```settings.py``` to the hostname of your local computer.
+**Important**: Prior to carrying out any simulation on your local computer, please update the path ```root_direc``` in ```settings.py``` to reflect where all the codes are running on your local machine.
 
 #### Carrying out the simulations
 Running the ```main.py``` file will run the simulations. First, the code will run ```field_data_processing()```, which will check if the standardized field data files exist and print some basic statistical properties of the field data. If these files are not present, it will create these standardized files. Unless you are in possession of the original field data files, please comment out ```field_data_processing()``` prior to running any simulations.
 
-Next, the function ```ubelix_submission.ubelix_synchronization(update=False)``` uses ```rsync``` to update the files on the laptop of the user with any potential output files on the [Ubelix HPC cluster](https://hpc-unibe-ch.github.io/) from the Universitaet Bern. Unless one has their own Ubelix account, please keep ```update=False``` so that the function doesn't run. Otherwise, adapt ```ubelix_submission.py``` to work on your own computer.
-
 Next, for all the wind, rise velocity and alpha values in ```w_10```, ```w_rise``` and ```alpha```, the function ```parcels_simulations(wind=wind, rise=rise, alpha=alpha_val)``` is called. Within ```parcels_simulations()```, if one wishes to overwrite any prior model output that exists for the same set of run parameters, set ```conduct = True``` in ```utils.remove_file(conduct=True, file_name=concentration_file)```. Next, if an output file doesn't already exist the parcels simulation for the given parameters will be carried out, and the parcels output will be converted to a non-normalized concentration profile by ```analysis.depth_concentration()```. Once the concentration profile is calculated, we delete the original parcels output to save storage, but if you wish to keep the original parcels file for further analysis set ```remove=False```. 
-
-**Note**: this procedure assumes that the simulations are carried out on a local computer, and not the Ubelix cluster. On the Ubelix cluster, the overall steps are the same, but the simulations are submitted as individual jobs using SLURM with the function ```ubelix_submission.ubelix_submission(diffusion, boundary, wind, rise, alpha, submission='parcels')```.
 
 Finally, the function ```plotting()``` calls all plotting functions that are set within ```plotting()```. The visualization functions are all contained within the ```visualization``` directory, and a brief explanation of each plotting function is given either within the ```plotting()``` function or otherwise in the function documentation of the respective visualization functions.
 
@@ -115,9 +111,7 @@ Finally, the function ```plotting()``` calls all plotting functions that are set
 - ```main.py```: This is the main file used to define and run the simulations
 - ```settings.py```: This is a file used to set a number of constants, dictionaries and directory paths that are used throughout the functions in the directory.
 - ```parcels_simulation_functions.py```: This file contains all the functions to run the parcels simulations.
-- ```eulerian_simulation_functions.py```: This file contains functions to run Eulerian model simulations. These were ultimately not used in the paper.
 - ```field_data.py```: This contains all the functions to convert the original field data files into one standardized format.
-- ```ubelix_submission.py```: This contains functions used to run the parcels simulations on the Ubelix server.
 - ```analysis```: This directory contains all the analysis functions, split into three files:
   - ```function_concentration.py```: function for converting the parcels model output to concentration profiles.
   - ```function_RMSE.py```: all analysis functions related to calculating RMSE values between field data and concentration profiles
