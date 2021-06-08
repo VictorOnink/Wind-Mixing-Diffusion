@@ -7,7 +7,7 @@ import visualization.utils_visualization
 
 
 def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', fig_size=(16, 8),
-                             ax_label_size=16, legend_size=10):
+                             ax_label_size=16, legend_size=11):
     """
     A figure showing the RMSE of M-0 and M-1 simulations relative to the field data for the various wind conditions
     :param x_label: x axis label
@@ -107,4 +107,4 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
 
 def label_marker(rise):
     """ Setting the figure label based on the rise velocity"""
-    return r'$w_r$ = {}'.format(np.abs(rise)) + ' m s$^{-1}$'
+    return r'$w_{rise}$' + ' = {}'.format(np.abs(rise)) + ' m s$^{-1}$'
