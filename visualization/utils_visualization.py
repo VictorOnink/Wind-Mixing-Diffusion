@@ -256,10 +256,8 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
     :return: dictionary containing lists with the relevant outputs
     """
     output_dic = {'concentration_list': [],         # List containing the concentration profiles
-                  'parameter_concentrations': [],   # List containing tuples with the w-10 and w_rise values for each
+                  'parameter_concentrations': []}   # List containing tuples with the w-10 and w_rise values for each
                                                     # profile in 'concentration_list'
-                  'parameter_SWB': []}              # Same really as 'parameter_concentrations', relic from earlier code
-                                                    # but this parameter is still called at times so we leave it for now
 
     # Using the selection parameter to adapt w_rise_list or w_10_list to contain just one value. selection == 'all' will
     # just return all simulations for a particular diffusion_type and boundary
@@ -294,7 +292,6 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
             output_dic['depth_bins'] = input_dir['bin_edges'][:-1] * -1
             # Saving the physical parameters of the concentration distribution we have just loaded
             output_dic['parameter_concentrations'].append((w_10, w_rise))
-            output_dic['parameter_SWB'].append((w_10, w_rise))
     return output_dic
 
 
