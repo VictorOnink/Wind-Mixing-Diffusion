@@ -1,16 +1,10 @@
 from datetime import timedelta
-import socket
+import os
 
-# Checking which computer this is all running on
-hostname = 'Victors-MBP.home'
-if socket.gethostname() == hostname:
-    server = 'laptop'
-else:
-    server = 'ubelix'
-
+server = 'local_machine'
+machine_home_directory = os.path.expanduser('~')
 # directory for the output files of the parcels simulations
-root_direc = {'laptop': '/Users/victoronink/Desktop/Bern Projects/Wind Mixing/',
-              'ubelix': r'/storage/homefs/vo18e689/Wind-Mixing/'}
+root_direc = {'local_machine': machine_home_directory + '/Desktop/Bern Projects/Wind Mixing/'}
 output_dir = root_direc[server] + 'parcels_output/'
 eulout_dir = root_direc[server] + 'eulerian_output/'
 conc_dir = root_direc[server] + 'concentration_output/'

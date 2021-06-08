@@ -22,20 +22,6 @@ def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=s
     return name + '.nc'
 
 
-def get_eulerian_output_name(w_10, w_rise, diffusion_type, mld=settings.MLD):
-    """
-    Setting the file name of the Eulerian model output
-    :param w_10: 10m wind speed
-    :param w_rise: rise velocity
-    :param diffusion_type: KPP or SWB diffusion
-    :param mld: mixed layer depth
-    :return:
-    """
-    str_format = diffusion_type, w_rise, w_10, mld
-    name = settings.eulout_dir + 'eulerian_{}_w_r={}_w_10={}_MLD={}'.format(*str_format)
-    return name
-
-
 def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=None, mld=settings.MLD,
                                   dt=settings.dt_int.seconds):
     """
