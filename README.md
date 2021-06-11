@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4912693.svg)](https://doi.org/10.5281/zenodo.4912693)
+
 # *Wind Mixing Diffusion* Repository
 Contents:
 - [Overview](#overview)
