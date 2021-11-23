@@ -59,7 +59,7 @@ def determine_surface_roughness(w_10):
     # Kukulka et al. (2012)
     beta = settings.wave_age * u_s / w_10
     # Since beta > 0.4 (corresponding to relative mature wind waves), we have from eq. 36 that:
-    z_0 = 3.5153e-5 * beta ** (-0.42) * w_10 **2 / settings.g
+    z_0 = 3.5153e-5 * beta ** (-0.42) * w_10 ** 2 / settings.g
     return z_0
 
 

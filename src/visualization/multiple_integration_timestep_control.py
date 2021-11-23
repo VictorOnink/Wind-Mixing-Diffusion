@@ -1,8 +1,8 @@
 import settings
 import matplotlib.pyplot as plt
-import utils
 from visualization import utils_visualization as utils_v
 import numpy as np
+import utils
 
 
 def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='Depth (m)', alpha=0.3,
@@ -47,7 +47,7 @@ def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='D
                              all_x_labels=True)
 
     # Getting the wind speed corresponding to the Beaufort scale
-    mean_wind = np.mean(utils.utils_physics.beaufort_limits()[beaufort])
+    mean_wind = np.mean(utils.beaufort_limits()[beaufort])
 
     # Setting the y limits in order of decreasing rise velocities
     ylim = [(-2, 0.1), (-15, 0.1), (-20, 0.1)]
@@ -92,7 +92,7 @@ def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='D
     diff_dict = {'Ceiling': 'M0-Ceiling', 'Ceiling_Markov': 'M1_{}-Ceiling'.format(alpha),
                  'Reflect': 'M0-Reflect', 'Reflect_Markov': 'M1_{}-Reflect'.format(alpha)}
     plt.savefig(settings.figure_dir + 'Bft_{}_{}_dt_int_check_mld={}'.format(beaufort, diff_dict[boundary],
-                                                                                settings.MLD) + '.png',
+                                                                             settings.MLD) + '.png',
                 bbox_inches='tight', dpi=600)
 
 

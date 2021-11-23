@@ -1,7 +1,5 @@
 import settings
 import matplotlib.pyplot as plt
-import utils
-import visualization.utils_visualization
 from visualization import utils_visualization as utils_v
 
 
@@ -43,13 +41,14 @@ def timestep_comparison(w_10_list, w_rise_list, alpha_list, selection='w_10', cl
         for counter in range(0, len(profile_dict['concentration_list']), interval):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                     label=label_time_step(counter, interval),
-                    linestyle='-', color=visualization.utils_visualization.return_color(counter))
+                    linestyle='-', color=utils_v.return_color(counter))
+
     # Plotting the distribution according to the KPP parametrization
     if diffusion_type is 'KPP':
         for counter in range(0, len(profile_dict['concentration_list']), interval):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                     label=label_time_step(counter, interval),
-                    linestyle='-', color=visualization.utils_visualization.return_color(counter))
+                    linestyle='-', color=utils_v.return_color(counter))
 
     lines, labels = ax.get_legend_handles_labels()
 

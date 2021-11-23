@@ -1,7 +1,6 @@
-import settings
 import matplotlib.pyplot as plt
 import numpy as np
-import analysis
+import analysis, settings
 
 
 def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', fig_size=(8, 8),

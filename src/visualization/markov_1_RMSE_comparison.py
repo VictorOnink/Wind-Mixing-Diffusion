@@ -1,9 +1,7 @@
-import settings
 import matplotlib.pyplot as plt
-import utils
 import numpy as np
-import analysis
-import visualization.utils_visualization
+import analysis, settings
+from visualization import utils_visualization as utils_v
 
 
 def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', fig_size=(16, 8),
@@ -31,14 +29,14 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Ceiling', alpha=0.0, output=True)
-            plot_tuple = RMSE, index_w10 + 1, marker_type[rise], visualization.utils_visualization.return_color(0)
+            plot_tuple = RMSE, index_w10 + 1, marker_type[rise], utils_v.return_color(0)
             point_list_KPP.append(plot_tuple)
     # Then for the M-1 simulations
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             for index_a, a in enumerate(alpha):
                 RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Ceiling_Markov', alpha=a, output=True)
-                plot_tuple = RMSE, index_w10 + 1 + rise_offset[rise], marker_type[rise], visualization.utils_visualization.return_color(index_a + 1)
+                plot_tuple = RMSE, index_w10 + 1 + rise_offset[rise], marker_type[rise], utils_v.return_color(index_a + 1)
                 point_list_KPP.append(plot_tuple)
 
     # Looping through the SWB simulations, and retrieving the RMSE values for them, first for the M-0 simulations
@@ -46,14 +44,14 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             RMSE = analysis.determine_RMSE(wind, rise, 'SWB', 'Ceiling', alpha=0.0, output=True)
-            plot_tuple = RMSE, index_w10 + 1, marker_type[rise], visualization.utils_visualization.return_color(0)
+            plot_tuple = RMSE, index_w10 + 1, marker_type[rise], utils_v.return_color(0)
             point_list_Kukulka.append(plot_tuple)
     # And then for M-1 simulations
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             for index_a, a in enumerate(alpha):
                 RMSE = analysis.determine_RMSE(wind, rise, 'SWB', 'Ceiling_Markov', alpha=a, output=True)
-                plot_tuple = RMSE, index_w10 + 1 + rise_offset[rise], marker_type[rise], visualization.utils_visualization.return_color(index_a + 1)
+                plot_tuple = RMSE, index_w10 + 1 + rise_offset[rise], marker_type[rise], utils_v.return_color(index_a + 1)
                 point_list_Kukulka.append(plot_tuple)
 
     # Creating the axis
@@ -96,8 +94,9 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     marker = [plt.plot([], [], c='k', markersize=10, marker=marker_type[rise], label=label_marker(rise), linestyle='')[0] for rise in
               w_r]
     # Showing the color according to M-0/M-1 with alpha values
-    markov0 = [plt.plot([], [], c=visualization.utils_visualization.return_color(0), markersize=10, marker='o', label='M0', linestyle='')[0]]
-    markov1 = [plt.plot([], [], c=visualization.utils_visualization.return_color(ind + 1), markersize=10, marker='o', label=r'M1 - $\alpha = $' + '{}'.format(a), linestyle='')[0] for ind, a in
+    markov0 = [plt.plot([], [], c=utils_v.return_color(0), markersize=10, marker='o', label='M0', linestyle='')[0]]
+    markov1 = [plt.plot([], [], c=utils_v.return_color(ind + 1), markersize=10, marker='o',
+                        label=r'M1 - $\alpha = $' + '{}'.format(a), linestyle='')[0] for ind, a in
                enumerate(alpha)]
     # Adding the legend
     ax2.legend(handles=marker + markov0 + markov1, fontsize=legend_size, loc='upper right')

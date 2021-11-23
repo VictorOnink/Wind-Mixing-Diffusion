@@ -1,9 +1,4 @@
-import utils
-import visualization.plot_field_data_overview
-import parcels_simulation_functions
-import analysis
-import visualization
-import field_data
+import analysis, utils, visualization, field_data, parcels_simulation_functions
 from progressbar import ProgressBar
 
 w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]

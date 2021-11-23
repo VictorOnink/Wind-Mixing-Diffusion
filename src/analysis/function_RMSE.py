@@ -1,5 +1,4 @@
-import settings
-import utils
+import utils, settings
 import numpy as np
 import pandas as pd
 from copy import deepcopy
@@ -22,7 +21,7 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, exclude=None, 
         # Loading the concentration profi   le and the depths, and normalizing by the total number of particles in the
         # simulation
         conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
-                                   alpha=alpha))
+                                                                                alpha=alpha))
         concentration = conc_dict[conc_dict['last_time_slice']]
         concentration = concentration / concentration.sum()
         concentration_depth = conc_dict['bin_edges'][:-1]

@@ -1,13 +1,12 @@
 import settings
 import matplotlib.pyplot as plt
-import visualization.utils_visualization
 from visualization import utils_visualization as utils_v
 
 
 def basic_profile_figure(w_10_list, w_rise_list, alpha_list, selection='w_10', close_up=None,
                          y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),
                          ax_label_size=16, legend_size=12, single_select=1,
-                         output_step=-1, diffusion_type='Kukulka', boundary='Mixed', diffusion_curve=True):
+                         output_step=-1, diffusion_type='SWB', boundary='Ceiling', diffusion_curve=False):
     """
     a basic plot of the concentration with respect to depth, where the runs for the given wind and rise velocities are
     plotted
@@ -44,8 +43,8 @@ def basic_profile_figure(w_10_list, w_rise_list, alpha_list, selection='w_10', c
         for counter in range(len(profile_dict['concentration_list'])):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                     label=utils_v.label_SWB(selection=selection,
-                                            parameters=profile_dict['parameter_SWB'][counter]),
-                    linestyle='-', color=visualization.utils_visualization.return_color(counter))
+                                            parameters=profile_dict['parameter_concentrations'][counter]),
+                    linestyle='-', color=utils_v.return_color(counter))
 
     # Plotting the distribution according to the KPP parametrization
     if diffusion_type is 'KPP':
@@ -54,8 +53,8 @@ def basic_profile_figure(w_10_list, w_rise_list, alpha_list, selection='w_10', c
                                                       boundary=boundary, alpha_list=alpha_list)
         for counter in range(len(profile_dict['concentration_list'])):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                    label=utils_v.label_KPP(parameters=profile_dict['parameter_SWB'][counter], selection=selection),
-                    linestyle='-', color=visualization.utils_visualization.return_color(counter))
+                    label=utils_v.label_KPP(parameters=profile_dict['parameter_concentrations'][counter], selection=selection),
+                    linestyle='-', color=utils_v.return_color(counter))
 
     # Plotting the distribution according to the artificial diffusion profile
     if diffusion_type is 'artificial':
@@ -64,8 +63,8 @@ def basic_profile_figure(w_10_list, w_rise_list, alpha_list, selection='w_10', c
                                                       boundary=boundary, alpha_list=alpha_list)
         for counter in range(len(profile_dict['concentration_list'])):
             ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                    label=utils_v.label_KPP(parameters=profile_dict['parameter_SWB'][counter], selection=selection),
-                    linestyle='-', color=visualization.utils_visualization.return_color(counter))
+                    label=utils_v.label_KPP(parameters=profile_dict['parameter_concentrations'][counter], selection=selection),
+                    linestyle='-', color=utils_v.return_color(counter))
     lines, labels = ax.get_legend_handles_labels()
 
     # Plotting the diffusion curve
@@ -78,7 +77,7 @@ def basic_profile_figure(w_10_list, w_rise_list, alpha_list, selection='w_10', c
             for counter in range(len(profile_dict['parameter_concentrations'])):
                 w_10, w_rise = profile_dict['parameter_concentrations'][counter]
                 ax2 = utils_v.diffusion_curve_axis(ax, ax_label_size, w_10, profile_dict, 'SWB',
-                                                   visualization.utils_visualization.return_color(counter))
+                                                   utils_v.return_color(counter))
                 lines2, labels2 = ax2.get_legend_handles_labels()
                 lines += lines2
                 labels += labels2

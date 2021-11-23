@@ -1,7 +1,6 @@
-import settings
 import numpy as np
 import matplotlib.pyplot as plt
-import utils
+import utils, settings
 from matplotlib.gridspec import GridSpec
 
 
@@ -48,7 +47,7 @@ def label_diffusivity_profile(w_10, diffusion_type):
     if diffusion_type == 'SWB':
         return r'SWB, u$_{10}$' + ' = {:.2f}'.format(w_10) + ' m s$^{-1}$'
     elif diffusion_type == 'KPP':
-        return r'KPP, u$_{10}$ '+'= {:.2f}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
+        return r'KPP, u$_{10}$ ' + '= {:.2f}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)
 
 
 def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1), plot_num=1, all_x_labels=False,
@@ -144,19 +143,22 @@ def label_SWB(selection, parameters):
     w_10, w_rise = parameters
     w_rise = np.abs(w_rise)
     if selection is 'w_rise':
-        return r'SWB, w$_{rise}$ '+'= {} m s'.format(w_rise) + r'$^{-1}$'
+        return r'SWB, w$_{rise}$ ' + '= {} m s'.format(w_rise) + r'$^{-1}$'
     elif selection is 'w_10':
-        return r'SWB, u$_{10}$ '+'= {} m s'.format(w_10) + r'$^{-1}$'
+        return r'SWB, u$_{10}$ ' + '= {} m s'.format(w_10) + r'$^{-1}$'
 
 
-def label_KPP(selection, parameters, mld=settings.MLD):
+def label_KPP(selection, parameters, mld=settings.MLD, with_MLD=False):
     """ Basic label for a plot showing KPP diffusion results """
     w_10, w_rise = parameters
     w_rise = np.abs(w_rise)
     if selection is 'w_rise':
-        return r'KPP, w$_{rise}$ '+'= {}'.format(w_rise) + 'm s$^{-1}$, MLD = ' + '{:.1f} m'.format(mld)
+        label = r'KPP, w$_{rise}$ ' + r'= {}'.format(w_rise) + r' m s$^{-1}$'
     elif selection is 'w_10':
-        return r'KPP, u$_{10}$ '+'= {}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{:.1f} m'.format(mld)
+        label = r'KPP, u$_{10}$ ' + r'= {}'.format(w_10) + r' m s$^{-1}$'
+    if with_MLD:
+        label += ', MLD = ' + '{:.1f} m'.format(mld)
+    return label
 
 
 def label_alpha_comparison(boundary, alpha):
@@ -255,9 +257,9 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
     :param dt: the integration timestep, with the default taken from settings.py
     :return: dictionary containing lists with the relevant outputs
     """
-    output_dic = {'concentration_list': [],         # List containing the concentration profiles
-                  'parameter_concentrations': []}   # List containing tuples with the w-10 and w_rise values for each
-                                                    # profile in 'concentration_list'
+    output_dic = {'concentration_list': [],  # List containing the concentration profiles
+                  'parameter_concentrations': []}  # List containing tuples with the w-10 and w_rise values for each
+    # profile in 'concentration_list'
 
     # Using the selection parameter to adapt w_rise_list or w_10_list to contain just one value. selection == 'all' will
     # just return all simulations for a particular diffusion_type and boundary

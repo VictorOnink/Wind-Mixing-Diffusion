@@ -1,10 +1,7 @@
-import settings
 import matplotlib.pyplot as plt
-import utils
-import analysis
+import analysis, utils, settings
 from visualization import utils_visualization as utils_v
 import numpy as np
-
 
 
 def timestep_RMSE_convergence(y_label='RMSE', x_label=r'$\Delta t$ (seconds)', fig_size=(16, 20), ax_label_size=16,
@@ -50,7 +47,7 @@ def timestep_RMSE_convergence(y_label='RMSE', x_label=r'$\Delta t$ (seconds)', f
         for count, w_rise in enumerate(w_rise_list):
             RMSE = []
             for dt in dt_list:
-                RMSE.append(analysis.reference_RMSE_difference(w_rise=w_rise,w_10=mean_wind, dt=dt,
+                RMSE.append(analysis.reference_RMSE_difference(w_rise=w_rise, w_10=mean_wind, dt=dt,
                                                                diffusion_type='KPP'))
             ax[2 * row + 1].plot(dt_list, RMSE, linestyle='-', color=utils_v.return_color(count),
                                  label=r'$w_{rise}$ = ' + '{}'.format(w_rise) + r'm s$^{-1}$')

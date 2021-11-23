@@ -1,7 +1,5 @@
-import settings
 import matplotlib.pyplot as plt
-import utils
-import utils.utils_physics
+import utils, settings
 from visualization import utils_visualization as utils_v
 import numpy as np
 
@@ -38,7 +36,7 @@ def multiple_boundary_condition_comparison(selection='w_rise', close_up=None, ou
                              all_x_labels=True)
 
     # Setting the wind speed
-    mean_wind = np.mean(utils.utils_physics.beaufort_limits()[beaufort])
+    mean_wind = np.mean(utils.beaufort_limits()[beaufort])
 
     for count, boundary in enumerate(boundary_list):
         # Plotting the distribution according to the SWB parametrization

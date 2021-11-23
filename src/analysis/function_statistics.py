@@ -1,7 +1,6 @@
-import utils
 import numpy as np
 import scipy.stats as stats
-import analysis
+import analysis, utils
 
 
 def correlation_depth_concentration(conduct=True, exclude=None, get_r=[]):

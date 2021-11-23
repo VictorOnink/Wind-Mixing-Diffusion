@@ -1,8 +1,5 @@
-import settings
 import matplotlib.pyplot as plt
-import utils
-import utils.utils_physics
-import visualization.utils_visualization
+import utils, settings
 from visualization import utils_visualization as utils_v
 import numpy as np
 
@@ -42,7 +39,7 @@ def mld_depth_influence(w_rise_list, MLD_list, alpha_list, selection='w_rise', o
     ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
 
     # Plotting the field data points
-    wind_range = utils.utils_physics.beaufort_limits()[beaufort]
+    wind_range = utils.beaufort_limits()[beaufort]
     _, _ = utils_v.add_observations(ax, norm_depth=True, alpha=alpha, wind_range=wind_range)
 
     line_style = ['-', '--', '-.']
@@ -57,7 +54,7 @@ def mld_depth_influence(w_rise_list, MLD_list, alpha_list, selection='w_rise', o
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
                         label=label_MLD_Comparison(parameters=profile_dict['parameter_SWB'][counter],
                                                    mld=mld, diffusion_type='SWB'),
-                        linestyle=line_style[counter], color=visualization.utils_visualization.return_color(count_mld))
+                        linestyle=line_style[counter], color=utils_v.return_color(count_mld))
 
         # Plotting the distribution according to the KPP parametrization
         if kpp:
@@ -69,7 +66,7 @@ def mld_depth_influence(w_rise_list, MLD_list, alpha_list, selection='w_rise', o
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
                         label=label_MLD_Comparison(parameters=profile_dict['parameter_SWB'][counter],
                                                    mld=mld, diffusion_type='KPP'),
-                        linestyle=line_style[counter], color=visualization.utils_visualization.return_color(count_mld))
+                        linestyle=line_style[counter], color=utils_v.return_color(count_mld))
     # Adding the legend
     ax.legend(fontsize=legend_size, loc='lower right')
 

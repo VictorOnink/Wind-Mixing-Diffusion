@@ -1,8 +1,5 @@
-import settings
 import matplotlib.pyplot as plt
-import utils
-import utils.utils_physics
-import visualization.utils_visualization
+import utils, settings
 from visualization import utils_visualization as utils_v
 import numpy as np
 
@@ -43,10 +40,10 @@ def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_
                              all_x_labels=True)
 
     # Setting the wind speed, and adding the field observations to the axis
-    mean_wind = np.mean(utils.utils_physics.beaufort_limits()[4])
+    mean_wind = np.mean(utils.beaufort_limits()[4])
     for axis in ax:
         data_line, data_label = utils_v.add_observations(axis, norm_depth=False, alpha=alpha,
-                                                         wind_range=utils.utils_physics.beaufort_limits()[4])
+                                                         wind_range=utils.beaufort_limits()[4])
 
     # First, plotting the KPP data:
     for count, boundary in enumerate(boundary_list):
@@ -57,7 +54,7 @@ def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_
             for counter in range(len(profile_dict['concentration_list'])):
                 ax[0].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                            label=utils_v.label_alpha_comparison(boundary=boundary, alpha=alpha_list[count]),
-                           linestyle=line_style[count], color=visualization.utils_visualization.return_color(count))
+                           linestyle=line_style[count], color=utils_v.return_color(count))
         if swb:
             profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                           output_step=output_step, diffusion_type='SWB',
@@ -65,9 +62,10 @@ def diffusion_markov_comparison(w_rise_list, selection='w_10', close_up=None, y_
             for counter in range(len(profile_dict['concentration_list'])):
                 ax[1].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                            label=utils_v.label_alpha_comparison(boundary=boundary, alpha=alpha_list[count]),
-                           linestyle=line_style[count], color=visualization.utils_visualization.return_color(count))
+                           linestyle=line_style[count], color=utils_v.return_color(count))
 
     lines, labels = ax[1].get_legend_handles_labels()
+
     # Adding the legends
     ax[0].legend(data_line, data_label, fontsize=legend_size, loc='lower right')
     ax[1].legend(lines[:-5], labels[:-5], fontsize=legend_size, loc='lower right')

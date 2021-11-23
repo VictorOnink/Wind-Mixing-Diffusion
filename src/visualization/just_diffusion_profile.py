@@ -1,7 +1,5 @@
-import settings
 import matplotlib.pyplot as plt
-import utils
-import utils.utils_physics
+import utils, settings
 from visualization import utils_visualization as utils_v
 import numpy as np
 
@@ -28,13 +26,13 @@ def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ ($10^
 
     # Plotting the diffusion profile according to the SWB approach
     for count, w_10 in enumerate(w_10_list):
-        profile = utils.utils_physics.get_vertical_diffusion_profile(w_10, depth, 'SWB')
+        profile = utils.get_vertical_diffusion_profile(w_10, depth, 'SWB')
         ax.plot(profile * 100, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)), linestyle='-',
                 label=utils_v.label_diffusivity_profile(w_10, 'SWB'))
 
     # Plotting the diffusion profile according the KPP approach
     for count, w_10 in enumerate(w_10_list):
-        profile = utils.utils_physics.get_vertical_diffusion_profile(w_10, depth, 'KPP')
+        profile = utils.get_vertical_diffusion_profile(w_10, depth, 'KPP')
         ax.plot(profile * 100, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)),
                 linestyle='--', label=utils_v.label_diffusivity_profile(w_10, 'KPP'))
 

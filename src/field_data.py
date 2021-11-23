@@ -1,5 +1,5 @@
 import utils
-import settings as SET
+import settings
 import numpy as np
 import pandas as pd
 from seabird.cnv import fCNV
@@ -36,7 +36,7 @@ def standardization_kukulka():
     # Check if the file exists
     if not utils.check_file_exist(file_name + '.pkl'):
         # Loading the data
-        data = np.genfromtxt(SET.data_dir + 'atlantic_prf.dat')
+        data = np.genfromtxt(settings.data_dir + 'atlantic_prf.dat')
         # Convert wind data from knots to m/s
         data[:, -2] *= 0.514
 
@@ -72,8 +72,8 @@ def standardization_kooi():
     if not utils.check_file_exist(file_name + '.pkl'):
         # Loading the data, first the general trawl conditions and then the specific counts for each size class in each
         # trawl
-        data_trawl = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='trawls')
-        data_plastic = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='nets')
+        data_trawl = pd.read_excel(settings.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='trawls')
+        data_plastic = pd.read_excel(settings.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='nets')
 
         # Determine the mixed layer depth
         MLD = determine_MLD(prefix)
@@ -134,7 +134,7 @@ def standardization_Pieper():
     prefix = 'Pieper'
     file_name = utils.get_data_output_name(prefix)
     if not utils.check_file_exist(file_name + '.pkl'):
-        data_bottle = pd.read_excel(SET.data_dir + '2020_PE442_MPs.xlsx')
+        data_bottle = pd.read_excel(settings.data_dir + '2020_PE442_MPs.xlsx')
 
         # Get the station indicators, sample concentrations, sample depths, and sample types
         station_sample = data_bottle['Station Number']
@@ -202,9 +202,9 @@ def standardization_Zettler():
     file_name = utils.get_data_output_name(prefix)
     if not utils.check_file_exist(file_name + '.pkl'):
         # Loading the multinet data
-        data_multi = pd.read_excel(SET.data_dir + 'PE448_multinet_data.xlsx')
+        data_multi = pd.read_excel(settings.data_dir + 'PE448_multinet_data.xlsx')
         # Loading the surface trawl data
-        data_surf = pd.read_excel(SET.data_dir + 'Sample Log-PE448b-20190121.xlsx', sheet_name='MT')
+        data_surf = pd.read_excel(settings.data_dir + 'Sample Log-PE448b-20190121.xlsx', sheet_name='MT')
 
         # Get the sample depths, counts, and volumes for the multi-net, and then the concentration (counts/volume)
         depth = data_multi.depth.dropna().reset_index(drop=True)
@@ -266,7 +266,7 @@ def standardization_Egger():
     file_name = utils.get_data_output_name(prefix)
     if not utils.check_file_exist(file_name + '.pkl'):
         # Loading the data
-        data_multi = pd.read_excel(SET.data_dir + 'Egger2020_processed.xlsx')
+        data_multi = pd.read_excel(settings.data_dir + 'Egger2020_processed.xlsx')
 
         # Create an empty dataframe to divide up the dataset according to the station
         concentrations = pd.DataFrame(columns=range(1, 6), index=range(16)).fillna(0.0)
@@ -322,7 +322,7 @@ def determine_MLD(prefix: str, station_numbers=None):
 
     if prefix is 'Kooi':
         # Loading the CTD data
-        data_ctd = pd.read_excel(SET.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='CTD')
+        data_ctd = pd.read_excel(settings.data_dir + 'Data_KooiEtAl.xlsx', sheet_name='CTD')
         # Changing the station numbering so the first station has index 0 instead of 1
         data_ctd.station -= 1
         station_numbers = np.sort(np.append(data_ctd.station.unique(), 24))
@@ -352,7 +352,7 @@ def determine_MLD(prefix: str, station_numbers=None):
         MLD = pd.DataFrame(columns=station_numbers, index=[0]).fillna(0.0)
         # Check if there is a CTD file for the station in question
         for station in station_numbers:
-            file_name = SET.data_dir + 'CTD_PE442/PE442_' + station + 'avg.cnv'
+            file_name = settings.data_dir + 'CTD_PE442/PE442_' + station + 'avg.cnv'
             if utils.check_file_exist(file_name):
                 # Load the depth and temperature data for the particular station
                 temperature = fCNV(file_name)['TEMP']
@@ -371,7 +371,7 @@ def determine_MLD(prefix: str, station_numbers=None):
     if prefix is 'Zettler':
         MLD = pd.DataFrame(columns=range(1, 4), index=[0]).fillna(0.0)
         for station in MLD.columns:
-            data_file = SET.data_dir + 'CTD_PE448/PE448_HC_avg_station_{}.cnv'.format(station)
+            data_file = settings.data_dir + 'CTD_PE448/PE448_HC_avg_station_{}.cnv'.format(station)
             if utils.check_file_exist(data_file):
                 # Load the depth and temperature data for the particular station
                 temperature = fCNV(data_file)['TEMP']
@@ -388,7 +388,7 @@ def determine_MLD(prefix: str, station_numbers=None):
     if prefix is 'Egger':
         MLD = pd.DataFrame(columns=range(1, 6), index=[0]).fillna(0.0)
         for station in MLD.columns:
-            data_file = SET.data_dir + 'CTD_EGGER/station_{}/CTD Data/NPM2_Stat-{}_Cast1.txt'.format(station, station)
+            data_file = settings.data_dir + 'CTD_EGGER/station_{}/CTD Data/NPM2_Stat-{}_Cast1.txt'.format(station, station)
             # Loading the data for the depth and temperature (C)
             data = np.genfromtxt(data_file, skip_header=4, usecols=(1, 2))
             # Determine index of the max depth, and then only use data from before that point, as we only want to use
@@ -415,9 +415,9 @@ def casino_wind(device: str, cruise: str):
     :return:
     """
     if cruise is 'PE442':
-        data = pd.read_csv(SET.data_dir + 'casino_{}.csv'.format(cruise), delimiter='\t')
+        data = pd.read_csv(settings.data_dir + 'casino_{}.csv'.format(cruise), delimiter='\t')
     elif cruise is 'PE448':
-        data = pd.read_excel(SET.data_dir + 'casino_{}.xlsx'.format(cruise))
+        data = pd.read_excel(settings.data_dir + 'casino_{}.xlsx'.format(cruise))
 
     # Now, we want the wind data for the points in time when the device in question starts it's deployment
     wind_data = data.loc[(data['Device name'] == device) &

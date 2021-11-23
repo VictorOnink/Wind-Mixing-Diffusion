@@ -1,5 +1,4 @@
-import settings
-import utils
+import utils, settings
 from netCDF4 import Dataset
 import numpy as np
 

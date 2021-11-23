@@ -1,8 +1,5 @@
-import settings
 import matplotlib.pyplot as plt
-import utils
-import utils.utils_physics
-import visualization.utils_visualization
+import utils, settings
 from visualization import utils_visualization as utils_v
 import numpy as np
 
@@ -30,7 +27,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
 
     # Plotting data points for just one set of wind conditions
     if not wind_sort:
-        wind_range = utils.utils_physics.beaufort_limits()[beaufort]
+        wind_range = src.utils.utils_physics.beaufort_limits()[beaufort]
 
         # Get the base figure axis
         ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)
@@ -38,7 +35,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
         # Plotting the field data points
         _, _ = utils_v.add_observations(ax, norm_depth=norm_depth, alpha=alpha, wind_range=wind_range)
 
-        mean_wind = np.mean(utils.utils_physics.beaufort_limits()[beaufort])
+        mean_wind = np.mean(utils.beaufort_limits()[beaufort])
         for boundary in boundary_list:
             # Plotting the distribution according to the SWB parametrization
             if swb:
@@ -49,7 +46,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
                     ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
                             label=utils_v.label_SWB(selection=selection,
                                                     parameters=profile_dict['parameter_concentrations'][counter]),
-                            linestyle='-', color=visualization.utils_visualization.return_color(counter))
+                            linestyle='-', color=utils_v.return_color(counter))
 
             # Plotting the distribution according to the KPP parametrization
             if kpp:
@@ -60,7 +57,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
                     ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
                             label=utils_v.label_KPP(selection=selection,
                                                     parameters=profile_dict['parameter_concentrations'][counter]),
-                            linestyle='--', color=visualization.utils_visualization.return_color(counter))
+                            linestyle='--', color=utils_v.return_color(counter))
         lines, labels = ax.get_legend_handles_labels()
 
         # Adding the legend
@@ -77,7 +74,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
         ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(2, 3), plot_num=plot_num,
                                  legend_axis=True)
 
-        beaufort = utils.utils_physics.beaufort_limits()
+        beaufort = utils.beaufort_limits()
         # The figures for the different wind conditions, where we only want to have this for the higher rise velocities
         w_rise_list = utils_v.rise_velocity_selector(size_class='large', w_rise_list=w_rise_list)
         for scale in range(plot_num - 1):
@@ -96,7 +93,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
                                        label=label_model_field_comparison(w_rise=w_rise, diffusion_type='SWB', boundary=boundary),
                                        linestyle=utils_v.determine_linestyle(boundary, boundary_list, kpp, swb,
                                                                              'SWB'),
-                                       color=visualization.utils_visualization.return_color(model))
+                                       color=utils_v.return_color(model))
                 if kpp:
                     profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, 'all', single_select,
                                                                   output_step=output_step, diffusion_type='KPP',
@@ -108,7 +105,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
                                        label=label_model_field_comparison(w_rise=w_rise, diffusion_type='KPP', boundary=boundary),
                                        linestyle=utils_v.determine_linestyle(boundary, boundary_list, kpp, swb,
                                                                              'KPP'),
-                                       color=visualization.utils_visualization.return_color(model))
+                                       color=utils_v.return_color(model))
             lines, labels = ax[scale].get_legend_handles_labels()
         # Now, a final plot showing just the w_r=0.00003 case
         scale = plot_num - 1

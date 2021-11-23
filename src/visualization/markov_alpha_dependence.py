@@ -1,8 +1,5 @@
-import settings
 import matplotlib.pyplot as plt
-import utils
-import utils.utils_physics
-import visualization.utils_visualization
+import utils, settings
 from visualization import utils_visualization as utils_v
 import numpy as np
 
@@ -40,8 +37,8 @@ def markov_alpha_dependence(w_rise_list, selection='w_10', close_up=None, y_labe
     line_style = ['-', '--', '--', '--', '--', '--', '--']
 
     # Loading the field data for Beaufort 4 wind conditions
-    mean_wind = np.mean(utils.utils_physics.beaufort_limits()[4])
-    _, _ = utils_v.add_observations(ax, norm_depth=False, alpha=alpha, wind_range=utils.utils_physics.beaufort_limits()[4])
+    mean_wind = np.mean(utils.beaufort_limits()[4])
+    _, _ = utils_v.add_observations(ax, norm_depth=False, alpha=alpha, wind_range=utils.beaufort_limits()[4])
 
     # Looping through all the M-0 and M-1 cases
     for count, boundary in enumerate(boundary_list):
@@ -53,7 +50,7 @@ def markov_alpha_dependence(w_rise_list, selection='w_10', close_up=None, y_labe
             for counter in range(len(profile_dict['concentration_list'])):
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                         label=utils_v.label_alpha_comparison(boundary=boundary, alpha=alpha_list[count]),
-                        linestyle=line_style[count], color=visualization.utils_visualization.return_color(count))
+                        linestyle=line_style[count], color=utils_v.return_color(count))
         # Plotting the distribution according to the KPP diffusion profile
         if kpp:
             profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
@@ -62,7 +59,7 @@ def markov_alpha_dependence(w_rise_list, selection='w_10', close_up=None, y_labe
             for counter in range(len(profile_dict['concentration_list'])):
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                         label=utils_v.label_alpha_comparison(boundary=boundary, alpha=alpha_list[count]),
-                        linestyle=line_style[count], color=visualization.utils_visualization.return_color(count))
+                        linestyle=line_style[count], color=utils_v.return_color(count))
         # Plotting the distribution according to the artificial diffusion profile
         if artificial:
             profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
@@ -71,7 +68,7 @@ def markov_alpha_dependence(w_rise_list, selection='w_10', close_up=None, y_labe
             for counter in range(len(profile_dict['concentration_list'])):
                 ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                         label=utils_v.label_alpha_comparison(boundary=boundary, alpha=alpha_list[count]),
-                        linestyle=line_style[count], color=visualization.utils_visualization.return_color(count))
+                        linestyle=line_style[count], color=utils_v.return_color(count))
 
     lines, labels = ax.get_legend_handles_labels()
     # Adding the legend

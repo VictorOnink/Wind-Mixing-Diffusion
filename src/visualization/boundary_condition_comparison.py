@@ -1,11 +1,8 @@
-import settings
 import matplotlib.pyplot as plt
-import utils
-import utils.utils_physics
-import visualization.utils_visualization
-from visualization import utils_visualization as utils_v
 import numpy as np
-
+import settings
+import utils
+from visualization import utils_visualization as utils_v
 
 def boundary_condition_comparison(w_rise_list, alpha_list, selection='w_rise', close_up=None, output_step=-1,
                                   y_label='Depth (m)', x_label=r'Normalised Plastic Counts ($n/n_0$)', fig_size=(8, 8),

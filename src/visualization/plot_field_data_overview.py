@@ -1,8 +1,5 @@
 import matplotlib.pyplot as plt
-
-import settings
-import utils
-import utils.utils_physics
+import utils, settings
 from visualization import utils_visualization as utils_v
 
 
@@ -47,7 +44,7 @@ def plot_field_data_overview(norm_depth=False, wind_sort=False, y_label='Depth (
         # Get the base figure axis
         plot_num = 6
         ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(2, 3), plot_num=plot_num)
-        beaufort = utils.utils_physics.beaufort_limits()
+        beaufort = utils.beaufort_limits()
         for scale in range(plot_num):
             line, label = utils_v.add_observations(ax[scale], norm_depth=norm_depth, wind_range=beaufort[scale + 1],
                                                    alpha=alpha)

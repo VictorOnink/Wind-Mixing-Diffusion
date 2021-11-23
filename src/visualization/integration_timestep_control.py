@@ -1,7 +1,7 @@
 import settings
 import matplotlib.pyplot as plt
-import utils
 from visualization import utils_visualization as utils_v
+import utils
 import numpy as np
 
 
@@ -43,7 +43,7 @@ def integration_timestep_control(w_rise_select, selection='w_10', close_up=None,
                              all_x_labels=True)
 
     # Getting hte mean wind for Beaufort 4
-    mean_wind = np.mean(utils.utils_physics.beaufort_limits()[4])
+    mean_wind = np.mean(utils.beaufort_limits()[4])
 
     # looping through all the timesteps we want to plot
     for count, dt in enumerate(dt_list):
