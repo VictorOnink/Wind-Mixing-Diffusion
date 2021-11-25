@@ -23,6 +23,7 @@ def data_standardization():
     standardization_Pieper()
     standardization_Zettler()
     standardization_Egger()
+    standardization_average()
 
 
 def standardization_kukulka():
@@ -308,6 +309,64 @@ def standardization_Egger():
         utils.save_obj(filename=file_name, item=output_dic)
 
 
+def standardization_average():
+    """
+    We calculate the average concentration in each depth bin and the standard deviation of all observations that fall
+    into that bin
+    :return:
+    """
+    prefix = 'average'
+    file_name = utils.get_data_output_name(prefix)
+    if not utils.check_file_exist(file_name + '.pkl'):
+        sources = ['Kooi', 'Pieper', 'Zettler', 'Kukulka', 'Egger']
+
+        # Setting the depth ranges
+        depth_ranges = [(0, 0.5)]
+        while depth_ranges[-1][-1] < 20:
+            depth_ranges.append((depth_ranges[-1][-1], depth_ranges[-1][-1] + 0.5))
+
+        # Initializing the arrays for the mean concentration and the standard deviation
+        mean_concentration, std_concentration = {}, {}
+        for wind_range in utils.beaufort_limits():
+            mean_wind = np.nanmean(wind_range)
+            mean_concentration[mean_wind] = np.zeros(shape=depth_ranges.__len__(), dtype=float)
+            std_concentration[mean_wind] = np.zeros(shape=depth_ranges.__len__(), dtype=float)
+
+        # Initializing arrays for the observation concentrations, depths and wind speeds
+        data_concentration = np.array([], dtype=float)
+        data_depth = np.array([], dtype=float)
+        data_wind = np.array([], dtype=float)
+
+        # Looping through all observations and putting them all into one big array
+        for source in sources:
+            data_dict = utils.load_obj(utils.get_data_output_name(source))
+            data_concentration = np.append(data_concentration, data_dict['concentration'])
+            data_depth = np.append(data_depth, data_dict['depth'])
+            data_wind = np.append(data_wind, data_dict['wind_speed'])
+
+        # Looping through all the wind conditions and calculating the mean and std within each depth bin
+        for wind_range in utils.beaufort_limits():
+            min_wind, max_wind = wind_range
+            mean_wind = np.nanmean(wind_range)
+            selection_wind = (data_wind < max_wind) & (data_wind > min_wind)
+            for index_range, depth_range in enumerate(depth_ranges):
+                selection = (selection_wind == True) & (data_depth <= depth_range[1]) & (data_depth > depth_range[0])
+                if max(selection) > 0:
+                    mean_concentration[mean_wind][index_range] = np.nanmean(data_concentration[selection])
+                    std_concentration[mean_wind][index_range] = np.nanmean(data_concentration[selection])
+
+        # Creating an array containing the midpoint of each depth range
+        depth_midpoint = np.array([])
+        for depth_range in depth_ranges:
+            depth_midpoint = np.append(depth_midpoint, np.nanmean(depth_range))
+
+        # Creating the final output dict
+        output_dict = {"depth": depth_midpoint, "average": mean_concentration, "std": std_concentration}
+
+        # Pickling the output dictionary
+        utils.save_obj(filename=file_name, item=output_dict)
+
+
 def determine_MLD(prefix: str, station_numbers=None):
     """
     Determine the mixing layer depth according to de Boyer Montegut et al. (2004), which calculates the MLD from CTD
@@ -388,7 +447,8 @@ def determine_MLD(prefix: str, station_numbers=None):
     if prefix is 'Egger':
         MLD = pd.DataFrame(columns=range(1, 6), index=[0]).fillna(0.0)
         for station in MLD.columns:
-            data_file = settings.data_dir + 'CTD_EGGER/station_{}/CTD Data/NPM2_Stat-{}_Cast1.txt'.format(station, station)
+            data_file = settings.data_dir + 'CTD_EGGER/station_{}/CTD Data/NPM2_Stat-{}_Cast1.txt'.format(station,
+                                                                                                          station)
             # Loading the data for the depth and temperature (C)
             data = np.genfromtxt(data_file, skip_header=4, usecols=(1, 2))
             # Determine index of the max depth, and then only use data from before that point, as we only want to use

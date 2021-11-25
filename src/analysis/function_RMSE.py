@@ -133,3 +133,57 @@ def RMSE_calculation(reference_array, candidate_array):
     to the depth levels, and returns the RMSE value
     """
     return np.sqrt(np.sum(np.square(reference_array - candidate_array)) / reference_array.size)
+
+
+def compute_modelling_efficiency(w_10, w_rise, diffusion_type, boundary, alpha, conduct=False):
+    """
+    Computing the modelling efficiency, which is defined as:
+    MEF = 1 - RMSE^2 / s^2
+    where RMSE is the root mean square error and s^2 is the variance of observations
+    RMSE = np.sqrt(np.sum(np.square(field_data - concentration[nearest_point])) / field_data.size)
+    We follow the definitions described in Stow et al. (2008)
+    https://dx.doi.org/10.1016%2Fj.jmarsys.2008.03.011
+    :param w_10:
+    :param w_rise:
+    :param diffusion_type:
+    :param boundary:
+    :param alpha:
+    :return:
+    """
+    if conduct:
+        # First, load the concentration array for the given parameters
+        conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
+                                                                                alpha=alpha))
+        concentration = conc_dict[conc_dict['last_time_slice']]
+        concentration = concentration / concentration.sum()
+        concentration_depth = (conc_dict['bin_edges'][:-1] + conc_dict['bin_edges'][1:]) / 2
+
+        # Next, load the averaged field data and the standard deviations, which we convert to variance
+        data_dict = utils.load_obj(utils.utils_filenames.get_data_output_name('average'))
+        mean_field = data_dict['average'][w_10]
+        variance = np.square(data_dict['std'][w_10])
+        data_depth = data_dict['depth']
+
+        # Sort out just the field data where we have variance > 0, since these are based on just a single data point
+        # and not as reliable
+        select = variance > 0
+        mean_field = mean_field[select]
+        variance = variance[select]
+        data_depth = data_depth[select]
+
+        # For each field data point, find the nearest model point
+        nearest_point = np.zeros(data_depth.shape, dtype=np.int32)
+        for ind, Z in enumerate(data_depth):
+            nearest_point[ind] = utils.utils_files.find_nearest_index(concentration_depth, Z)
+
+        # Next, we calculate the RMSE for each field data point with the nearest model point
+        RMSE = RMSE_calculation(concentration[nearest_point], mean_field)
+
+        # Now, calculate the MEF
+        MEF = 1 - np.divide(RMSE, variance)
+
+        str_format = diffusion_type, boundary, w_rise, w_10, alpha, RMSE
+        print('For the {} profile with {}, w_r = {}, w_10 = {}, alpha = {}, MEF = {:.3f}'.format(*str_format))
+
+
+

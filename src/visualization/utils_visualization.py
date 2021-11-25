@@ -51,7 +51,7 @@ def label_diffusivity_profile(w_10, diffusion_type):
 
 
 def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1), plot_num=1, all_x_labels=False,
-                legend_axis=False):
+                legend_axis=False, log_xscale=True):
     """
     Function creating the base figure that we use as a foundation for almost all figures
     :param fig_size: size of the figure
@@ -65,6 +65,7 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1
                          middle one
     :param legend_axis: if true, we add an additional column in which we can add the legend (in case it is too big to
                         fit within a subplot)
+    :param log_scale: if True, have the x axis be a log scale
     :return:
     """
     # Loading the axis limits
@@ -84,7 +85,8 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1
         ax_sub.tick_params(axis='both', labelsize=ax_label_size)
         # X axis = Concentration axis
         ax_sub.set_xlabel(x_label, fontsize=ax_label_size)
-        ax_sub.set_xscale('log')
+        if log_xscale:
+            ax_sub.set_xscale('log')
         ax_sub.set_xlim((xmin, xmax))
         if not legend_axis:
             return ax_sub
@@ -112,7 +114,8 @@ def base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, shape=(1, 1
                 else:
                     ax_sub.tick_params(labelleft=False)
                 # Only add x labels if we are in the bottom row, and only to the middle one unless all_x_labels == True
-                ax_sub.set_xscale('log')
+                if log_xscale:
+                    ax_sub.set_xscale('log')
                 ax_sub.set_xlim((xmin, xmax))
                 if row == (shape[0] - 1):
                     if not all_x_labels and column % 2 is 1:
@@ -297,7 +300,7 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
     return output_dic
 
 
-def add_observations(ax, sources=None, wind_range=None, norm_depth=False, alpha=0.5):
+def add_observations(ax, sources=None, wind_range=None, norm_depth=False, alpha=0.5, mean_concentrations=False):
     """
     Function that adds field data to the axis object ax
     :param ax: the axis object to which we add the field data
@@ -306,6 +309,8 @@ def add_observations(ax, sources=None, wind_range=None, norm_depth=False, alpha=
                        the field data
     :param norm_depth: if True, normalize the field data by the MLD
     :param alpha: setting the opacity of the markers
+    :param mean_concentrations: if True, plot mean field data with standard deviation instead of all separate data
+                                points
     :return:
     """
     # If no individual sources as specified, just assume I want to include all of them
@@ -318,29 +323,42 @@ def add_observations(ax, sources=None, wind_range=None, norm_depth=False, alpha=
                    'Kukulka': 'Kukulka et al. (2012)', 'Egger': 'Egger et al. (2020)'}
 
     # Adding the actual plotting
-    for count, source in enumerate(sources):
-        # Load the correct data dictionary
-        data_dict = utils.load_obj(utils.get_data_output_name(source))
-        source_conc = data_dict['concentration']
-        # Normalized depths vs un-normalized
-        if norm_depth:
-            source_depth = data_dict['depth_norm']
-        else:
-            source_depth = data_dict['depth']
-        # Selecting the data within the wind_range
+    if mean_concentrations:
+        data_dict = utils.load_obj(utils.get_data_output_name('average'))
+        concentration_all, std_all, depth = data_dict['average'], data_dict['std'], data_dict['depth']
         if wind_range is not None:
-            w_min, w_max = wind_range
-            wind = data_dict['wind_speed']
-            wind_select = (w_min < wind) & (wind <= w_max)
-            if sum(wind_select) is 0:
-                break
-            else:
-                source_depth = source_depth[wind_select]
-                source_conc = source_conc[wind_select]
+            mean_wind = np.nanmean(wind_range)
+            concentration, std = concentration_all[mean_wind], std_all[mean_wind]
+            # Making the actual plot
+            ax.errorbar(concentration, -1 * depth, fmt='ok', xerr=std, label='Average field data')
 
-        # Making the actual plot
-        ax.scatter(source_conc, -1 * source_depth, marker=data_markers[count], c='black',
-                   alpha=alpha, label=data_labels[source])
+        else:
+            print("The average plots and std values are calculated per wind condition, so you can't just sum over all.")
+
+    else:
+        for count, source in enumerate(sources):
+            # Load the correct data dictionary
+            data_dict = utils.load_obj(utils.get_data_output_name(source))
+            source_conc = data_dict['concentration']
+            # Normalized depths vs un-normalized
+            if norm_depth:
+                source_depth = data_dict['depth_norm']
+            else:
+                source_depth = data_dict['depth']
+            # Selecting the data within the wind_range
+            if wind_range is not None:
+                w_min, w_max = wind_range
+                wind = data_dict['wind_speed']
+                wind_select = (w_min < wind) & (wind <= w_max)
+                if sum(wind_select) is 0:
+                    break
+                else:
+                    source_depth = source_depth[wind_select]
+                    source_conc = source_conc[wind_select]
+
+            # Making the actual plot
+            ax.scatter(source_conc, -1 * source_depth, marker=data_markers[count], c='black',
+                       alpha=alpha, label=data_labels[source])
     # Getting the lines and labels for the data, so we can add these later to the legend of the figure
     lines, labels = ax.get_legend_handles_labels()
     return lines, labels

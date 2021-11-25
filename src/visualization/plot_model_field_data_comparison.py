@@ -27,7 +27,7 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
 
     # Plotting data points for just one set of wind conditions
     if not wind_sort:
-        wind_range = src.utils.utils_physics.beaufort_limits()[beaufort]
+        wind_range = utils.beaufort_limits()[beaufort]
 
         # Get the base figure axis
         ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size)

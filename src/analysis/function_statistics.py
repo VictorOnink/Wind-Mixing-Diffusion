@@ -69,3 +69,39 @@ def range_MLD_values(conduct = True, exclude=None):
         Max, Min, STD, Mean = np.max(MLD), np.min(MLD), np.std(MLD), np.mean(MLD)
         print('The average MLD over all field data is {:.2f} ± {:.2f}m, min = {:.2f}m, max = {:.2f}m'.format(Mean, STD, Min,
                                                                                                              Max))
+
+
+def correlation_field_model_data(w_10, w_rise, diffusion_type, boundary, alpha, conduct=False):
+    """
+    Computing the correlation between the average concentrations and the modelled distributions
+    :param w_10:
+    :param w_rise:
+    :param diffusion_type:
+    :param boundary:
+    :param alpha:
+    :return:
+    """
+    if conduct:
+        # First, load the concentration array for the given parameters
+        conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
+                                                                                alpha=alpha))
+        concentration = conc_dict[conc_dict['last_time_slice']]
+        concentration = concentration / concentration.sum()
+        concentration_depth = (conc_dict['bin_edges'][:-1] + conc_dict['bin_edges'][1:]) / 2
+
+        # Next, load the averaged field data and the standard deviations, which we convert to variance
+        data_dict = utils.load_obj(utils.utils_filenames.get_data_output_name('average'))
+        mean_field = data_dict['average'][w_10]
+        data_depth = data_dict['depth']
+
+        # For each field data point, find the nearest model point
+        nearest_point = np.zeros(data_depth.shape, dtype=np.int32)
+        for ind, Z in enumerate(data_depth):
+            nearest_point[ind] = utils.utils_files.find_nearest_index(concentration_depth, Z)
+
+        # Calculate the correlation between the field data and the model concentrations
+        r, p = stats.pearsonr(concentration[nearest_point], mean_field)
+
+        str_format = diffusion_type, boundary, w_rise, w_10, alpha, r, p
+        print('For the {} profile with {}, w_r = {}, w_10 = {}, alpha = {}, r = {:.3f} (p = {:.3f})'.format(*str_format))
+
