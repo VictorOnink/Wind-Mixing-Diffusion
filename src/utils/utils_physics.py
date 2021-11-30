@@ -63,15 +63,18 @@ def determine_surface_roughness(w_10):
     return z_0
 
 
-def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD, H_s_frac=1.):
+def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD, h_s_frac=1.,
+                                   theta=1, wave_roughness=False):
     """
     Determining the vertical diffusion profile at the given depth levels for the given diffusion type
     :param w_10: 10m wind speeds
     :param depth: the depth array (can be negative in the case of the eulerian model setup)
     :param diffusion_type: KPP or SWB or artifial (where that was only a test case)
     :param mld: the mixed layer depth
-    :param H_s_frac: Relevent for SWB diffusion, setting until what depth we have constant diffusion as a fraction of
+    :param h_s_frac: Relevent for SWB diffusion, setting until what depth we have constant diffusion as a fraction of
                      the significant wave height
+    :param theta: Langmuir circulation amplification factor
+    :param wave_roughness: if True, use the 0.1 * significant wave height as the surface roughness
     :return: array with Kz value at each depth level
     """
     depth = np.abs(depth)
@@ -80,13 +83,16 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, m
     # Getting the significant wave height
     H_s = determine_wave_height(w_10)
     # Getting the surface roughness
-    z0 = determine_surface_roughness(w_10)
+    if wave_roughness:
+        z0 = 0.1 * H_s
+    else:
+        z0 = determine_surface_roughness(w_10)
     if diffusion_type == 'SWB':
         profile = 1.5 * settings.vk * u_s * H_s * np.ones(depth.shape)
-        profile[depth > (H_s * H_s_frac)] *= ((H_s * H_s_frac) ** 1.5 * np.power(depth[depth > (H_s * H_s_frac)], -1.5))
+        profile[depth > (H_s * h_s_frac)] *= ((H_s * h_s_frac) ** 1.5 * np.power(depth[depth > (H_s * h_s_frac)], -1.5))
         profile += settings.bulk_diff
     elif diffusion_type == 'KPP':
-        alpha = (settings.vk * u_s) / settings.phi
+        alpha = (settings.vk * u_s * theta) / settings.phi
         profile = alpha * (depth + z0) * np.power(1 - depth / mld, 2)
         profile[depth > mld] = 0
         profile += settings.bulk_diff
@@ -99,15 +105,17 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, m
 
 
 def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD,
-                                            H_s_frac=1.):
+                                            h_s_frac=1., theta=1, wave_roughness=False):
     """
     Analytically determining vertical gradient of the vertical diffusion profile at the given depth levels
     :param w_10: 10m wind speeds
     :param depth: the depth array (can be negative in the case of the eulerian model setup)
     :param diffusion_type: KPP or SWB or artifial (where that was only a test case)
     :param mld: the mixed layer depth
-    :param H_s_frac: Relevent for SWB diffusion, setting until what depth we have constant diffusion as a fraction of
+    :param h_s_frac: Relevent for SWB diffusion, setting until what depth we have constant diffusion as a fraction of
                      the significant wave height
+    :param theta: Langmuir circulation amplification factor
+    :param wave_roughness: if True, use 0.1 * significant wave height as the surface roughness
     :return: array with dKz value at each depth level
     """
     depth = np.abs(depth)
@@ -116,12 +124,15 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
     # Getting the significant wave height
     H_s = determine_wave_height(w_10)
     # Getting the surface roughness
-    z0 = determine_surface_roughness(w_10)
+    if wave_roughness:
+        z0 = 0.1 * H_s
+    else:
+        z0 = determine_surface_roughness(w_10)
     if diffusion_type == 'SWB':
-        profile = -2.25 * settings.vk * u_s * H_s * (H_s * H_s_frac) ** 1.5 * np.power(depth, -2.5) * np.ones(depth.shape)
-        profile[depth < (H_s * H_s_frac)] = 0
+        profile = -2.25 * settings.vk * u_s * H_s * (H_s * h_s_frac) ** 1.5 * np.power(depth, -2.5) * np.ones(depth.shape)
+        profile[depth < (H_s * h_s_frac)] = 0
     elif diffusion_type == 'KPP':
-        alpha = (settings.vk * u_s) / (settings.phi * mld ** 2)
+        alpha = (settings.vk * u_s * theta) / (settings.phi * mld ** 2)
         profile = alpha * (mld - depth) * (mld - 3 * depth - 2 * z0)
         profile[depth > mld] = 0
     elif diffusion_type == 'artificial':
@@ -131,45 +142,48 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
     return profile
 
 
-def determine_particle_size(w_rise):
+def determine_particle_size(w_rise, conduct=False):
     """
     Determining the equivalent spherical particle size for a rise velocity based on Enders et al. (2015)
     https://doi.org/10.1016/j.marpolbul.2015.09.027
     We do this by means of a pre-calculated lookup table for PE and PP particles with varying sizes of L, as for some
     reason I don't get correct results when I go from rise velocity to size
     """
-    lookup_file = settings.data_dir + 'particle_size_rise_velocity_lookup'
-    if not check_file_exist(lookup_file):
-        # The optimization function
-        def to_optimize(w_rise):
-            if material is 'PE':
-                rho_p = settings.rho_p_pe
-            elif material is 'PP':
-                rho_p = settings.rho_p_pp
-            left = (1. - rho_p / settings.rho_w) * 8. / 3. * L * settings.g
-            Re = 2. * L * np.abs(w_rise) / settings.nu
-            right = np.square(w_rise) * (24. / Re + 5. / np.sqrt(Re) + 2. / 5.)
-            return np.abs(left - right)
-        # The range of particle sizes for which we will compute the rise velocities for
-        L_range = np.logspace(0, -5, 2000)
-        lookup_dict = {'L': L_range, 'w_rise_PP': np.zeros(L_range.shape, dtype=float),
-                       'w_rise_PE': np.zeros(L_range.shape, dtype=float)}
-        for ind, L in enumerate(L_range):
-            material = 'PP'
-            lookup_dict['w_rise_PP'][ind] = scipy.optimize.minimize_scalar(to_optimize, bounds=[-100, 0], method='bounded').x
-            material = 'PE'
-            lookup_dict['w_rise_PE'][ind] = scipy.optimize.minimize_scalar(to_optimize, bounds=[-100, 0], method='bounded').x
+    if conduct:
+        lookup_file = settings.data_dir + 'particle_size_rise_velocity_lookup'
+        if not check_file_exist(lookup_file):
+            # The optimization function
+            def to_optimize(w_rise):
+                if material is 'PE':
+                    rho_p = settings.rho_p_pe
+                elif material is 'PP':
+                    rho_p = settings.rho_p_pp
+                left = (1. - rho_p / settings.rho_w) * 8. / 3. * L * settings.g
+                Re = 2. * L * np.abs(w_rise) / settings.nu
+                right = np.square(w_rise) * (24. / Re + 5. / np.sqrt(Re) + 2. / 5.)
+                return np.abs(left - right)
+            # The range of particle sizes for which we will compute the rise velocities for
+            L_range = np.logspace(0, -5, 2000)
+            lookup_dict = {'L': L_range, 'w_rise_PP': np.zeros(L_range.shape, dtype=float),
+                           'w_rise_PE': np.zeros(L_range.shape, dtype=float)}
+            for ind, L in enumerate(L_range):
+                material = 'PP'
+                lookup_dict['w_rise_PP'][ind] = scipy.optimize.minimize_scalar(to_optimize, bounds=[-100, 0],
+                                                                               method='bounded').x
+                material = 'PE'
+                lookup_dict['w_rise_PE'][ind] = scipy.optimize.minimize_scalar(to_optimize, bounds=[-100, 0],
+                                                                               method='bounded').x
 
-        save_obj(lookup_file, lookup_dict)
-    # Loading the lookup table
-    lookup_dict = load_obj(lookup_file)
-    ind_PP = find_nearest_index(lookup_dict['w_rise_PP'], w_rise)
-    ind_PE = find_nearest_index(lookup_dict['w_rise_PE'], w_rise)
-    L_range = lookup_dict['L']
-    str_format = w_rise, 2 * L_range[ind_PP], 2 * L_range[ind_PE]
-    output = 'A rise velocity of {:.2E} is approximately a PP particle of diameter {:.2E} or a PE ' \
-             'particle of diameter {:.2E}'.format(*str_format)
-    print(output)
+            save_obj(lookup_file, lookup_dict)
+        # Loading the lookup table
+        lookup_dict = load_obj(lookup_file)
+        ind_PP = find_nearest_index(lookup_dict['w_rise_PP'], w_rise)
+        ind_PE = find_nearest_index(lookup_dict['w_rise_PE'], w_rise)
+        L_range = lookup_dict['L']
+        str_format = w_rise, 2 * L_range[ind_PP], 2 * L_range[ind_PE]
+        output = 'A rise velocity of {:.2E} is approximately a PP particle of diameter {:.2E} or a PE ' \
+                 'particle of diameter {:.2E}'.format(*str_format)
+        print(output)
 
 
 def determine_mixed_layer(w_10, w_rise, diffusion_type='KPP'):

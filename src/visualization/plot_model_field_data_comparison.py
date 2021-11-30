@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
-import utils, settings
+import utils
+import settings
 from visualization import utils_visualization as utils_v
 import numpy as np
 
 
 def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selection='w_10', output_step=-1,
-                                     single_select=1,
-                                     norm_depth=False, wind_sort=True, y_label='Depth (m)', close_up=None,
-                                     x_label=r'Normalised Concentrations', fig_size=(16, 8), ax_label_size=16,
-                                     legend_size=12, diffusion_type='SWB', boundary='Ceiling', alpha=0.3,
-                                     beaufort=4):
+                                     single_select=1, add_variability=True, norm_depth=False, wind_sort=True,
+                                     y_label='Depth (m)', close_up=None, x_label=r'Normalised Concentrations',
+                                     fig_size=(16, 8), ax_label_size=16, legend_size=12, diffusion_type='SWB',
+                                     boundary='Ceiling', alpha=0.15, beaufort=4, theta=1.0, wave_roughness=False):
     if norm_depth:
         y_label = 'Depth/MLD'
         correction = settings.MLD
@@ -41,7 +41,8 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
             if swb:
                 profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                               output_step=output_step, diffusion_type='SWB',
-                                                              boundary=boundary, alpha_list=alpha_list)
+                                                              boundary=boundary, alpha_list=alpha_list, theta=theta,
+                                                              wave_roughness=wave_roughness)
                 for counter in range(len(profile_dict['concentration_list'])):
                     ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
                             label=utils_v.label_SWB(selection=selection,
@@ -52,7 +53,8 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
             if kpp:
                 profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                               output_step=output_step, diffusion_type='KPP',
-                                                              boundary=boundary, alpha_list=alpha_list)
+                                                              boundary=boundary, alpha_list=alpha_list, theta=theta,
+                                                              wave_roughness=wave_roughness)
                 for counter in range(len(profile_dict['concentration_list'])):
                     ax.plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'] / correction,
                             label=utils_v.label_KPP(selection=selection,
@@ -79,34 +81,50 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
         w_rise_list = utils_v.rise_velocity_selector(size_class='large', w_rise_list=w_rise_list)
         for scale in range(plot_num - 1):
             _, _ = utils_v.add_observations(ax[scale], norm_depth=norm_depth, wind_range=beaufort[scale + 1],
-                                            alpha=alpha)
+                                            alpha=alpha, mean_concentrations=True)
             ax[scale].set_title(sub_titles[scale], fontsize=ax_label_size)
             for boundary in boundary_list:
                 if swb:
                     profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, 'all', single_select,
                                                                   output_step=output_step, diffusion_type='SWB',
-                                                                  boundary=boundary, alpha_list=alpha_list)
+                                                                  boundary=boundary, alpha_list=alpha_list, theta=theta,
+                                                                  wave_roughness=wave_roughness)
                     for model in range(len(w_rise_list)):
                         _, w_rise = profile_dict['parameter_concentrations'][scale + model * len(w_10_list)]
                         concentration = profile_dict['concentration_list'][scale + model * len(w_10_list)]
-                        ax[scale].plot(concentration, profile_dict['depth_bins'] / correction,
+                        depth = profile_dict['depth_bins'] / correction
+                        ax[scale].plot(concentration, depth,
                                        label=label_model_field_comparison(w_rise=w_rise, diffusion_type='SWB', boundary=boundary),
                                        linestyle=utils_v.determine_linestyle(boundary, boundary_list, kpp, swb,
                                                                              'SWB'),
                                        color=utils_v.return_color(model))
+                        if add_variability:
+                            std = profile_dict['std_list'][scale + model * len(w_10_list)]
+                            upper_limit, lower_limit = concentration + std, concentration - std
+                            ax[scale].fill_betweenx(depth, lower_limit, upper_limit, alpha=0.2,
+                                                    color=utils_v.return_color(model))
                 if kpp:
                     profile_dict = utils_v.get_concentration_list(w_10_list, w_rise_list, 'all', single_select,
                                                                   output_step=output_step, diffusion_type='KPP',
-                                                                  boundary=boundary, alpha_list=alpha_list)
+                                                                  boundary=boundary, alpha_list=alpha_list, theta=theta,
+                                                                  wave_roughness=wave_roughness)
                     for model in range(len(w_rise_list)):
                         _, w_rise = profile_dict['parameter_concentrations'][scale + model * len(w_10_list)]
                         concentration = profile_dict['concentration_list'][scale + model * len(w_10_list)]
-                        ax[scale].plot(concentration, profile_dict['depth_bins'] / correction,
+                        depth = profile_dict['depth_bins'] / correction
+                        ax[scale].plot(concentration, depth,
                                        label=label_model_field_comparison(w_rise=w_rise, diffusion_type='KPP', boundary=boundary),
                                        linestyle=utils_v.determine_linestyle(boundary, boundary_list, kpp, swb,
                                                                              'KPP'),
                                        color=utils_v.return_color(model))
+                        if add_variability:
+                            std = profile_dict['std_list'][scale + model * len(w_10_list)]
+                            upper_limit, lower_limit = concentration + std, concentration - std
+                            ax[scale].fill_betweenx(depth, lower_limit, upper_limit, alpha=0.2,
+                                                    color=utils_v.return_color(model))
+
             lines, labels = ax[scale].get_legend_handles_labels()
+
         # Now, a final plot showing just the w_r=0.00003 case
         scale = plot_num - 1
         ax[scale].set_title(sub_titles[scale], fontsize=ax_label_size)
@@ -114,27 +132,43 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
             if swb:
                 profile_dict = utils_v.get_concentration_list(w_10_list, [-0.0003], 'w_10', single_select=0,
                                                               output_step=output_step, diffusion_type='SWB',
-                                                              boundary=boundary, alpha_list=alpha_list)
+                                                              boundary=boundary, alpha_list=alpha_list, theta=theta,
+                                                              wave_roughness=wave_roughness)
                 for model in range(len(w_10_list)):
                     w_10, w_rise = profile_dict['parameter_concentrations'][model]
                     concentration = profile_dict['concentration_list'][model]
-                    ax[scale].plot(concentration, profile_dict['depth_bins'] / correction,
+                    depth = profile_dict['depth_bins'] / correction
+                    ax[scale].plot(concentration, depth,
                                    label=label_model_field_comparison(w_10=w_10, diffusion_type='SWB', boundary=boundary),
                                    linestyle=utils_v.determine_linestyle(boundary, boundary_list, kpp, swb,
                                                                          'SWB'),
                                    color=utils_v.discrete_color_from_cmap(model, len(w_10_list)))
+                    if add_variability:
+                        std = profile_dict['std_list'][model]
+                        upper_limit, lower_limit = concentration + std, concentration - std
+                        ax[scale].fill_betweenx(depth, lower_limit, upper_limit, alpha=0.2,
+                                                color=utils_v.discrete_color_from_cmap(model, len(w_10_list)))
+
             if kpp:
                 profile_dict = utils_v.get_concentration_list(w_10_list, [-0.0003], 'w_10', single_select=0,
                                                               output_step=output_step, diffusion_type='KPP',
-                                                              boundary=boundary, alpha_list=alpha_list)
+                                                              boundary=boundary, alpha_list=alpha_list, theta=theta,
+                                                              wave_roughness=wave_roughness)
                 for model in range(len(w_10_list)):
                     w_10, w_rise = profile_dict['parameter_concentrations'][model]
                     concentration = profile_dict['concentration_list'][model]
-                    ax[scale].plot(concentration, profile_dict['depth_bins'] / correction,
+                    depth = profile_dict['depth_bins'] / correction
+                    ax[scale].plot(concentration, depth,
                                    label=label_model_field_comparison(w_10=w_10, diffusion_type='KPP', boundary=boundary),
                                    linestyle=utils_v.determine_linestyle(boundary, boundary_list, kpp, swb,
                                                                          'KPP'),
                                    color=utils_v.discrete_color_from_cmap(model, len(w_10_list)))
+                    if add_variability:
+                        std = profile_dict['std_list'][model]
+                        upper_limit, lower_limit = concentration + std, concentration - std
+                        ax[scale].fill_betweenx(depth, lower_limit, upper_limit, alpha=0.2,
+                                                color=utils_v.discrete_color_from_cmap(model, len(w_10_list)))
+
             lines_w_10, labels_w_10 = ax[scale].get_legend_handles_labels()
         # Adding the legend for the split wind plots
         ax[-2].legend(lines, labels, fontsize=legend_size, loc='upper left')
@@ -145,7 +179,8 @@ def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selecti
 
     # Saving the figure
     save_name = model_field_data_comparison_name(diffusion_type, boundary, alpha_list, close_up=close_up,
-                                                 wind_sort=wind_sort, norm_depth=norm_depth, beaufort=beaufort)
+                                                 wind_sort=wind_sort, norm_depth=norm_depth, beaufort=beaufort,
+                                                 theta=theta, wave_roughness=wave_roughness)
     plt.savefig(save_name, bbox_inches='tight')
 
 
@@ -163,7 +198,7 @@ def label_model_field_comparison(w_rise=None, w_10=None, diffusion_type=None, bo
 
 
 def model_field_data_comparison_name(diffusion_type, boundary, alpha_list,close_up=None, wind_sort=False,
-                                     norm_depth=False, output_type='.png', beaufort=1):
+                                     norm_depth=False, output_type='.png', beaufort=1, theta=1, wave_roughness=False):
     diff_dict = {'SWB': 'SWB', 'KPP': 'KPP', 'all': 'SWB_KPP'}
     figure_name = settings.figure_dir + 'model_field_data_{}_{}'.format(diff_dict[diffusion_type], boundary)
     if 'Markov' in boundary:
@@ -174,7 +209,10 @@ def model_field_data_comparison_name(diffusion_type, boundary, alpha_list,close_
     if wind_sort:
         figure_name += '_wind_sort'
     elif not wind_sort:
-        figure_name += '_Bft{}_'.format(beaufort)
+        figure_name += '_Bft{}'.format(beaufort)
     if norm_depth:
         figure_name += '_normalized_depth'
+    if wave_roughness:
+        figure_name += '_wave_roughness'
+    figure_name += '_theta={}'.format(theta)
     return figure_name + '_dt={}'.format(settings.dt_int.seconds) + output_type

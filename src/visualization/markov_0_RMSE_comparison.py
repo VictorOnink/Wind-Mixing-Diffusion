@@ -4,7 +4,7 @@ import analysis, settings
 
 
 def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', fig_size=(8, 8),
-                             ax_label_size=16, legend_size=12, boundary='Ceiling'):
+                             ax_label_size=16, legend_size=12, boundary='Ceiling', wave_roughness=False):
     """
     A figure showing the RMSE of M-0 simulations relative to the field data for the various wind conditions
     :param x_label: x axis label
@@ -12,6 +12,7 @@ def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     :param fig_size: figure size
     :param ax_label_size: axis label fontsize
     :param legend_size: legend fontsize
+    :param wave_roughness: if True, have surface roughness be wave height dependent
     :return:
     """
     # Setting the wind speeds and rise velocities that we want to plot
@@ -31,7 +32,8 @@ def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             for diffusion_type in diffusion:
-                RMSE = analysis.determine_RMSE(wind, rise, diffusion_type, boundary, alpha=0.0, output=True)
+                RMSE = analysis.determine_RMSE(wind, rise, diffusion_type, boundary, alpha=0.0, output=True,
+                                               wave_roughness=wave_roughness)
                 plot_tuple = RMSE, index_w10 + 1 + diffusion_offset[diffusion_type], marker_type[diffusion_type], marker_color[rise]
                 point_list.append(plot_tuple)
 

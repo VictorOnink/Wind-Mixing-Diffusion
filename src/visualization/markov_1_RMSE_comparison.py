@@ -5,7 +5,7 @@ from visualization import utils_visualization as utils_v
 
 
 def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', fig_size=(16, 8),
-                             ax_label_size=16, legend_size=11):
+                             ax_label_size=16, legend_size=11, wave_roughness=False):
     """
     A figure showing the RMSE of M-0 and M-1 simulations relative to the field data for the various wind conditions
     :param x_label: x axis label
@@ -13,6 +13,7 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     :param fig_size: figure size
     :param ax_label_size: axis label fontsize
     :param legend_size: legend fontsize
+    :param wave_roughness: if True, have surface roughness be wave height dependent
     :return:
     """
     # Setting the wind speeds, rise velocities and alpha values that we want to plot
@@ -28,14 +29,16 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     point_list_KPP = []
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
-            RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Ceiling', alpha=0.0, output=True)
+            RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Ceiling', alpha=0.0, output=True,
+                                           wave_roughness=wave_roughness)
             plot_tuple = RMSE, index_w10 + 1, marker_type[rise], utils_v.return_color(0)
             point_list_KPP.append(plot_tuple)
     # Then for the M-1 simulations
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             for index_a, a in enumerate(alpha):
-                RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Ceiling_Markov', alpha=a, output=True)
+                RMSE = analysis.determine_RMSE(wind, rise, 'KPP', 'Ceiling_Markov', alpha=a, output=True,
+                                               wave_roughness=wave_roughness)
                 plot_tuple = RMSE, index_w10 + 1 + rise_offset[rise], marker_type[rise], utils_v.return_color(index_a + 1)
                 point_list_KPP.append(plot_tuple)
 
@@ -43,14 +46,16 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     point_list_Kukulka = []
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
-            RMSE = analysis.determine_RMSE(wind, rise, 'SWB', 'Ceiling', alpha=0.0, output=True)
+            RMSE = analysis.determine_RMSE(wind, rise, 'SWB', 'Ceiling', alpha=0.0, output=True,
+                                           wave_roughness=wave_roughness)
             plot_tuple = RMSE, index_w10 + 1, marker_type[rise], utils_v.return_color(0)
             point_list_Kukulka.append(plot_tuple)
     # And then for M-1 simulations
     for index_w10, wind in enumerate(w_10):
         for rise in w_r:
             for index_a, a in enumerate(alpha):
-                RMSE = analysis.determine_RMSE(wind, rise, 'SWB', 'Ceiling_Markov', alpha=a, output=True)
+                RMSE = analysis.determine_RMSE(wind, rise, 'SWB', 'Ceiling_Markov', alpha=a, output=True,
+                                               wave_roughness=wave_roughness)
                 plot_tuple = RMSE, index_w10 + 1 + rise_offset[rise], marker_type[rise], utils_v.return_color(index_a + 1)
                 point_list_Kukulka.append(plot_tuple)
 

@@ -14,11 +14,13 @@ code_dir = root_direc[server] + 'Codes/Wind-Mixing-Diffusion/'
 bin_dir = root_direc[server] + r'Codes/Wind-Mixing-Diffusion/bin/'
 
 # Timesteps for integration and for printing to the output file
-dt_out = timedelta(seconds=3600)  # timedelta(seconds=100)
+dt_out = timedelta(seconds=3 * 60)
 dt_int = timedelta(seconds=30)  # timedelta(seconds=1)
 
 # Runtime for the entire simulation
-runtime = timedelta(seconds=12*3600)  # timedelta(seconds=3600)
+hours = 12
+spinup_time = timedelta(seconds=(hours - 1) * 3600)
+runtime = timedelta(seconds=3600)  # timedelta(seconds=3600)
 
 # Number of particles in a simulation
 p_number = 100000

@@ -5,6 +5,7 @@ import pandas as pd
 from seabird.cnv import fCNV
 from copy import deepcopy
 import scipy.stats as stats
+import analysis
 
 
 def data_standardization():
@@ -325,12 +326,14 @@ def standardization_average():
         while depth_ranges[-1][-1] < 20:
             depth_ranges.append((depth_ranges[-1][-1], depth_ranges[-1][-1] + 0.5))
 
-        # Initializing the arrays for the mean concentration and the standard deviation
-        mean_concentration, std_concentration = {}, {}
+        # Initializing the arrays for the mean concentration, the total standard deviation and all per depth level to
+        # ease the RMSE per depth level calculation later on
+        mean_concentration, std_concentration, total_std, all_concentrations = {}, {}, {}, {}
         for wind_range in utils.beaufort_limits():
             mean_wind = np.nanmean(wind_range)
             mean_concentration[mean_wind] = np.zeros(shape=depth_ranges.__len__(), dtype=float)
             std_concentration[mean_wind] = np.zeros(shape=depth_ranges.__len__(), dtype=float)
+            all_concentrations[mean_wind] = {}
 
         # Initializing arrays for the observation concentrations, depths and wind speeds
         data_concentration = np.array([], dtype=float)
@@ -353,15 +356,17 @@ def standardization_average():
                 selection = (selection_wind == True) & (data_depth <= depth_range[1]) & (data_depth > depth_range[0])
                 if max(selection) > 0:
                     mean_concentration[mean_wind][index_range] = np.nanmean(data_concentration[selection])
-                    std_concentration[mean_wind][index_range] = np.nanmean(data_concentration[selection])
+                    std_concentration[mean_wind][index_range] = np.nanstd(data_concentration[selection])
+                    all_concentrations[mean_wind][index_range] = data_concentration[selection]
+            total_std[mean_wind] = np.nanstd(data_concentration[selection_wind])
 
         # Creating an array containing the midpoint of each depth range
         depth_midpoint = np.array([])
         for depth_range in depth_ranges:
             depth_midpoint = np.append(depth_midpoint, np.nanmean(depth_range))
-
         # Creating the final output dict
-        output_dict = {"depth": depth_midpoint, "average": mean_concentration, "std": std_concentration}
+        output_dict = {"depth": depth_midpoint, "average": mean_concentration, "std": std_concentration,
+                       "total_std": total_std, "all_concentrations": all_concentrations}
 
         # Pickling the output dictionary
         utils.save_obj(filename=file_name, item=output_dict)

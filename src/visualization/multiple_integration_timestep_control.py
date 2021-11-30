@@ -8,7 +8,7 @@ import utils
 def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='Depth (m)', alpha=0.3,
                                 x_label=r'Normalised Concentrations', fig_size=(8, 12),
                                 ax_label_size=15, legend_size=10, single_select=0,
-                                output_step=-1, boundary='Ceiling'):
+                                output_step=-1, boundary='Ceiling', wave_roughness=False):
     """
     figure comparing the influence of the integration timestep on the vertical concentration profiles. We do this for
     the three different rise velocities, and since these get mixed to varying depths, each subplot has its own y axis
@@ -24,6 +24,7 @@ def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='D
     :param single_select: selection index related to 'selection'
     :param output_step: set at -1, so we plot the final concentration profile in the parcels simulation
     :param boundary: which boundary condition do we want to show
+    :param wave_roughness: if True, have surface roughness be wave height dependent
     :return:
     """
     # Getting the axis limits, but the y axis limits will be updated later
@@ -59,7 +60,8 @@ def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='D
             if kpp:
                 profile_dict = utils_v.get_concentration_list([mean_wind], [w_rise[column]], selection, single_select,
                                                               output_step=output_step, diffusion_type='KPP',
-                                                              boundary=boundary, alpha_list=[alpha], dt=dt)
+                                                              boundary=boundary, alpha_list=[alpha], dt=dt,
+                                                              wave_roughness=wave_roughness)
                 for counter in range(len(profile_dict['concentration_list'])):
                     ax[2 * column].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                                label=label(dt),
@@ -69,7 +71,8 @@ def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='D
             if swb:
                 profile_dict = utils_v.get_concentration_list([mean_wind], [w_rise[column]], selection, single_select,
                                                               output_step=output_step, diffusion_type='Kukulka',
-                                                              boundary=boundary, alpha_list=[alpha], dt=dt)
+                                                              boundary=boundary, alpha_list=[alpha], dt=dt,
+                                                              wave_roughness=wave_roughness)
                 for counter in range(len(profile_dict['concentration_list'])):
                     ax[2 * column + 1].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                                label=label(dt),

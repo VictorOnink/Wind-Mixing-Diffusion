@@ -13,7 +13,7 @@ import settings
 import utils
 
 
-def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixed'):
+def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixed', theta=1, wave_roughness=False):
     """
     General function that runs a parcels simulation for the given parameters
     :param w_10: wind speed
@@ -23,10 +23,13 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixe
                   get used
     :param boundary: Setting the boundary condition. If the boundary string contains "Markov", then we are running a
                      M-1 process
+    :param theta: Langmuir circulation amplification factor for KPP mixing
+    :param wave_roughness: if True, have surface roughness be wave height dependent
     :return:
     """
     # Create the fieldset
-    fieldset = create_fieldset(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary, alpha=alpha)
+    fieldset = create_fieldset(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary, alpha=alpha,
+                               theta=theta, wave_roughness=wave_roughness)
 
     # The particle size that corresponds to the rise velocity, according to Enders et al. (2015)
     utils.determine_particle_size(w_rise)
@@ -38,13 +41,17 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixe
     pset = create_pset(fieldset=fieldset, boundary=boundary)
 
     # Setting the output file
-    output_file = pset.ParticleFile(name=utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha),
+    output_file = pset.ParticleFile(name=utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha,
+                                                                       theta=theta, wave_roughness=wave_roughness),
                                     outputdt=settings.dt_out)
 
     # Determine the type of boundary condition we use, which in turn relates to which type of diffusion we consider:
     kernel = create_kernel(pset=pset, boundary=boundary)
 
-    # The actual integration
+    # The actual integration, where we first let the model run for 11 hours to reach a steady state. Afterwards, we save
+    # the profile every 3 minutes so that can examine the variability over time.
+    pset.execute(kernel, runtime=settings.spinup_time, dt=settings.dt_int,
+                 recovery={ErrorCode.ErrorOutOfBounds: utils.DeleteParticle})
     pset.execute(kernel, runtime=settings.runtime, dt=settings.dt_int, output_file=output_file,
                  recovery={ErrorCode.ErrorOutOfBounds: utils.DeleteParticle})
     output_file.export()
@@ -100,7 +107,7 @@ class Markov_1_Particle(JITParticle):
     potential = Variable('potential', initial=0, dtype=np.float32, to_write=to_write)
 
 
-def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha):
+def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha, theta, wave_roughness):
     """
     Creating the fieldset that we use for the simulationw
     """
@@ -123,9 +130,11 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha):
 
     # Getting the diffusivity fields, and the gradient of the diffusivity fields. The gradients are calculated
     # analytically
-    K_z = Field('K_z', data=utils.get_vertical_diffusion_profile(w_10, Depth, diffusion_type),
+    K_z = Field('K_z', data=utils.get_vertical_diffusion_profile(w_10, Depth, diffusion_type, theta=theta,
+                                                                 wave_roughness=wave_roughness),
                 depth=depth, lon=lon, lat=lat)
-    dK_z = Field('dK_z', data=utils.get_vertical_diffusion_gradient_profile(w_10, Depth, diffusion_type),
+    dK_z = Field('dK_z', data=utils.get_vertical_diffusion_gradient_profile(w_10, Depth, diffusion_type, theta=theta,
+                                                                            wave_roughness=wave_roughness),
                  depth=depth, lon=lon, lat=lat)
     fieldset = FieldSet(U, V)
     fieldset.add_field(K_z)

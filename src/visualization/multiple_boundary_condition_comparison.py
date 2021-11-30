@@ -6,7 +6,7 @@ import numpy as np
 
 def multiple_boundary_condition_comparison(selection='w_rise', close_up=None, output_step=-1,
                                   y_label='Depth (m)', x_label=r'Normalised Concentrations', fig_size=(10, 8),
-                                  ax_label_size=16, legend_size=12, single_select=0, beaufort=4):
+                                  ax_label_size=16, legend_size=12, single_select=0, beaufort=4, wave_roughness=False):
     """
     Figure comparing the vertical concentration profiles with Ceiling and Reflecting boundary conditions
     :param selection: selection criteria for loading parcels concentration profiles
@@ -20,6 +20,7 @@ def multiple_boundary_condition_comparison(selection='w_rise', close_up=None, ou
     :param legend_size: fontsize of the legend
     :param single_select: selection index related to 'selection'
     :param beaufort: sea state/wind state which is being shown
+    :param wave_roughness: if True, have surface roughness be wave height dependent
     :return:
     """
     # Setting the axis limits
@@ -42,7 +43,7 @@ def multiple_boundary_condition_comparison(selection='w_rise', close_up=None, ou
         # Plotting the distribution according to the SWB parametrization
         profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                       output_step=output_step, diffusion_type='SWB',
-                                                      boundary=boundary, alpha_list=[0])
+                                                      boundary=boundary, alpha_list=[0], wave_roughness=wave_roughness)
         for counter in range(len(profile_dict['concentration_list'])):
             ax[1].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                        linestyle=linestyle[count], color=utils_v.return_color(counter))
@@ -50,7 +51,7 @@ def multiple_boundary_condition_comparison(selection='w_rise', close_up=None, ou
         # Plotting the distribution according to the KPP parametrization
         profile_dict = utils_v.get_concentration_list([mean_wind], w_rise_list, selection, single_select,
                                                       output_step=output_step, diffusion_type='KPP',
-                                                      boundary=boundary, alpha_list=[0])
+                                                      boundary=boundary, alpha_list=[0], wave_roughness=wave_roughness)
         for counter in range(len(profile_dict['concentration_list'])):
             ax[0].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                        linestyle=linestyle[count], color=utils_v.return_color(counter))
