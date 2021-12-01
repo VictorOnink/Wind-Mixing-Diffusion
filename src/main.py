@@ -5,12 +5,12 @@ import field_data
 import parcels_simulation_functions
 from progressbar import ProgressBar
 
-w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]  # [0.85, 2.4, 4.35, 6.65, 9.3]
-w_rise = [-0.003]  # [-0.03, -0.003, -0.0003]
+w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
+w_rise = [-0.03, -0.003, -0.0003]  # [-0.03, -0.003, -0.0003]
 alpha = [0.0]  # [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
-theta = [1.0, 2.0, 3.0, 4.0, 5.0]  # [1.0, 2.0, 3.0, 4.0, 5.0]
+theta = [1.0]  # [1.0, 2.0, 3.0, 4.0, 5.0]
 diffusion = 'KPP'
-wave_roughness = False
+wave_roughness = True
 boundary = 'Ceiling'
 
 if diffusion == 'SWB':
@@ -26,6 +26,7 @@ def parcels_simulations(wind, rise, alpha, theta):
     :param theta: for KPP diffusion, the langmuir circulation amplification factor
     :return:
     """
+    utils.simulation_description(wind, rise, alpha, theta, diffusion, wave_roughness, boundary)
     # Option to remove a previous file if it exists in case I want to rerun a simulation. Setting
     # conduct to False deactivates the remove file function
     concentration_file = utils.get_concentration_output_name(wind, rise, diffusion, boundary, alpha=alpha, theta=theta,
@@ -79,17 +80,20 @@ def plotting():
     # visualization.markov_0_RMSE_comparison()
 
     # Figure 4: Comparing M-0 with M-1 models with various alpha values for both KPP and SWB diffusion
-    visualization.diffusion_markov_comparison(w_rise_list=[-0.003], single_select=0, close_up=(0, -25), theta=1.0)
+    # visualization.diffusion_markov_comparison(w_rise_list=[-0.003], single_select=0, close_up=(0, -25), theta=1.0)
 
     # Figure 5: RMSE for the M-1 model runs compared with observations
     # visualization.markov_1_RMSE_comparison()
 
     # Supplementary Figures: Influence of dt for M-0 runs for Reflect and Ceiling conditions
     # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Reflect')
+    # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Reflect', wave_roughness=True)
     # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Ceiling')
+    # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Ceiling', wave_roughness=True)
 
     # Supplementary Figures: Influence of boundary conditions on overall profile
     # visualization.multiple_boundary_condition_comparison(close_up=(0, -20), beaufort=4)
+    # visualization.multiple_boundary_condition_comparison(close_up=(0, -20), beaufort=4, wave_roughness=True)
 
     # Supplementary Figure: Time evolution of the vertical profiles for M-0 for both KPP and SWB diffusion
     # visualization.timestep_comparison(close_up=(0, -25))
@@ -105,7 +109,7 @@ def plotting():
     #                                                         close_up=(0, -20))
 
     # Supplementary figure: plotting the correlation and RMSE between field measurements and modelled profiles
-    visualization.plot_error_correlaton(markov=False, diffusion='KPP')
+    # visualization.plot_error_correlaton(markov=False, diffusion='KPP')
     pass
 
 

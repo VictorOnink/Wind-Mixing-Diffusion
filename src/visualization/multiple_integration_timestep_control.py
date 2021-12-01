@@ -6,9 +6,10 @@ import utils
 
 
 def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='Depth (m)', alpha=0.3,
-                                x_label=r'Normalised Concentrations', fig_size=(8, 12),
-                                ax_label_size=15, legend_size=10, single_select=0,
-                                output_step=-1, boundary='Ceiling', wave_roughness=False):
+                                          x_label=r'Normalised Concentrations', fig_size=(8, 12),
+                                          ax_label_size=15, legend_size=10, single_select=0,
+                                          output_step=-1, boundary='Ceiling', wave_roughness=False,
+                                          add_variability=True):
     """
     figure comparing the influence of the integration timestep on the vertical concentration profiles. We do this for
     the three different rise velocities, and since these get mixed to varying depths, each subplot has its own y axis
@@ -63,21 +64,34 @@ def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='D
                                                               boundary=boundary, alpha_list=[alpha], dt=dt,
                                                               wave_roughness=wave_roughness)
                 for counter in range(len(profile_dict['concentration_list'])):
-                    ax[2 * column].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                               label=label(dt),
-                               linestyle=line_style[count], color=utils_v.discrete_color_from_cmap(count, len(dt_list)))
+                    concentration = profile_dict['concentration_list'][counter]
+                    ax[2 * column].plot(concentration, profile_dict['depth_bins'], label=label(dt),
+                                        linestyle=line_style[count],
+                                        color=utils_v.discrete_color_from_cmap(count, len(dt_list)))
                     ax[2 * column].set_ylim(ylim[column])
+                    if add_variability:
+                        std = profile_dict['std_list'][counter]
+                        upper_limit, lower_limit = concentration + std, concentration - std
+                        ax[2 * column].fill_betweenx(profile_dict['depth_bins'], lower_limit, upper_limit, alpha=0.2,
+                                                     color=utils_v.discrete_color_from_cmap(count, len(dt_list)))
             # Plotting the SWB profiles
             if swb:
                 profile_dict = utils_v.get_concentration_list([mean_wind], [w_rise[column]], selection, single_select,
-                                                              output_step=output_step, diffusion_type='Kukulka',
+                                                              output_step=output_step, diffusion_type='SWB',
                                                               boundary=boundary, alpha_list=[alpha], dt=dt,
                                                               wave_roughness=wave_roughness)
                 for counter in range(len(profile_dict['concentration_list'])):
-                    ax[2 * column + 1].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
-                               label=label(dt),
-                               linestyle=line_style[count], color=utils_v.discrete_color_from_cmap(count, len(dt_list)))
+                    concentration = profile_dict['concentration_list'][counter]
+                    ax[2 * column + 1].plot(concentration, profile_dict['depth_bins'], label=label(dt),
+                                            linestyle=line_style[count],
+                                            color=utils_v.discrete_color_from_cmap(count, len(dt_list)))
                     ax[2 * column + 1].set_ylim(ylim[column])
+                    if add_variability:
+                        std = profile_dict['std_list'][counter]
+                        upper_limit, lower_limit = concentration + std, concentration - std
+                        ax[2 * column + 1].fill_betweenx(profile_dict['depth_bins'], lower_limit, upper_limit,
+                                                         alpha=0.2,
+                                                         color=utils_v.discrete_color_from_cmap(count, len(dt_list)))
 
     lines, labels = ax[1].get_legend_handles_labels()
     # Adding the legend in the bottom right subfigure
@@ -94,8 +108,8 @@ def multiple_integration_timestep_control(beaufort, selection='w_10', y_label='D
     # Saving the figure
     diff_dict = {'Ceiling': 'M0-Ceiling', 'Ceiling_Markov': 'M1_{}-Ceiling'.format(alpha),
                  'Reflect': 'M0-Reflect', 'Reflect_Markov': 'M1_{}-Reflect'.format(alpha)}
-    plt.savefig(settings.figure_dir + 'Bft_{}_{}_dt_int_check_mld={}'.format(beaufort, diff_dict[boundary],
-                                                                             settings.MLD) + '.png',
+    str_format = beaufort, diff_dict[boundary], settings.MLD, wave_roughness
+    plt.savefig(settings.figure_dir + 'Bft_{}_{}_dt_int_check_mld={}_wave={}'.format(*str_format) + '.png',
                 bbox_inches='tight', dpi=600)
 
 
