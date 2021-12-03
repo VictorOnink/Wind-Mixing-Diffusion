@@ -8,7 +8,7 @@ from visualization.utils_visualization import label_diffusivity_profile
 
 def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ (m$^2$ s$^{-1}$)',
                            fig_size=(10, 10), ax_label_size=16, legend_size=12, theta=1,
-                           wave_roughness=False, with_theta=True):
+                           wave_roughness=False, with_theta=True, kpp=True, swb=True):
     """
     A simple figure just showing the diffusion profiles for KPP and SWB diffusion with different wind conditions
     :param w_10_list: list of the wind speeds
@@ -31,16 +31,18 @@ def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ (m$^2
     ax = utils_v.base_figure(fig_size, ax_range, y_label, x_label, ax_label_size, log_xscale=True)
 
     # Plotting the diffusion profile according to the SWB approach
-    for count, w_10 in enumerate(w_10_list):
-        profile = utils.get_vertical_diffusion_profile(w_10, depth, 'SWB', theta=theta, wave_roughness=False)
-        ax.plot(profile, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)), linestyle='-',
-                label=label_diffusivity_profile(w_10, 'SWB'))
+    if swb:
+        for count, w_10 in enumerate(w_10_list):
+            profile = utils.get_vertical_diffusion_profile(w_10, depth, 'SWB', theta=theta, wave_roughness=False)
+            ax.plot(profile, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)), linestyle='-',
+                    label=label_diffusivity_profile(w_10, 'SWB'))
 
     # Plotting the diffusion profile according the KPP approach with theta = 1
-    for count, w_10 in enumerate(w_10_list):
-        profile = utils.get_vertical_diffusion_profile(w_10, depth, 'KPP', theta=1, wave_roughness=False)
-        ax.plot(profile, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)),
-                linestyle='--', label=label_diffusivity_profile(w_10, 'KPP'))
+    if kpp:
+        for count, w_10 in enumerate(w_10_list):
+            profile = utils.get_vertical_diffusion_profile(w_10, depth, 'KPP', theta=1, wave_roughness=False)
+            ax.plot(profile, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)),
+                    linestyle='--', label=label_diffusivity_profile(w_10, 'KPP'))
 
     # Plotting the diffusion profile according the KPP approach with theta = 5
     if with_theta:

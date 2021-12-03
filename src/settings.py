@@ -4,23 +4,21 @@ import os
 server = 'local_machine'
 machine_home_directory = os.path.expanduser('~')
 
-# directory for the output files of the parcels simulations
+# directories for the output files of the parcels simulations, concentration files, figures, and field data
 root_direc = {'local_machine': machine_home_directory + '/Desktop/Bern Projects/Wind Mixing/'}
 output_dir = root_direc[server] + 'parcels_output/'
 conc_dir = root_direc[server] + 'concentration_output/'
 figure_dir = root_direc[server] + 'Figures/'
 data_dir = root_direc[server] + 'Data/'
-code_dir = root_direc[server] + 'Codes/Wind-Mixing-Diffusion/'
-bin_dir = root_direc[server] + r'Codes/Wind-Mixing-Diffusion/bin/'
 
 # Timesteps for integration and for printing to the output file
 dt_out = timedelta(seconds=3 * 60)
-dt_int = timedelta(seconds=30)  # timedelta(seconds=1)
+dt_int = timedelta(seconds=30)
 
 # Runtime for the entire simulation
 hours = 12
 spinup_time = timedelta(seconds=(hours - 1) * 3600)
-runtime = timedelta(seconds=3600)  # timedelta(seconds=3600)
+runtime = timedelta(seconds=3600)
 
 # Number of particles in a simulation
 p_number = 100000

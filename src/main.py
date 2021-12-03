@@ -5,12 +5,12 @@ import field_data
 import parcels_simulation_functions
 from progressbar import ProgressBar
 
-w_10 = [6.65]  # [0.85, 2.4, 4.35, 6.65, 9.3]
+w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]  # [0.85, 2.4, 4.35, 6.65, 9.3]
 w_rise = [-0.03, -0.003, -0.0003]  # [-0.03, -0.003, -0.0003]
 alpha = [0.0]  # [0.0, 0.1, 0.3, 0.5, 0.7, 0.95]
 theta = [1.0]  # [1.0, 2.0, 3.0, 4.0, 5.0]
 diffusion = 'KPP'
-wave_roughness = True
+wave_roughness = False
 boundary = 'Ceiling'
 
 if diffusion == 'SWB':
@@ -67,22 +67,27 @@ def field_data_processing():
 def plotting():
     # Figure 1: Plotting just the diffusion profiles for various wind conditions
     # visualization.just_diffusion_profile(w_10_list=[0.85, 2.4, 4.35, 6.65, 9.3])
-    # visualization.just_diffusion_profile(w_10_list=[0.85, 2.4, 4.35, 6.65, 9.3], with_theta=False,
-    #                                      wave_roughness=True,)
+    # visualization.just_diffusion_profile(w_10_list=[0.85, 2.4, 4.35, 6.65, 9.3], with_theta=False, swb=False,
+    #                                      wave_roughness=True)
 
     # Figure 2: Plotting vertical profiles for KPP and SWB diffusion under various wind conditions
-    # visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
-    #                                                selection='w_10', single_select=2, wind_sort=True,
-    #                                                close_up=(0, -20), diffusion_type='all', boundary='Ceiling',
-    #                                                theta=1.0, wave_roughness=wave_roughness)
+    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
+                                                   selection='w_10', single_select=2, wind_sort=True,
+                                                   close_up=(0, -20), diffusion_type='all', boundary='Ceiling',
+                                                   theta=1.0, wave_roughness=False)
 
-    # Figure 3: Root mean square error (RMSE) for the M-0 model runs compared with observations
+    # Figure 3: Influence of the Langmuir amplification factor and z_0 for KPP
+    # visualization.theta_langmuir_wave_roughness_sensitivity(w_10_list=w_10, w_rise=-0.003,
+    #                                                         theta_list=[1.0, 2.0, 3.0, 4.0, 5.0], close_up=(0, -20))
+
+    # Figure 4: Root mean square error (RMSE) for the M-0 model runs compared with observations
     # visualization.markov_0_RMSE_comparison()
 
-    # Figure 4: Comparing M-0 with M-1 models with various alpha values for both KPP and SWB diffusion
-    # visualization.diffusion_markov_comparison(w_rise_list=[-0.003], single_select=0, close_up=(0, -25), theta=1.0)
+    # Figure 5: Comparing M-0 with M-1 models with various alpha values for both KPP and SWB diffusion
+    # visualization.diffusion_markov_comparison(w_rise_list=[-0.003], single_select=0, close_up=(0, -25), theta=1.0,
+    #                                           wave_roughness=False)
 
-    # Figure 5: RMSE for the M-1 model runs compared with observations
+    # Figure 6: RMSE for the M-1 model runs compared with observations
     # visualization.markov_1_RMSE_comparison()
 
     # Supplementary Figures: Influence of dt for M-0 runs for Reflect and Ceiling conditions
@@ -99,14 +104,12 @@ def plotting():
     # visualization.timestep_comparison(close_up=(0, -25))
 
     # Supplementary Figure: Influence of the theta Langmuir amplification factor
+    # w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
     # visualization.theta_langmuir_wave_roughness_sensitivity(w_10_list=w_10, w_rise=-0.03,
     #                                                         theta_list=[1.0, 2.0, 3.0, 4.0, 5.0], close_up=(0, -20))
-    # visualization.theta_langmuir_wave_roughness_sensitivity(w_10_list=w_10, w_rise=-0.003,
-    #                                                         theta_list=[1.0, 2.0, 3.0, 4.0, 5.0],
-    #                                                         close_up=(0, -20))
     # visualization.theta_langmuir_wave_roughness_sensitivity(w_10_list=w_10, w_rise=-0.0003,
     #                                                         theta_list=[1.0, 2.0, 3.0, 4.0, 5.0],
-    #                                                         close_up=(0, -20))
+    #                                                         close_up=(0, -20), with_observations=False)
 
     # Supplementary figure: plotting the correlation and RMSE between field measurements and modelled profiles
     # visualization.plot_error_correlaton(markov=False, diffusion='KPP')

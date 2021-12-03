@@ -8,7 +8,7 @@ import numpy as np
 def theta_langmuir_wave_roughness_sensitivity(w_10_list, w_rise, theta_list, output_step=-1,
                                               single_select=1, add_variability=True, y_label='Depth (m)', close_up=None,
                                               x_label=r'Normalised Concentrations', fig_size=(16, 8), ax_label_size=16,
-                                              legend_size=12, boundary='Ceiling', alpha=0.15):
+                                              legend_size=12, boundary='Ceiling', alpha=0.15, with_observations=True):
     # Setting the axes ranges
     ax_range = utils_v.get_axes_range(close_up=close_up, norm_depth=False)
 
@@ -32,8 +32,9 @@ def theta_langmuir_wave_roughness_sensitivity(w_10_list, w_rise, theta_list, out
     line_style = {False: '-', True: 'dotted'}
 
     for scale in range(w_10_list.__len__()):
-        _, _ = utils_v.add_observations(ax[scale], norm_depth=False, wind_range=beaufort[scale + 1],
-                                        alpha=alpha, mean_concentrations=True)
+        if with_observations:
+            _, _ = utils_v.add_observations(ax[scale], norm_depth=False, wind_range=beaufort[scale + 1],
+                                            alpha=alpha, mean_concentrations=True)
         for wave_roughness in [True, False]:
             for index_theta, theta in enumerate(theta_list):
                 plot_color = utils_v.discrete_color_from_cmap(index=index_theta, subdivisions=theta_list.__len__())
@@ -54,7 +55,8 @@ def theta_langmuir_wave_roughness_sensitivity(w_10_list, w_rise, theta_list, out
         lines, labels = ax[scale].get_legend_handles_labels()
 
     # Labels for field data
-    field_lines, field_labels = lines[-6:], labels[-6:]
+    if with_observations:
+        field_lines, field_labels = lines[-6:], labels[-6:]
     # Labels for wind conditions
     wind_lines = [plt.plot([], [], c=utils_v.discrete_color_from_cmap(index=index, subdivisions=theta_list.__len__()),
                            label=r'$\theta=$' + '{}'.format(theta), linestyle='-')[0]
@@ -63,7 +65,11 @@ def theta_langmuir_wave_roughness_sensitivity(w_10_list, w_rise, theta_list, out
     roughness_lines = [plt.plot([], [], c='k', label=label, linestyle=line)[0] for label, line in zip(labels, styles)]
 
     # Adding the legend
-    ax[-1].legend(handles=field_lines + wind_lines + roughness_lines, fontsize=legend_size, loc='upper left')
+    if with_observations:
+        handles = field_lines + wind_lines + roughness_lines
+    else:
+        handles = wind_lines + roughness_lines
+    ax[-1].legend(handles=handles, fontsize=legend_size, loc='upper left')
     ax[-1].axis('off')
 
     # Saving the figure

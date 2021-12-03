@@ -25,7 +25,7 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixe
                      M-1 process
     :param theta: Langmuir circulation amplification factor for KPP mixing
     :param wave_roughness: if True, have surface roughness be wave height dependent
-    :return:
+    :return: None
     """
     # Create the fieldset
     fieldset = create_fieldset(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary, alpha=alpha,

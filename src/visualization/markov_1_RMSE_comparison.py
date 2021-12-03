@@ -67,7 +67,7 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     ax.set_xlim((0, 6))
     ax.tick_params(axis='both', labelsize=ax_label_size)
     ax.set_ylabel(y_label, fontsize=ax_label_size)
-    ax.set_ylim((0, 0.6))
+    ax.set_ylim((0, 0.15))
     # Adding the axis for SWB
     ax2 = fig.add_subplot(122)
     ax2.set_xlim((0, 6))
@@ -75,7 +75,7 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     ax2.tick_params(axis='both', labelsize=ax_label_size)
     ax2.tick_params(labelleft=False)
     # X axis = Concentration axis
-    ax2.set_ylim((0, 0.6))
+    ax2.set_ylim((0, 0.15))
 
     ax.set_title(r'(a) KPP', fontsize=ax_label_size)
     ax2.set_title(r'(b) SWB', fontsize=ax_label_size)
@@ -104,11 +104,11 @@ def markov_1_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
                         label=r'M1 - $\alpha = $' + '{}'.format(a), linestyle='')[0] for ind, a in
                enumerate(alpha)]
     # Adding the legend
-    ax2.legend(handles=marker + markov0 + markov1, fontsize=legend_size, loc='upper right')
+    ax2.legend(handles=marker + markov0 + markov1, fontsize=legend_size, loc='lower left')
     # Saving the figure
     plt.savefig(settings.figure_dir + 'model_evaluation_markov_1.png', bbox_inches='tight', dpi=600)
 
 
 def label_marker(rise):
     """ Setting the figure label based on the rise velocity"""
-    return r'$w_{rise}$' + ' = {}'.format(np.abs(rise)) + ' m s$^{-1}$'
+    return r'$w_{r}$' + ' = {}'.format(np.abs(rise)) + ' m s$^{-1}$'

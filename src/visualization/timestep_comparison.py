@@ -43,6 +43,7 @@ def timestep_comparison(selection='w_10', close_up=None,
                                                   all_timesteps=True, boundary=boundary, mld=mld, alpha_list=[0],
                                                   wave_roughness=wave_roughness)
     subdivision = len(profile_dict['concentration_list']) // interval
+
     for counter in range(0, len(profile_dict['concentration_list']), interval):
         ax[0].plot(profile_dict['concentration_list'][counter], profile_dict['depth_bins'],
                   label=label_time_step(counter, interval),

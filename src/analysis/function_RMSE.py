@@ -4,7 +4,7 @@ import pandas as pd
 from copy import deepcopy
 
 
-def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, theta=1, exclude=None, output=False, conduct=True,
+def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, theta=1.0, output=False, conduct=True,
                    wave_roughness=False):
     """
     Getting the root mean square error between the normalized model concentrations and the field data
@@ -14,7 +14,6 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, theta=1, exclu
     :param boundary: boundary condition, and whether it is M-0 or M-1
     :param alpha: memory term for M-1
     :param theta: Langmuir circulation amplification term
-    :param exclude: specifying if there is any field data we don't want to include in the analysis
     :param output: if False, we have just a print statement giving the RMSE value, if True we return the RMSE value
     :param conduct: if True, carry out the entire RMSE calculations
     :param wave_roughness: if True, have surface roughness be wave height dependent
