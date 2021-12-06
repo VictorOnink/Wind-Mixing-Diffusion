@@ -18,7 +18,7 @@ Contents:
 ---
 ## Overview
 
-This repository contains all the code for the vertical wind mixing experiments described in Onink et al. (in prep): "*Empirical Lagrangian parametrization for wind-driven mixing of buoyant particulates at the ocean surface*". Using
+This repository contains all the code for the vertical wind mixing experiments described in [Onink et al. (submitted)](http://dx.doi.org/10.5194/gmd-2021-195): "*Empirical Lagrangian parametrization for wind-driven mixing of buoyant particulates at the ocean surface*". Using
 the [parcels](http://oceanparcels.org/) (**P**robably **A** **R**eally **C**omputationally **E**fficient **L**agrangian **S**imulator) package, a 1D
 model has been developed to model the vertical concentration profile of buoyant particles in the ocean surface mixed layer depending on the surface wind
 stress, the particle rise velocities, and the parametrization of vertical turbulent mixing.
@@ -62,7 +62,7 @@ If a particle were to cross the lower domain boundary, then we apply a reflectin
 
 ### Particle rise velocities
 
-The particle rise velocities are assigned by the user in the ```main.py``` file. The corresponding spherical particle size
+The particle rise velocities are assigned by the user in the ```src/main.py``` file. The corresponding spherical particle size
 for a given rise velocity can be computed based on [Enders et al. (2015)](https://doi.org/10.1016/j.marpolbul.2015.09.027)
 
 ### Field measurements
@@ -93,7 +93,7 @@ With the exception of the [Kooi et al. (2016)](https://doi.org/10.1038/srep33882
 ## Code setup 
 ### Running the model
 #### Setting up the run parameters
-All the commands for running the model go via the ```main.py``` file with the ```src``` directory. At the beginning of the file, you can set the wind speeds ```w_10```, the rise velocities ```w_rise``` and M-1 memory terms ```alpha``` for which you want to run the simulation (```alpha``` values are not used in running a M-0 simulation, but ```alpha``` must still be defined). All these run parameters are written as lists, since the code will run through all elements of the list to carry out the requested simulations.
+All the commands for running the model go via the ```main.py``` file within the ```src``` directory. At the beginning of the file, you can set the wind speeds ```w_10```, the rise velocities ```w_rise``` and M-1 memory terms ```alpha``` for which you want to run the simulation (```alpha``` values are not used in running a M-0 simulation, but ```alpha``` must still be defined). In the case of KPP diffusion, you can also set the Langmuir circulation enhancement factor ```theta```, which is a multiplicative factor that increases the amount of mixing to account for Langmuir circulation driven mixing. All these run parameters are written as lists, since the code will run through all elements of the list to carry out the requested simulations.
 
 The variable ```diffusion``` sets the diffusion profile that will be used in the simulation, and must be set either as ```'KPP'``` or ```'SWB'```. The boundary condition is set by ```boundary```, where the options are either ```'Ceiling'```, ```'Reflect'```, ```'Mixed'``` or ```'Reduce_dt'``` (the BC condition used for the results in the paper is typically ```'Ceiling'``` unless otherwise stated). If you want to run a M-1 simulation, then you add ```'_Markov'``` to the ```diffusion``` string (e.g. ```boundary='Ceiling_Markov'``` would run a M-1 simulation with the Ceiling BC). Otherwise, the default is to run a M-0 simulation.
 
