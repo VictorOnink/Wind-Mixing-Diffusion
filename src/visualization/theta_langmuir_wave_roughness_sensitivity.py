@@ -5,10 +5,12 @@ from visualization import utils_visualization as utils_v
 import numpy as np
 
 
-def theta_langmuir_wave_roughness_sensitivity(w_10_list, w_rise, theta_list, output_step=-1,
+def theta_langmuir_wave_roughness_sensitivity(w_rise, output_step=-1,
                                               single_select=1, add_variability=True, y_label='Depth (m)', close_up=None,
                                               x_label=r'Normalised Concentrations', fig_size=(16, 8), ax_label_size=16,
                                               legend_size=12, boundary='Ceiling', alpha=0.15, with_observations=True):
+    w_10_list = [0.85, 2.4, 4.35, 6.65, 9.3]
+    theta_list = [1.0, 2.0, 3.0, 4.0, 5.0]
     # Setting the axes ranges
     ax_range = utils_v.get_axes_range(close_up=close_up, norm_depth=False)
 

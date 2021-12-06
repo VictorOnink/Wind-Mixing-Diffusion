@@ -2,7 +2,7 @@ import settings
 
 
 def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=settings.MLD, dt=settings.dt_int.seconds,
-                            theta=1, wave_roughness=False):
+                            theta=1.0, wave_roughness=False):
     """
     Setting the filename for the parcels output
     :param w_10: 10m wind speed
@@ -30,7 +30,7 @@ def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=s
 
 
 def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=None, mld=settings.MLD,
-                                  dt=settings.dt_int.seconds, theta=1, with_pkl=False, wave_roughness=False):
+                                  dt=settings.dt_int.seconds, theta=1.0, with_pkl=False, wave_roughness=False):
     """
     Setting the file name of the concentration output
     :param w_10:

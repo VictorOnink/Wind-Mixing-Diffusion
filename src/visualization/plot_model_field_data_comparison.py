@@ -5,11 +5,12 @@ from visualization import utils_visualization as utils_v
 import numpy as np
 
 
-def plot_model_field_data_comparison(w_10_list, w_rise_list, alpha_list, selection='w_10', output_step=-1,
+def plot_model_field_data_comparison(w_rise_list, alpha_list, selection='w_10', output_step=-1,
                                      single_select=1, add_variability=True, norm_depth=False, wind_sort=True,
                                      y_label='Depth (m)', close_up=None, x_label=r'Normalised Concentrations',
                                      fig_size=(16, 8), ax_label_size=16, legend_size=12, diffusion_type='SWB',
                                      boundary='Ceiling', alpha=0.15, beaufort=4, theta=1.0, wave_roughness=False):
+    w_10_list = [0.85, 2.4, 4.35, 6.65, 9.3]
     if norm_depth:
         y_label = 'Depth/MLD'
         correction = settings.MLD

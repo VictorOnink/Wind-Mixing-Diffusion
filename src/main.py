@@ -71,14 +71,13 @@ def plotting():
     #                                      wave_roughness=True)
 
     # Figure 2: Plotting vertical profiles for KPP and SWB diffusion under various wind conditions
-    visualization.plot_model_field_data_comparison(w_10_list=w_10, w_rise_list=w_rise, alpha_list=alpha,
-                                                   selection='w_10', single_select=2, wind_sort=True,
-                                                   close_up=(0, -20), diffusion_type='all', boundary='Ceiling',
-                                                   theta=1.0, wave_roughness=False)
+    # visualization.plot_model_field_data_comparison(w_rise_list=w_rise, alpha_list=alpha, selection='w_10',
+    #                                                single_select=2, wind_sort=True, close_up=(0, -20),
+    #                                                diffusion_type='all', boundary='Ceiling', theta=1.0,
+    #                                                wave_roughness=False)
 
     # Figure 3: Influence of the Langmuir amplification factor and z_0 for KPP
-    # visualization.theta_langmuir_wave_roughness_sensitivity(w_10_list=w_10, w_rise=-0.003,
-    #                                                         theta_list=[1.0, 2.0, 3.0, 4.0, 5.0], close_up=(0, -20))
+    # visualization.theta_langmuir_wave_roughness_sensitivity(w_rise=-0.003, close_up=(0, -20))
 
     # Figure 4: Root mean square error (RMSE) for the M-0 model runs compared with observations
     # visualization.markov_0_RMSE_comparison()
@@ -92,9 +91,7 @@ def plotting():
 
     # Supplementary Figures: Influence of dt for M-0 runs for Reflect and Ceiling conditions
     # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Reflect')
-    # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Reflect', wave_roughness=True)
     # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Ceiling')
-    # visualization.multiple_integration_timestep_control(beaufort=4, boundary='Ceiling', wave_roughness=True)
 
     # Supplementary Figures: Influence of boundary conditions on overall profile
     # visualization.multiple_boundary_condition_comparison(close_up=(0, -20), beaufort=4)
@@ -104,15 +101,10 @@ def plotting():
     # visualization.timestep_comparison(close_up=(0, -25))
 
     # Supplementary Figure: Influence of the theta Langmuir amplification factor
-    # w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
-    # visualization.theta_langmuir_wave_roughness_sensitivity(w_10_list=w_10, w_rise=-0.03,
-    #                                                         theta_list=[1.0, 2.0, 3.0, 4.0, 5.0], close_up=(0, -20))
-    # visualization.theta_langmuir_wave_roughness_sensitivity(w_10_list=w_10, w_rise=-0.0003,
-    #                                                         theta_list=[1.0, 2.0, 3.0, 4.0, 5.0],
-    #                                                         close_up=(0, -20), with_observations=False)
+    # visualization.theta_langmuir_wave_roughness_sensitivity(w_rise=-0.03, close_up=(0, -20))
+    # visualization.theta_langmuir_wave_roughness_sensitivity(w_rise=-0.0003, close_up=(0, -20),
+    #                                                         with_observations=False)
 
-    # Supplementary figure: plotting the correlation and RMSE between field measurements and modelled profiles
-    # visualization.plot_error_correlaton(markov=False, diffusion='KPP')
     pass
 
 

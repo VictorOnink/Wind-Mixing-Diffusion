@@ -13,7 +13,7 @@ import settings
 import utils
 
 
-def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixed', theta=1, wave_roughness=False):
+def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixed', theta=1.0, wave_roughness=False):
     """
     General function that runs a parcels simulation for the given parameters
     :param w_10: wind speed
