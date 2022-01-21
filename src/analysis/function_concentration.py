@@ -3,7 +3,7 @@ from netCDF4 import Dataset
 import numpy as np
 
 
-def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, theta, bin_size=0.5, remove_file=True,
+def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, theta, gamma, bin_size=0.5, remove_file=True,
                         wave_roughness=False):
     """
     Binning the parcels output for a given run into vertical bins of size bin_size.
@@ -14,13 +14,14 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, theta, bi
     :param boundary: boundary condition, and whether M-0 or M-1
     :param alpha: memory term for M-1
     :param theta: Langmuir circulation amplification term
+    :param gamma: for SWB diffusion, the multiple of the Hs to which we have constant diffusion
     :param remove_file: if True, remove the original parcels output file
     :param wave_roughness: if True, have surface roughness be wave height dependent
     :return:
     """
     # Loading the relevant parcels file
     parcels_file = utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary=boundary, mld=settings.MLD,
-                                                 alpha=alpha, theta=theta, wave_roughness=wave_roughness)
+                                                 alpha=alpha, theta=theta, wave_roughness=wave_roughness, gamma=gamma)
     dataset = Dataset(parcels_file)
     time = dataset.variables['time'][0, :]
     time_steps = len(time)
@@ -56,14 +57,15 @@ def depth_concentration(w_10, w_rise, diffusion_type, boundary, alpha, theta, bi
 
     # Pickling the concentration array
     utils.save_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=alpha,
-                                                                theta=theta, wave_roughness=wave_roughness),
+                                                                theta=theta, wave_roughness=wave_roughness,
+                                                                gamma=gamma),
                    item=output_dir)
     # We don't need the parcels file for any subsequent analysis, so I'm removing it to save storage on my computer
     if remove_file:
         utils.remove_file(conduct=True, file_name=parcels_file)
 
 
-def depth_bin_numbers(w_10, w_rise, diffusion_type, boundary, alpha, theta, wave_roughness=False, conduct=False):
+def depth_bin_numbers(w_10, w_rise, diffusion_type, boundary, alpha, theta, gamma, wave_roughness=False, conduct=False):
     """
     State the number of particles that are within the defined depth ranges
     :param w_10: 10m wind speed
@@ -72,6 +74,7 @@ def depth_bin_numbers(w_10, w_rise, diffusion_type, boundary, alpha, theta, wave
     :param boundary: boundary condition, and whether M-0 or M-1
     :param alpha: memory term for M-1
     :param theta: Langmuir circulation amplification term
+    :param gamma: for SWB diffusion, the multiple of the Hs to which we have constant diffusion
     :param wave_roughness: if True, have surface roughness be wave height dependent
     :param conduct: if True, carry out the function
     :return:
@@ -79,7 +82,7 @@ def depth_bin_numbers(w_10, w_rise, diffusion_type, boundary, alpha, theta, wave
     if conduct:
         # Load the concentration file
         data_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
-                                                                                alpha=alpha, theta=theta,
+                                                                                alpha=alpha, theta=theta, gamma=gamma,
                                                                                 wave_roughness=wave_roughness))
         # Load the final concentration array and the bin depths
         counts = data_dict[data_dict['last_time_slice']]

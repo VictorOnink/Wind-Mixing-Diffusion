@@ -8,7 +8,7 @@ from visualization.utils_visualization import label_diffusivity_profile
 
 def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ (m$^2$ s$^{-1}$)',
                            fig_size=(10, 10), ax_label_size=16, legend_size=12, theta=1,
-                           wave_roughness=False, with_theta=True, kpp=True, swb=True):
+                           wave_roughness=False, with_theta=True, kpp=True, swb=True, with_gamma=True):
     """
     A simple figure just showing the diffusion profiles for KPP and SWB diffusion with different wind conditions
     :param w_10_list: list of the wind speeds
@@ -20,6 +20,9 @@ def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ (m$^2
     :param theta: Langmuir circulation amplification factor
     :param wave_roughness: if True, set the roughness scale to be the waveheight for KPP diffusion
     :param with_theta: if True, plot the KPP diffusion profile for theta=5
+    :param kpp: if True, plot KPP profiles
+    :param swb: if True, plot SWB profiles
+    :param with_gamma: if True, plot influence of SWB
     :return:
     """
     # Setting the range of the x and y axis
@@ -35,7 +38,13 @@ def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ (m$^2
         for count, w_10 in enumerate(w_10_list):
             profile = utils.get_vertical_diffusion_profile(w_10, depth, 'SWB', theta=theta, wave_roughness=False)
             ax.plot(profile, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)), linestyle='-',
-                    label=label_diffusivity_profile(w_10, 'SWB'))
+                    label=label_diffusivity_profile(w_10, 'SWB'), linewidth=3)
+        if with_gamma:
+            for count, w_10 in enumerate(w_10_list):
+                profile = utils.get_vertical_diffusion_profile(w_10, depth, 'SWB', theta=theta, wave_roughness=False,
+                                                               gamma=2.0)
+                ax.plot(profile, -1 * depth, color=utils_v.discrete_color_from_cmap(count, len(w_10_list)),
+                        linestyle='-', label=label_diffusivity_profile(w_10, 'SWB', gamma=2.0))
 
     # Plotting the diffusion profile according the KPP approach with theta = 1
     if kpp:
@@ -61,16 +70,19 @@ def just_diffusion_profile(w_10_list, y_label='Depth (m)', x_label=r'$K_z$ (m$^2
     # Creating a legend
     color_labels = [plt.plot([], [], c=utils_v.discrete_color_from_cmap(index_size, subdivisions=w_10_list.__len__()),
                                 label=wind_label(w_10), linestyle='-')[0] for index_size, w_10 in enumerate(w_10_list)]
-    line_list, label_list = ['-', '--'], ['SWB', r'KPP, MLD = 20 m, $\theta=1$']
-    if with_theta:
-        line_list.append('dotted')
-        label_list.append(r'KPP, MLD = 20 m, $\theta=5$')
-    if wave_roughness:
-        line_list.append('-.')
-        label_list.append(r'KPP, MLD = 20 m, $z_0=0.1\times H_s$')
-    line_labels = [plt.plot([], [], c='k', label=label, linestyle=line)[0] for line, label in zip(line_list, label_list)]
+    line_labels = []
+    if swb:
+        line_labels += [plt.plot([], [], c='k', label=r'SWB, $\gamma = 1.0$', linestyle='-', linewidth=3.0)[0]]
+        if with_gamma:
+            line_labels += [plt.plot([], [], c='k', label=r'SWB, $\gamma = 2.0$', linestyle='-')[0]]
+    if kpp:
+        line_labels += [plt.plot([], [], c='k', label=r'KPP, MLD = 20 m, $\theta=1$', linestyle='--')[0]]
+        if with_theta:
+            line_labels += [plt.plot([], [], c='k', label=r'KPP, MLD = 20 m, $\theta=5$', linestyle='dotted')[0]]
+        if wave_roughness:
+            line_labels += [plt.plot([], [], c='k', label=r'KPP, MLD = 20 m, $z_0=0.1\times H_s$', linestyle='-.')[0]]
 
-    ax.legend(handles=color_labels + line_labels, fontsize=legend_size, loc='lower right')
+    ax.legend(handles=color_labels + line_labels, fontsize=legend_size, loc='lower right', ncol=2)
 
     plt.savefig(file_name(theta, wave_roughness), bbox_inches='tight')
 

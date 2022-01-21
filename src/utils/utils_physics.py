@@ -63,7 +63,7 @@ def determine_surface_roughness(w_10):
     return z_0
 
 
-def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD, h_s_frac=1.,
+def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD, gamma=1.,
                                    theta=1, wave_roughness=False):
     """
     Determining the vertical diffusion profile at the given depth levels for the given diffusion type
@@ -71,7 +71,7 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, m
     :param depth: the depth array (can be negative in the case of the eulerian model setup)
     :param diffusion_type: KPP or SWB or artifial (where that was only a test case)
     :param mld: the mixed layer depth
-    :param h_s_frac: Relevent for SWB diffusion, setting until what depth we have constant diffusion as a fraction of
+    :param gamma: Relevent for SWB diffusion, setting until what depth we have constant diffusion as a fraction of
                      the significant wave height
     :param theta: Langmuir circulation amplification factor
     :param wave_roughness: if True, use the 0.1 * significant wave height as the surface roughness
@@ -89,7 +89,7 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, m
         z0 = determine_surface_roughness(w_10)
     if diffusion_type == 'SWB':
         profile = 1.5 * settings.vk * u_s * H_s * np.ones(depth.shape)
-        profile[depth > (H_s * h_s_frac)] *= ((H_s * h_s_frac) ** 1.5 * np.power(depth[depth > (H_s * h_s_frac)], -1.5))
+        profile[depth > (H_s * gamma)] *= ((H_s * gamma) ** 1.5 * np.power(depth[depth > (H_s * gamma)], -1.5))
         profile += settings.bulk_diff
     elif diffusion_type == 'KPP':
         alpha = (settings.vk * u_s * theta) / settings.phi
@@ -105,14 +105,14 @@ def get_vertical_diffusion_profile(w_10, depth: np.array, diffusion_type: str, m
 
 
 def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_type: str, mld: float = settings.MLD,
-                                            h_s_frac=1., theta=1, wave_roughness=False):
+                                            gamma=1., theta=1, wave_roughness=False):
     """
     Analytically determining vertical gradient of the vertical diffusion profile at the given depth levels
     :param w_10: 10m wind speeds
     :param depth: the depth array (can be negative in the case of the eulerian model setup)
     :param diffusion_type: KPP or SWB or artifial (where that was only a test case)
     :param mld: the mixed layer depth
-    :param h_s_frac: Relevent for SWB diffusion, setting until what depth we have constant diffusion as a fraction of
+    :param gamma: Relevent for SWB diffusion, setting until what depth we have constant diffusion as a fraction of
                      the significant wave height
     :param theta: Langmuir circulation amplification factor
     :param wave_roughness: if True, use 0.1 * significant wave height as the surface roughness
@@ -129,8 +129,8 @@ def get_vertical_diffusion_gradient_profile(w_10, depth: np.array, diffusion_typ
     else:
         z0 = determine_surface_roughness(w_10)
     if diffusion_type == 'SWB':
-        profile = -2.25 * settings.vk * u_s * H_s * (H_s * h_s_frac) ** 1.5 * np.power(depth, -2.5) * np.ones(depth.shape)
-        profile[depth < (H_s * h_s_frac)] = 0
+        profile = -2.25 * settings.vk * u_s * H_s * (H_s * gamma) ** 1.5 * np.power(depth, -2.5) * np.ones(depth.shape)
+        profile[depth < (H_s * gamma)] = 0
     elif diffusion_type == 'KPP':
         alpha = (settings.vk * u_s * theta) / (settings.phi * mld ** 2)
         profile = alpha * (mld - depth) * (mld - 3 * depth - 2 * z0)

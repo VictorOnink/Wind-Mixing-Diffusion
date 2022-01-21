@@ -59,7 +59,7 @@ def theta_langmuir_wave_roughness_sensitivity(w_rise, output_step=-1,
     # Labels for field data
     if with_observations:
         field_lines, field_labels = lines[-6:], labels[-6:]
-    # Labels for wind conditions
+    # Labels for theta
     wind_lines = [plt.plot([], [], c=utils_v.discrete_color_from_cmap(index=index, subdivisions=theta_list.__len__()),
                            label=r'$\theta=$' + '{}'.format(theta), linestyle='-')[0]
                   for index, theta in enumerate(theta_list)]

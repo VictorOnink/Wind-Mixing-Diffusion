@@ -3,6 +3,7 @@ import numpy as np
 import analysis, settings
 from visualization import utils_visualization as utils_v
 
+
 def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', fig_size=(16, 8),
                              ax_label_size=16, legend_size=12, boundary='Ceiling', wave_roughness=False):
     """
@@ -17,14 +18,11 @@ def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
     """
     # Setting the wind speeds and rise velocities that we want to plot, along with the theta values
     w_10 = [0.85, 2.4, 4.35, 6.65, 9.3]
-    w_r = [-0.03, -0.003]
     theta_list = [1.0, 2.0, 3.0, 4.0, 5.0]
+    gamma_list = [0.5, 1.0, 1.5, 2.0]
     # Setting the type of diffusion, and a small offset for the x axis so that the markers are not plotted on top of
     # each other
-    diffusion = ['KPP', 'SWB']
     diffusion_offset = {'KPP': 0.1, 'SWB': -0.1}
-    # Selecting the marker color according to which rise velocity
-    marker_color = {-0.03: 'tab:blue', -0.003: 'tab:red', -0.0003: 'tab:green'}
 
     # Looping through the simulations, and retrieving the RMSE values for them
     point_list_high_kpp, point_list_low_kpp = [], []
@@ -42,16 +40,16 @@ def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
             plot_tuple = RMSE, index_w10 + 1 + diffusion_offset['KPP'], 'o', color
             point_list_low_kpp.append(plot_tuple)
     for index_w10, wind in enumerate(w_10):
-        for index_theta, theta in enumerate([1.0]):
-            color = (1, 0, 0, 0)
+        for index_gamma, gamma in enumerate(gamma_list):
+            color = utils_v.discrete_color_from_cmap(index=index_gamma, subdivisions=gamma_list.__len__())
             RMSE = analysis.determine_RMSE(wind, -0.03, 'SWB', boundary, alpha=0.0, output=True,
-                                           wave_roughness=wave_roughness, theta=theta)
-            plot_tuple = RMSE, index_w10 + 1 + diffusion_offset['SWB'], 'o', color
+                                           wave_roughness=wave_roughness, gamma=gamma)
+            plot_tuple = RMSE, index_w10 + 1 + diffusion_offset['SWB'], 'X', color
             point_list_high_SWB.append(plot_tuple)
 
             RMSE = analysis.determine_RMSE(wind, -0.003, 'SWB', boundary, alpha=0.0, output=True,
-                                           wave_roughness=wave_roughness, theta=theta)
-            plot_tuple = RMSE, index_w10 + 1 + diffusion_offset['SWB'], 'o', color
+                                           wave_roughness=wave_roughness, gamma=gamma)
+            plot_tuple = RMSE, index_w10 + 1 + diffusion_offset['SWB'], 'X', color
             point_list_low_SWB.append(plot_tuple)
 
     # Creating the axis
@@ -93,7 +91,6 @@ def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
         color_face = (color[0], color[1], color[2], 0.5)
         ax2.plot(index_w10, RMSE, mec=color, marker=marker, markersize=10, mfc=color_face)
 
-
     # Now, altering the Y axis to list the wind speeds instead of the simple labels 1 - 5
     for ax in [ax1, ax2]:
         ax.set_xticks(range(7))
@@ -101,15 +98,23 @@ def markov_0_RMSE_comparison(x_label=r'$u_{10}$ (m s$^{-1}$)', y_label=r'RMSE', 
 
     # Next, adding a legend to explain the color scheme and the marker type
     # The marker color indicates the theta value
-    swb = [plt.plot([], [], c='red', markersize=10, marker='o', label='SWB', linestyle='')[0] for i in range(1)]
-    color = [plt.plot([], [], c=utils_v.discrete_color_from_cmap(index=index_theta, subdivisions=theta_list.__len__()),
-                      markersize=10, marker='o', label=label_color(theta), linestyle='')[0]
-             for index_theta, theta in enumerate(theta_list)]
+    swb = [plt.plot([], [], c=utils_v.discrete_color_from_cmap(index=index_gamma, subdivisions=gamma_list.__len__()),
+                    markersize=10, marker='X', label=label_gamma(gamma), linestyle='')[0]
+           for index_gamma, gamma in enumerate(gamma_list)]
+    kpp = [plt.plot([], [], c=utils_v.discrete_color_from_cmap(index=index_theta, subdivisions=theta_list.__len__()),
+                    markersize=10, marker='o', label=label_theta(theta), linestyle='')[0]
+           for index_theta, theta in enumerate(theta_list)]
+
     # Creating a legend
-    ax2.legend(handles=swb + color, fontsize=legend_size, loc='upper right')
+    ax2.legend(handles=swb + kpp, fontsize=legend_size, loc='upper right')
 
     plt.savefig(settings.figure_dir + 'model_evaluation_markov_0.png', bbox_inches='tight', dpi=600)
 
 
-def label_color(theta):
+def label_theta(theta):
     return r'KPP, $\theta=$' + '{:.1f}'.format(theta)
+
+
+def label_gamma(gamma):
+    return r'SWB, $\gamma=$' + '{:.1f}'.format(gamma)
+

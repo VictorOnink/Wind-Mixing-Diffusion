@@ -2,7 +2,7 @@ import settings
 
 
 def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=settings.MLD, dt=settings.dt_int.seconds,
-                            theta=1.0, wave_roughness=False):
+                            theta=1.0, wave_roughness=False, gamma=1.0):
     """
     Setting the filename for the parcels output
     :param w_10: 10m wind speed
@@ -14,6 +14,7 @@ def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=s
     :param dt: integration timestep
     :param theta: Langmuir circulation amplification factor
     :param wave_roughness: if True, have surface roughness be wave height dependent
+    :param gamma
     :return:
     """
     name = settings.output_dir + '{}_{}_w10_{}_w_rise_{}_MLD_{}'.format(diffusion_type, boundary, w_10, w_rise, mld)
@@ -26,11 +27,14 @@ def get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha, mld=s
         name += '_theta={}'.format(theta)
         if wave_roughness:
             name += '_wave_roughness'
+    elif diffusion_type == 'SWB':
+        name += '_gamma={}'.format(gamma)
     return name + '.nc'
 
 
 def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=None, mld=settings.MLD,
-                                  dt=settings.dt_int.seconds, theta=1.0, with_pkl=False, wave_roughness=False):
+                                  dt=settings.dt_int.seconds, theta=1.0, with_pkl=False, wave_roughness=False,
+                                  gamma=1.0):
     """
     Setting the file name of the concentration output
     :param w_10:
@@ -43,6 +47,7 @@ def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=
     :param theta
     :param with_pkl: if True, add '.pkl' to the filename
     :param wave_roughness: if True, have surface roughness be wave height dependent
+    :param gamma
     :return:
     """
     name = settings.conc_dir + '{}_{}_conc_w10_{}_w_rise_{}_MLD_{}'.format(diffusion_type, boundary, w_10, w_rise, mld)
@@ -54,6 +59,8 @@ def get_concentration_output_name(w_10, w_rise, diffusion_type, boundary, alpha=
         name += '_theta={}'.format(theta)
         if wave_roughness:
             name += '_wave_roughness'
+    elif diffusion_type == 'SWB':
+        name += '_gamma={}'.format(gamma)
     if with_pkl:
         name += '.pkl'
     return name

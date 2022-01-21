@@ -15,3 +15,4 @@ from visualization.multiple_integration_timestep_control import *
 from visualization.multiple_boundary_condition_comparison import *
 from visualization.theta_langmuir_wave_roughness_sensitivity import *
 from visualization.plot_error_correlation import *
+from visualization.gamma_sensitivity import gamma_sensitivity

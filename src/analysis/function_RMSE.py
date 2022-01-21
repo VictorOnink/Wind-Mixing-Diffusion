@@ -5,7 +5,7 @@ from copy import deepcopy
 
 
 def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, theta=1.0, output=False, conduct=True,
-                   wave_roughness=False):
+                   wave_roughness=False, gamma=1.0):
     """
     Getting the root mean square error between the normalized model concentrations and the field data
     :param w_10: 10m wind speed
@@ -14,6 +14,7 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, theta=1.0, out
     :param boundary: boundary condition, and whether it is M-0 or M-1
     :param alpha: memory term for M-1
     :param theta: Langmuir circulation amplification term
+    :param gamma: for SWB diffusion, the multiple of the Hs to which we have constant diffusion
     :param output: if False, we have just a print statement giving the RMSE value, if True we return the RMSE value
     :param conduct: if True, carry out the entire RMSE calculations
     :param wave_roughness: if True, have surface roughness be wave height dependent
@@ -23,7 +24,7 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, theta=1.0, out
         # Loading the concentration profile and the depths, and normalizing by the total number of particles in the
         # simulation
         conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
-                                                                                alpha=alpha, theta=theta,
+                                                                                alpha=alpha, theta=theta, gamma=gamma,
                                                                                 wave_roughness=wave_roughness))
         concentration = conc_dict['mean_profile']
         concentration = concentration / concentration.sum()
@@ -51,7 +52,7 @@ def determine_RMSE(w_10, w_rise, diffusion_type, boundary, alpha, theta=1.0, out
             return RMSE
 
 
-def timestep_dependent_RMSE(conduct: bool, diffusion_type: str, theta=1.0, wave_roughness=False):
+def timestep_dependent_RMSE(conduct: bool, diffusion_type: str, theta=1.0, gamma=1.0, wave_roughness=False):
     """
     To see if the profiles converged for increasingly small time steps, we calculate the RMSE relative to the
     concentration profile when dt = 1 for longer timesteps and save this into an Excel file
@@ -76,7 +77,8 @@ def timestep_dependent_RMSE(conduct: bool, diffusion_type: str, theta=1.0, wave_
                 for w_10 in w_10_list:
                     for w_rise in w_rise_list:
                         RMSE_dict[dt][w_rise][w_10] = reference_RMSE_difference(w_rise, w_10, dt, diffusion_type,
-                                                                                theta=theta, wave_roughness=wave_roughness)
+                                                                                theta=theta, gamma=gamma,
+                                                                                wave_roughness=wave_roughness)
 
             # Saving everything to the output excel file
             writer = pd.ExcelWriter(output_name)
@@ -85,7 +87,7 @@ def timestep_dependent_RMSE(conduct: bool, diffusion_type: str, theta=1.0, wave_
             writer.save()
 
 
-def reference_RMSE_difference(w_rise, w_10, dt, diffusion_type, theta, wave_roughness=False, boundary='Reflect'):
+def reference_RMSE_difference(w_rise, w_10, dt, diffusion_type, theta, gamma, wave_roughness=False, boundary='Reflect'):
     """
     This returns the RMSE difference between a reference concentration profile (for dt=1) and a candidate concentration
     profile
@@ -94,13 +96,15 @@ def reference_RMSE_difference(w_rise, w_10, dt, diffusion_type, theta, wave_roug
     :param dt:
     :param diffusion_type:
     :param boundary:
+    :param theta
+    :param gamma: for SWB diffusion, the multiple of the Hs to which we have constant diffusion
     :param wave_roughness: if True, have surface roughness be wave height dependent
     :return:
     """
     # Getting the reference concentration
     ref_file = utils.get_concentration_output_name(w_rise=w_rise, w_10=w_10, boundary=boundary, dt=1,
                                                    diffusion_type=diffusion_type, theta=theta,
-                                                   wave_roughness=wave_roughness)
+                                                   wave_roughness=wave_roughness, gamma=gamma)
     reference_concentration = utils.load_obj(ref_file)
     reference_concentration = reference_concentration[reference_concentration['last_time_slice']]
     reference_concentration = reference_concentration / reference_concentration.sum()
@@ -108,7 +112,7 @@ def reference_RMSE_difference(w_rise, w_10, dt, diffusion_type, theta, wave_roug
     # Loading the concentration that we are checking
     candidate_file = utils.get_concentration_output_name(w_rise=w_rise, w_10=w_10, boundary=boundary,
                                                          dt=dt, diffusion_type=diffusion_type, theta=theta,
-                                                         wave_roughness=wave_roughness)
+                                                         wave_roughness=wave_roughness, gamma=gamma)
     candidate_concentration = utils.load_obj(candidate_file)
     candidate_concentration = candidate_concentration[candidate_concentration['last_time_slice']]
     candidate_concentration = candidate_concentration / candidate_concentration.sum()
@@ -131,7 +135,7 @@ def RMSE_calculation(reference_array, candidate_array):
     return np.sqrt(np.sum(np.square(reference_array - candidate_array)) / reference_array.size)
 
 
-def compute_modelling_efficiency(w_10, w_rise, diffusion_type, boundary, alpha, theta=1, conduct=False,
+def compute_modelling_efficiency(w_10, w_rise, diffusion_type, boundary, alpha, theta=1, gamma=1.0, conduct=False,
                                  wave_roughness=False):
     """
     Computing the modelling efficiency, which is defined as:
@@ -146,6 +150,7 @@ def compute_modelling_efficiency(w_10, w_rise, diffusion_type, boundary, alpha, 
     :param boundary:
     :param alpha:
     :param theta: Langmuir circulation amplification term
+    :param gamma: for SWB diffusion, the multiple of the Hs to which we have constant diffusion
     :param wave_roughness: if True, have surface roughness be wave height dependent
     :param conduct
     :return:
@@ -153,7 +158,7 @@ def compute_modelling_efficiency(w_10, w_rise, diffusion_type, boundary, alpha, 
     if conduct:
         # First, load the concentration array for the given parameters
         conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
-                                                                                alpha=alpha, theta=theta,
+                                                                                alpha=alpha, theta=theta, gamma=gamma,
                                                                                 wave_roughness=wave_roughness))
         concentration = conc_dict[conc_dict['last_time_slice']]
         concentration = concentration / concentration.sum()

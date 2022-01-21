@@ -74,7 +74,7 @@ def range_MLD_values(conduct = True, exclude=None):
 
 
 def correlation_field_model_data(w_10, w_rise, diffusion_type, boundary, alpha, theta, conduct=True, to_print=True,
-                                 wave_roughness=False):
+                                 wave_roughness=False, gamma=1.0):
     """
     Computing the correlation between the average concentrations and the modelled distributions
     :param w_10:
@@ -83,6 +83,7 @@ def correlation_field_model_data(w_10, w_rise, diffusion_type, boundary, alpha, 
     :param boundary:
     :param alpha:
     :param theta: Langmuir circulation amplification term
+    :param gamma: for SWB diffusion, the multiple of the Hs to which we have constant diffusion
     :param conduct: if True, run the code
     :param to_print: if True, print the r and p values, otherwise return the r and p values
     :param wave_roughness: if True, have surface roughness be wave height dependent
@@ -91,7 +92,7 @@ def correlation_field_model_data(w_10, w_rise, diffusion_type, boundary, alpha, 
     if conduct:
         # First, load the concentration array for the given parameters
         conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
-                                                                                alpha=alpha, theta=theta,
+                                                                                alpha=alpha, theta=theta, gamma=gamma,
                                                                                 wave_roughness=wave_roughness))
         concentration = conc_dict['mean_profile']
         concentration = concentration / concentration.sum()
@@ -117,7 +118,7 @@ def correlation_field_model_data(w_10, w_rise, diffusion_type, boundary, alpha, 
             return r, p
 
 
-def rise_velocity_turbulence_ratio(wind, rise, diffusion, theta=1, conduct=False, wave_roughness=False):
+def rise_velocity_turbulence_ratio(wind, rise, diffusion, theta=1, gamma=1.0, conduct=False, wave_roughness=False):
     """
     This calculates the max w' within each depth profile (calculated using equation 4 in the manuscript), and divides
     it by the rise velocity
@@ -134,9 +135,9 @@ def rise_velocity_turbulence_ratio(wind, rise, diffusion, theta=1, conduct=False
         # Computing the profiles for the diffusion and diffusion gradient
         depth = np.linspace(0, settings.max_depth, num=settings.depth_levels)
         Kz_profile = utils.get_vertical_diffusion_profile(wind, depth, diffusion, theta=theta,
-                                                          wave_roughness=wave_roughness)
+                                                          wave_roughness=wave_roughness, gamma=gamma)
         dKz_profile = utils.get_vertical_diffusion_gradient_profile(wind, depth, diffusion, theta=theta,
-                                                                    wave_roughness=wave_roughness)
+                                                                    wave_roughness=wave_roughness, gamma=gamma)
 
         # Calculating the w' profile, and the maximum value
         dt = settings.dt_int.total_seconds()
@@ -149,7 +150,7 @@ def rise_velocity_turbulence_ratio(wind, rise, diffusion, theta=1, conduct=False
 
 
 def mean_percentage_deviation(wind, rise, diffusion, theta=1, conduct=False, wave_roughness=False, boundary='Ceiling',
-                              alpha=0.0, to_print=True):
+                              alpha=0.0, to_print=True, gamma=1.0):
     """
     The RMSE can be skewed by large deviations at the surface where concentrations are significantly higher than at
     depth. Therefore, we will calculate the average percentage difference in
@@ -157,6 +158,7 @@ def mean_percentage_deviation(wind, rise, diffusion, theta=1, conduct=False, wav
     :param rise:
     :param diffusion:
     :param theta:
+    :param gamma: for SWB diffusion, the multiple of the Hs to which we have constant diffusion
     :param conduct:
     :param wave_roughness:
     :param boundary
@@ -167,7 +169,7 @@ def mean_percentage_deviation(wind, rise, diffusion, theta=1, conduct=False, wav
     if conduct:
         # First, load the concentration array for the given parameters
         conc_dict = utils.load_obj(filename=utils.get_concentration_output_name(wind, rise, diffusion,
-                                                                                boundary=boundary,
+                                                                                boundary=boundary, gamma=gamma,
                                                                                 alpha=alpha, theta=theta,
                                                                                 wave_roughness=wave_roughness))
         concentration = conc_dict['mean_profile']

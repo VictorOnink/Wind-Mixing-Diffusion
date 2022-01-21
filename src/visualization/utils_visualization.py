@@ -231,7 +231,7 @@ def boolean_diff_type(diffusion_type):
 
 def get_concentration_list(w_10_list, w_rise_list, selection, single_select, diffusion_type, alpha_list, output_step=-1,
                            all_timesteps=False, boundary='Ceiling', mld=settings.MLD, dt=settings.dt_int.seconds,
-                           theta=1.0, wave_roughness=False):
+                           theta=1.0, wave_roughness=False, gamma=1.0):
     """
     A function that returns a dictionary, which in turns contains lists containing all concentration profiles for the
     runs specified in w_10_list, w_rise_list and alpha_list, for the given boundary condition and diffusion type
@@ -252,13 +252,13 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
     :param mld: the mixing layer depth, with teh default just being taken from the settings.py file
     :param dt: the integration timestep, with the default taken from settings.py
     :param theta: Langmuir circulation amplification factor
+    param gamma: multiple of Hs to which we have constant mixing with SWB mixing
     :param wave_roughness: if True, have surface roughness be wave height dependent
     :return: dictionary containing lists with the relevant outputs
     """
     output_dic = {'concentration_list': [],  # List containing the concentration profiles
                   'parameter_concentrations': [],  # List containing tuples with the w-10 and w_rise values for each
                   'std_list': []}  # List containing the standard deviations relative to the mean profile
-    # profile in 'concentration_list'
 
     # Using the selection parameter to adapt w_rise_list or w_10_list to contain just one value. selection == 'all' will
     # just return all simulations for a particular diffusion_type and boundary
@@ -278,7 +278,7 @@ def get_concentration_list(w_10_list, w_rise_list, selection, single_select, dif
             # Loading the dictionary containing the concentrations
             input_dir = utils.load_obj(utils.get_concentration_output_name(w_10, w_rise, diffusion_type, boundary,
                                                                            mld=mld, alpha=alpha, dt=dt, theta=theta,
-                                                                           wave_roughness=wave_roughness))
+                                                                           wave_roughness=wave_roughness, gamma=gamma))
             # Selecting the timeslice of interest
             if output_step == -1:
                 output_dic['concentration_list'].append(input_dir['mean_profile'] / input_dir['mean_profile'].sum())
@@ -399,7 +399,7 @@ def return_color(index):
     return colors[index % num]
 
 
-def label_diffusivity_profile(w_10, diffusion_type):
+def label_diffusivity_profile(w_10, diffusion_type, gamma=1.0):
     """
     Label for the diffusion profile
     :param w_10:
@@ -407,6 +407,6 @@ def label_diffusivity_profile(w_10, diffusion_type):
     :return:
     """
     if diffusion_type == 'SWB':
-        return r'SWB, u$_{10}$' + ' = {:.2f}'.format(w_10) + ' m s$^{-1}$'
+        return r'SWB, u$_{10}$' + ' = {:.2f}'.format(w_10) + ' m s$^{-1}$' + r', $\gamma = $' + '{}'.format(gamma)
     elif diffusion_type == 'KPP':
         return r'KPP, u$_{10}$ ' + '= {:.2f}'.format(w_10) + 'm s$^{-1}$, MLD = ' + '{} m'.format(settings.MLD)

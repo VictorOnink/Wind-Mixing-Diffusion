@@ -13,7 +13,8 @@ import settings
 import utils
 
 
-def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixed', theta=1.0, wave_roughness=False):
+def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixed', theta=1.0, wave_roughness=False,
+                           gamma=1.0):
     """
     General function that runs a parcels simulation for the given parameters
     :param w_10: wind speed
@@ -25,11 +26,12 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixe
                      M-1 process
     :param theta: Langmuir circulation amplification factor for KPP mixing
     :param wave_roughness: if True, have surface roughness be wave height dependent
+    :param gamma: multiple of Hs to which we have constant mixing with SWB mixing
     :return: None
     """
     # Create the fieldset
     fieldset = create_fieldset(w_10=w_10, w_rise=w_rise, diffusion_type=diffusion_type, boundary=boundary, alpha=alpha,
-                               theta=theta, wave_roughness=wave_roughness)
+                               theta=theta, wave_roughness=wave_roughness, gamma=gamma)
 
     # The particle size that corresponds to the rise velocity, according to Enders et al. (2015)
     utils.determine_particle_size(w_rise)
@@ -42,7 +44,8 @@ def vertical_diffusion_run(w_10, w_rise, diffusion_type, alpha=0, boundary='Mixe
 
     # Setting the output file
     output_file = pset.ParticleFile(name=utils.get_parcels_output_name(w_10, w_rise, diffusion_type, boundary, alpha,
-                                                                       theta=theta, wave_roughness=wave_roughness),
+                                                                       theta=theta, wave_roughness=wave_roughness,
+                                                                       gamma=gamma),
                                     outputdt=settings.dt_out)
 
     # Determine the type of boundary condition we use, which in turn relates to which type of diffusion we consider:
@@ -107,9 +110,9 @@ class Markov_1_Particle(JITParticle):
     potential = Variable('potential', initial=0, dtype=np.float32, to_write=to_write)
 
 
-def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha, theta, wave_roughness):
+def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha, theta, wave_roughness, gamma):
     """
-    Creating the fieldset that we use for the simulationw
+    Creating the fieldset that we use for the simulations
     """
     # Creating the lon and lat grids
     lon = np.linspace(0, 1, num=2)
@@ -131,10 +134,11 @@ def create_fieldset(w_10, w_rise, diffusion_type, boundary, alpha, theta, wave_r
     # Getting the diffusivity fields, and the gradient of the diffusivity fields. The gradients are calculated
     # analytically
     K_z = Field('K_z', data=utils.get_vertical_diffusion_profile(w_10, Depth, diffusion_type, theta=theta,
-                                                                 wave_roughness=wave_roughness),
+                                                                 wave_roughness=wave_roughness, gamma=gamma),
                 depth=depth, lon=lon, lat=lat)
     dK_z = Field('dK_z', data=utils.get_vertical_diffusion_gradient_profile(w_10, Depth, diffusion_type, theta=theta,
-                                                                            wave_roughness=wave_roughness),
+                                                                            wave_roughness=wave_roughness,
+                                                                            gamma=gamma),
                  depth=depth, lon=lon, lat=lat)
     fieldset = FieldSet(U, V)
     fieldset.add_field(K_z)

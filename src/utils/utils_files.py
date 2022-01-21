@@ -68,13 +68,13 @@ def exclude_field_data(exclude, sources):
     return sources
 
 
-def simulation_description(wind, rise, alpha, theta, diffusion, wave_roughness, boundary):
+def simulation_description(wind, rise, alpha, theta, gamma, diffusion, wave_roughness, boundary):
     if diffusion == 'KPP':
         str_format = boundary, wind, rise, theta, wave_roughness
         statement = 'Diffusion KPP, boundary {}, w_10={}, rise={}, theta={}, wave_roughness={}'.format(*str_format)
     elif diffusion == 'SWB':
-        str_format = boundary, wind, rise
-        statement = 'Diffusion SWB, boundary {}, w_10={}, rise={}'.format(*str_format)
+        str_format = boundary, wind, rise, gamma
+        statement = 'Diffusion SWB, boundary {}, w_10={}, rise={}, gamma={}'.format(*str_format)
     if 'Markov' in boundary:
         statement += ', alpha={}'.format(alpha)
     print(statement)
